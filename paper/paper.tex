@@ -3,6 +3,7 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{algorithm}
@@ -11,6 +12,11 @@
 \usepackage{microtype}
 \usepackage{caption}
 \usepackage{subcaption}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
 
 \title{\textbf{ProactiveHop: Topology-Aware Proactive Session Migration\\
 via Graph Neural Networks and Reinforcement Learning}}
@@ -200,6 +206,62 @@ baseline receives zero reward}, not a negative reward proportional to
 drops.  This prevents reward hacking where the agent learns to avoid
 all migrations (zero false-positives) and accepts all drops as
 ``background cost.''
+
+\subsection{Why Topology Is Necessary: A Formal Argument}
+\label{sec:proposition}
+
+We prove that no threshold policy---however well-tuned---can match
+the decision quality of a 1-hop GNN under all possible cluster states.
+
+\begin{definition}
+A \emph{threshold policy} $\mathcal{T}(\theta)$ decides to migrate
+sessions from server $v$ if and only if $\ell_v \geq \theta$, for some
+fixed $\theta \in [0,1]$.  It is a function solely of $\ell_v$.
+\end{definition}
+
+\begin{proposition}
+\label{prop:main}
+There exist two cluster states $S_1, S_2$ and a server $v$ such that:
+\begin{enumerate}
+  \item $\ell_v(S_1) = \ell_v(S_2)$ (identical local load),
+  \item The optimal migration decision for $v$ differs between $S_1$ and $S_2$,
+  \item Any threshold policy $\mathcal{T}(\theta)$ makes the same decision
+        in $S_1$ and $S_2$,
+  \item A 1-hop GNN distinguishes $S_1$ from $S_2$ and can make the
+        correct decision in both.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Let $\ell_v = 0.72$ in both states (just above threshold for any
+$\theta \leq 0.72$).
+
+\textbf{State $S_1$}: All neighbors $u \in \mathcal{N}(v)$ have load
+$\ell_u = 0.3$.  Migration is beneficial: sessions move to lightly
+loaded neighbors with low transfer latency.
+
+\textbf{State $S_2$}: All neighbors have $\ell_u = 0.85$.
+Migration is harmful: the only available targets are saturated,
+so migrated sessions will immediately re-drop on the target, wasting
+bandwidth $B_t$ with no latency saving ($m_t^{\rm TP} = 0$).
+
+Under the reward in Eq.~(\ref{eq:reward}), the optimal action is
+\emph{migrate} in $S_1$ and \emph{do not migrate} in $S_2$.
+Any $\mathcal{T}(\theta)$ with $\theta \leq 0.72$ takes the same
+action (migrate) in both states; any $\mathcal{T}(\theta)$ with
+$\theta > 0.72$ also takes the same action (do not migrate) in both.
+No fixed $\theta$ is optimal for both.
+
+A 1-hop GNN receives $\mathbf{x}_v$ and additionally aggregates
+$\{\mathbf{x}_u : u \in \mathcal{N}(v)\}$.  Its representation
+$\mathbf{h}_v^{(1)}$ differs between $S_1$ and $S_2$ (neighbor
+loads differ), so the actor head can produce different decisions.
+\end{proof}
+
+\noindent
+The proposition is tight: LSTM also cannot distinguish $S_1$ from
+$S_2$ because it watches each server in isolation (no cross-server
+aggregation), regardless of how many historical timesteps it observes.
 
 % -----------------------------------------------------------------------
 \section{Model Architecture}
