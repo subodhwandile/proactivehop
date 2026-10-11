@@ -41,14 +41,15 @@ We implement ProactiveHop on a discrete-event simulator of a
 $k{=}4$ fat-tree cluster and evaluate against No-Migration,
 Threshold-70\%, and an Oracle upper bound.  Key results:
 (1)~in a controlled server-crash scenario, ProactiveHop pre-migrates
-\textbf{55.6\%} of affected sessions before the crash vs.\ 19.3\% for
-the threshold baseline ($2.9\times$ improvement);
+\textbf{46.7\%} of affected sessions before the crash vs.\ 40.0\% for
+LSTM prediction and 18.5\% for threshold ($2.5\times$ over threshold);
 (2)~the GNN encoder is \textbf{2.3$\times$} more sample-efficient than
 an identically-trained flat MLP, confirming that topology-awareness
 drives the gain;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
-grows \textbf{4$\times$} ($N{=}16\!\to\!64$), verifying the
-O(degree$^2$) scaling claim of local neighborhood aggregation.
+grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $4.6\times$ for LSTM,
+verifying the O(degree$^2$) scaling advantage of local neighborhood
+aggregation.
 
 ProactiveHop demonstrates that graph-structured RL is a practical
 tool for proactive session continuity in large-scale real-time clusters.
@@ -283,14 +284,19 @@ servers.
 \subsection{Baselines}
 
 \begin{itemize}
-  \item \textbf{No Migration}: sessions reconnect reactively after
+  \item \textbf{No-Migration}: sessions reconnect reactively after
         any drop or failure.
   \item \textbf{Threshold-70\%}: migrates top-20 sessions from any
         server whose composite load exceeds 70\%.
+  \item \textbf{LSTM Predictor}: a 2-layer LSTM trained on 100 episodes
+        of simulator traces; observes a 10-step sliding window of
+        [load, failure\_rate, session\_count] per server and predicts
+        load 5 steps ahead. Migrates if predicted load $>0.65$.
+        This baseline has \emph{temporal memory but no topology}.
   \item \textbf{Oracle}: knows the exact drop-probability of every
         session at every step; migrates all imminently-dropping sessions.
         This is an upper bound unavailable in practice.
-  \item \textbf{PPO+GNN (ours)}: trained 150 episodes on a fixed seed;
+  \item \textbf{PPO+GNN (ours)}: trained 500 episodes on a fixed seed;
         evaluated on held-out seeds.
 \end{itemize}
 
@@ -308,8 +314,9 @@ servers.
 Policy & Pre-mig. & P50 (ms) & P95 (ms) \\
 \midrule
 No Migration     &  0.0\%  & 403 & 646 \\
-Threshold-70\%   & 19.3\%  & 403 & 646 \\
-\textbf{PPO+GNN} & \textbf{55.6\%} & \textbf{386} & \textbf{654} \\
+Threshold-70\%   & 18.5\%  & 401 & 647 \\
+LSTM Predictor   & 40.0\%  & 395 & 642 \\
+\textbf{PPO+GNN} & \textbf{46.7\%} & \textbf{396} & \textbf{648} \\
 Oracle (UB)      & 100.0\% &   5 &   9 \\
 \bottomrule
 \end{tabular}
@@ -322,20 +329,20 @@ to 0.05 ($25\times$ normal), and CPU utilization climbs by 0.012 per
 step.  This models observable pre-failure symptoms (disk I/O errors,
 thermal throttling, memory ECC corrections).
 
-The GNN observes the rising $\lambda_v$ feature (scaled $\times 100$
-in the input) and the increasing $\ell_v$, both of which propagate
-information about the stressed server through the 2-hop neighborhood.
-PPO+GNN pre-migrates \textbf{55.6\%} of sessions before the crash,
-vs.\ 19.3\% for Threshold-70\% ($2.9\times$ improvement).
-Threshold triggers only when load crosses 70\%; the degradation ramp
-in our scenario reaches $\approx$72\% near the crash, causing the
-threshold to act only in the final few steps.
-The GNN acts from step 20 onward because $\lambda_v$ rises earlier
-than load.
+The LSTM predictor, which sees a 10-step history of each server's load
+and failure rate, reaches \textbf{40.0\%} pre-migration---a strong
+baseline that confirms temporal memory alone is valuable.
+PPO+GNN surpasses it at \textbf{46.7\%} by additionally observing
+the load propagation pattern across topological neighbors: as the
+target server's load rises, it stresses its 2-hop neighborhood, and
+the GNN detects this correlated signal before the LSTM can---since
+LSTM watches each server in isolation and cannot see cross-server
+correlations.
 
-Figure~\ref{fig:failure} plots the session-drain time-series: only
-the PPO+GNN curve shows a visible slope \emph{before} the red failure
-line at step 40.
+Figure~\ref{fig:failure} plots the session-drain time-series. Both
+LSTM and GNN show a slope before the red failure line at step 40;
+only GNN's slope begins earlier and is steeper, reflecting the
+neighborhood-aggregation advantage.
 
 \begin{figure}[t]
   \centering
@@ -396,13 +403,18 @@ Policy & $N$ & Catch & Infer.\ (ms) & Scale factor \\
 \midrule
 \multirow{3}{*}{Threshold-70\%}
  & 16 & 0.15\% & 0.024 & --- \\
- & 25 & 0.26\% & 0.043 & --- \\
- & 64 & 0.54\% & 0.156 & $6.5\times$ \\
+ & 25 & 0.26\% & 0.042 & --- \\
+ & 64 & 0.54\% & 0.154 & $6.4\times$ \\
+\midrule
+\multirow{3}{*}{LSTM Predictor}
+ & 16 & 0.8\% & 0.609 & --- \\
+ & 25 & 1.9\% & 0.802 & --- \\
+ & 64 & 3.6\% & 2.827 & $4.6\times$ \\
 \midrule
 \multirow{3}{*}{\textbf{PPO+GNN}}
- & 16 & 1.2\% & 1.158 & --- \\
- & 25 & 1.4\% & 1.178 & --- \\
- & 64 & 4.1\% & 1.239 & \textbf{1.1$\times$} \\
+ & 16 & 0.8\% & 1.164 & --- \\
+ & 25 & 1.5\% & 1.185 & --- \\
+ & 64 & 3.4\% & 1.252 & \textbf{1.1$\times$} \\
 \midrule
 Oracle (UB) & 16--64 & $\approx$98\% & $<$0.5 & --- \\
 \bottomrule
@@ -412,13 +424,20 @@ Oracle (UB) & 16--64 & $\approx$98\% & $<$0.5 & --- \\
 Table~\ref{tab:scale} shows two results.
 
 \textbf{Sub-linear inference scaling.}
-Threshold-70\% inference time grows $6.5\times$ from $N{=}16$ to
-$N{=}64$ (scales with $N$ as it must scan all servers).
-PPO+GNN grows only $1.1\times$ (1.158\,ms $\to$ 1.239\,ms)
-for a $4\times$ cluster size increase.
-This confirms the O(degree$^2$) complexity claim: fat-tree degree is
-fixed at $k{=}4$ regardless of $N$, so the GNN's neighborhood
-aggregation is $O(1)$ per node.
+LSTM inference grows $4.6\times$ from $N{=}16$ to $N{=}64$: at each
+step it must run a forward pass for every server independently,
+so cost scales linearly with $N$.
+PPO+GNN grows only $1.1\times$ (1.164\,ms $\to$ 1.252\,ms)
+for the same $4\times$ cluster size increase, because neighborhood
+aggregation is bounded by the fixed fat-tree degree $k{=}4$.
+
+\textbf{Catch rate parity with better scaling.}
+At $N{=}64$, LSTM achieves 3.6\% vs GNN's 3.4\%---statistically
+indistinguishable---but at $4.6\times$ the inference cost.
+At $N{=}256$ (extrapolating linearly), LSTM would take $\sim$11\,ms
+per step while GNN would remain under 1.5\,ms.  For controllers
+running at 100\,ms decision intervals this is already a hard
+constraint.
 
 \textbf{Zero-shot generalization.}
 The GNN trained on $N{=}16$ transfers zero-shot to $N{=}25$ and

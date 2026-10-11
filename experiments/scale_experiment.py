@@ -25,6 +25,7 @@ from sim.cluster import ClusterSimulator, SimConfig
 from sim.session import SessionStatus
 from model.ppo_agent import PPOAgent
 from baselines.baselines import ThresholdPolicy, OraclePolicy, NoMigrationPolicy
+from baselines.lstm_baseline import LSTMPolicy
 
 
 SCALE_SIZES = [16, 32, 64]
@@ -128,6 +129,7 @@ def run_scale_experiment(model_path: str = "results/checkpoints/best_model.pt"):
     threshold = ThresholdPolicy(0.70)
     oracle = OraclePolicy()
     no_mig = NoMigrationPolicy()
+    lstm = LSTMPolicy(model_path="results/lstm_predictor.pt")
 
     results = {}
 
@@ -141,6 +143,7 @@ def run_scale_experiment(model_path: str = "results/checkpoints/best_model.pt"):
     policies = [
         ("No Migration",    lambda obs, sim: no_mig.select_action(obs, sim),    False),
         ("Threshold 70%",   lambda obs, sim: threshold.select_action(obs, sim), False),
+        ("LSTM Predict",    lambda obs, sim: lstm.select_action(obs, sim),      False),
         ("Oracle (UB)",     lambda obs, sim: oracle.select_action(obs, sim),    False),
         ("PPO+GNN (ours)",  None,                                               True),
     ]

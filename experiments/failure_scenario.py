@@ -36,6 +36,7 @@ from model.ppo_agent import PPOAgent
 from baselines.baselines import (
     NoMigrationPolicy, ThresholdPolicy, OraclePolicy
 )
+from baselines.lstm_baseline import LSTMPolicy
 
 
 FAILURE_STEP = 40      # server fails at step 40
@@ -194,6 +195,7 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
     COLORS = {
         "No Migration":    "#d62728",
         "Threshold 70%":   "#ff7f0e",
+        "LSTM Predict":    "#9467bd",
         "Oracle (UB)":     "#2ca02c",
         "PPO+GNN (ours)":  "#1f77b4",
     }
@@ -288,10 +290,12 @@ def run_failure_experiment(model_path: str = "results/checkpoints/best_model.pt"
     no_mig = NoMigrationPolicy()
     thresh = ThresholdPolicy(0.70)
     oracle = OraclePolicy()
+    lstm   = LSTMPolicy(model_path="results/lstm_predictor.pt")
 
     experiments = [
         ("No Migration",   no_mig.select_action, False, None),
         ("Threshold 70%",  thresh.select_action,  False, None),
+        ("LSTM Predict",   lstm.select_action,    False, None),
         ("Oracle (UB)",    oracle.select_action,   False, None),
         ("PPO+GNN (ours)", None,                   True,  ppo),
     ]
