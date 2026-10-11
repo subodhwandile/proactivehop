@@ -1,0 +1,38 @@
+[
+  {
+    "policy": "No Migration",
+    "pre_migrated_count": 0,
+    "reactive_count": 135,
+    "total_target_sessions": 135,
+    "pre_migration_rate": 0.0,
+    "p50_ms": 403.24316237471544,
+    "p95_ms": 645.6852626628055
+  },
+  {
+    "policy": "Threshold 70%",
+    "pre_migrated_count": 26,
+    "reactive_count": 109,
+    "total_target_sessions": 135,
+    "pre_migration_rate": 0.1925925925925926,
+    "p50_ms": 402.98042043824876,
+    "p95_ms": 646.2570000257043
+  },
+  {
+    "policy": "Oracle (UB)",
+    "pre_migrated_count": 135,
+    "reactive_count": 0,
+    "total_target_sessions": 135,
+    "pre_migration_rate": 1.0,
+    "p50_ms": 5.035976374507288,
+    "p95_ms": 8.501229991364536
+  },
+  {
+    "policy": "PPO+GNN (ours)",
+    "pre_migrated_count": 75,
+    "reactive_count": 60,
+    "total_target_sessions": 135,
+    "pre_migration_rate": 0.5555555555555556,
+    "p50_ms": 385.7054683795551,
+    "p95_ms": 653.6895309964701
+  }
+]

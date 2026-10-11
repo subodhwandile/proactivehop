@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.DS_Store
+*.egg-info/
+.env
+venv/
+env/
+
+# Large checkpoint files — keep only best
+results/checkpoints/ep_*.pt
+results/checkpoints_v2/ep_*.pt
+results/ablation/best_GNN.pt
+results/ablation/best_MLP.pt
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.log
+paper/*.bbl
+paper/*.blg
+paper/*.out
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
