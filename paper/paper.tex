@@ -65,30 +65,57 @@ tool for proactive session continuity in large-scale real-time clusters.
 \section{Introduction}
 \label{sec:intro}
 
-Stateful real-time services---online game servers, WebRTC signaling
+Stateful real-time services---online game servers, WebRTC conferencing
 endpoints, financial order-matching engines---maintain long-lived
 sessions whose in-memory state is expensive to reconstruct.
-When a server fails or saturates its CPU, sessions reconnect reactively:
-the client detects a timeout ($\approx$400\,ms), negotiates with a
-coordinator, and re-establishes state on a healthy server (another
-100--400\,ms).  This $400$--$800$\,ms window is unacceptable for
-latency-sensitive workloads~\cite{nsdi21stayingalive}.
+When a server fails or saturates its CPU, sessions disconnect and must
+reconnect reactively.  The disruption window is well-documented across
+production systems:
 
-Existing approaches fall into three categories:
+\begin{itemize}
+  \item \textbf{Game servers (AWS GameLift, Agones):} AWS explicitly
+        states that ``game sessions actively running on a reclaimed
+        instance are \emph{interrupted}''~\cite{awsgamelift}; the
+        Agones fleet manager \emph{deletes} unhealthy servers and
+        spawns replacements, with a minimum detection latency of
+        $3 \times \mathtt{periodSeconds}$ (default 15\,s) before any
+        reconnect can begin~\cite{agones}.
+  \item \textbf{WebRTC / video conferencing (Jitsi, RFC 8445):}
+        When the underlying server fails, an in-place ICE restart
+        cannot reuse the dead transport; a full new \texttt{PeerConnection}
+        with fresh DTLS/SRTP negotiation takes 1--3\,s~\cite{bloggeek}.
+        Applications must trigger this manually---``the browser will
+        not trigger one on its own''~\cite{mdnwebrtc}.  Jitsi's
+        open issue \#2438 (open through 2026) confirms in-place SFU
+        failover remains unsolved~\cite{jitsi2438}.
+  \item \textbf{Routing latency (Riot Games):} Riot built an entire
+        private backbone (Riot Direct) specifically to avoid reactive
+        path failures that pushed round-trip latency from 14\,ms to
+        70\,ms---a 5$\times$ spike---on commodity routing~\cite{riotdirect}.
+\end{itemize}
+
+In all three domains the root cause is the same: \emph{the system waits
+for failure to be detected before acting}.  Detection introduces
+multi-second delays; reconnect adds 1--3\,s more.  For game servers and
+video calls this is a hard user-visible disruption.
+
+Existing mitigation approaches fall into three categories:
 \begin{enumerate}
   \item \textbf{No migration}: sessions reconnect after failure.
-        Simple but reactive.
+        Simple but reactive; inherits the full detection + reconnect delay.
   \item \textbf{Threshold heuristics}: migrate when a server's CPU
         exceeds a fixed threshold (e.g., 70\%).
-        Acts before failure only if load happened to spike first.
-  \item \textbf{Oracle}: knows the future; impossible in practice but
-        establishes the upper bound.
+        Acts before failure only if load spiked first; blind to
+        failure-rate signals and neighbor state.
+  \item \textbf{Hot standby}: keep a replica server warm (e.g., AWS
+        RDS Multi-AZ).  Eliminates reconnect but doubles resource cost
+        and still requires detection before switchover.
 \end{enumerate}
 
-Neither of the practical approaches uses \emph{structural topology
-signals}.  A fat-tree cluster has a rich graph structure: a server
-with rising failure rate and two neighbors already at 80\% load is
-qualitatively different from the same server with idle neighbors.
+None of these approaches uses \emph{structural topology signals}.
+A fat-tree cluster has a rich graph structure: a server with rising
+failure rate and two neighbors already at 80\% load is qualitatively
+different from the same server with idle neighbors.
 Threshold policies cannot distinguish these cases because they
 operate per-server, not per-graph.
 
