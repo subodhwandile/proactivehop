@@ -17,6 +17,7 @@ from typing import Optional
 
 from sim.topology import ClusterTopology
 from sim.session import Session, SessionStatus
+from sim.trace_loader import AlibabaTraceLoader
 
 
 @dataclass
@@ -53,6 +54,9 @@ class SimConfig:
     timestep_sec: float = 1.0             # simulation step = 1 second
     max_steps: int = 3600                 # 1 hour of simulation
 
+    # Trace-driven workload (optional)
+    use_trace: bool = False               # if True, use Alibaba 2018 trace arrivals
+
 
 @dataclass
 class StepMetrics:
@@ -85,6 +89,11 @@ class ClusterSimulator:
             seed=config.seed,
         )
         self.n = self.topo.graph.number_of_nodes()
+
+        # Trace-driven arrivals (Alibaba 2018)
+        self._trace: AlibabaTraceLoader | None = None
+        if config.use_trace:
+            self._trace = AlibabaTraceLoader(target_mean=config.session_arrival_rate)
 
         # Session registry
         self.sessions: dict[str, Session] = {}
@@ -178,12 +187,16 @@ class ClusterSimulator:
             self._create_session(server_id)
 
     def _arrive_sessions(self):
-        """Poisson arrivals distributed across live servers."""
+        """Poisson arrivals (or trace-driven) distributed across live servers."""
         live_servers = [i for i in range(self.n) if self.topo.get_node(i).is_alive]
         if not live_servers:
             return
-        rate = self.cfg.session_arrival_rate * self.cfg.timestep_sec
-        n_arrivals = int(self.rng.poisson(rate))
+        if self._trace is not None:
+            # Trace-driven: use real Alibaba arrival count for this step
+            n_arrivals = int(round(self._trace.get_rate(self.current_step)))
+        else:
+            rate = self.cfg.session_arrival_rate * self.cfg.timestep_sec
+            n_arrivals = int(self.rng.poisson(rate))
         for _ in range(n_arrivals):
             server_id = int(self.rng.choice(live_servers))
             node = self.topo.get_node(server_id)

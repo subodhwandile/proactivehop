@@ -1,0 +1,66 @@
+{
+  "Synthetic (Poisson)": {
+    "No Migration": {
+      "catch_rate_mean": 0.0,
+      "catch_rate_std": 0.0,
+      "p95_mean": 645.9730171430474,
+      "fp_rate_mean": 0.0
+    },
+    "Threshold 70%": {
+      "catch_rate_mean": 0.0017455620026452605,
+      "catch_rate_std": 0.0011663794348432774,
+      "p95_mean": 648.3060095155872,
+      "fp_rate_mean": 0.3659096905274336
+    },
+    "LSTM Predict": {
+      "catch_rate_mean": 0.009786141523761888,
+      "catch_rate_std": 0.0021047725045916918,
+      "p95_mean": 646.0608182184235,
+      "fp_rate_mean": 0.5878600896580902
+    },
+    "Oracle (UB)": {
+      "catch_rate_mean": 0.9806256354828425,
+      "catch_rate_std": 0.0009855295302641613,
+      "p95_mean": 9.385040790276072,
+      "fp_rate_mean": 0.3725658411255796
+    },
+    "PPO+GNN (ours)": {
+      "catch_rate_mean": 0.012568541632132588,
+      "catch_rate_std": 0.003651502242772192,
+      "p95_mean": 645.6162874729623,
+      "fp_rate_mean": 0.5991242818334974
+    }
+  },
+  "Trace-Driven (Alibaba)": {
+    "No Migration": {
+      "catch_rate_mean": 0.0,
+      "catch_rate_std": 0.0,
+      "p95_mean": 646.0926263434083,
+      "fp_rate_mean": 0.0
+    },
+    "Threshold 70%": {
+      "catch_rate_mean": 0.0014766441980282985,
+      "catch_rate_std": 0.00032934981545777844,
+      "p95_mean": 645.9176687231991,
+      "fp_rate_mean": 0.3622989330386305
+    },
+    "LSTM Predict": {
+      "catch_rate_mean": 0.010734173428704087,
+      "catch_rate_std": 0.0015750219492755098,
+      "p95_mean": 646.0075201146485,
+      "fp_rate_mean": 0.5914342943250134
+    },
+    "Oracle (UB)": {
+      "catch_rate_mean": 0.9819526750207744,
+      "catch_rate_std": 0.0013031796365144917,
+      "p95_mean": 8.961978344003091,
+      "fp_rate_mean": 0.3832934819853075
+    },
+    "PPO+GNN (ours)": {
+      "catch_rate_mean": 0.011146385479682405,
+      "catch_rate_std": 0.0025272843072309758,
+      "p95_mean": 644.1632729813491,
+      "fp_rate_mean": 0.6445664565848737
+    }
+  }
+}

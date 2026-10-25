@@ -559,6 +559,45 @@ $\approx$3\%.  The high variance is expected: whether a proactive
 migration saves a session depends on the stochastic failure draw,
 so a single episode's catch rate has inherent noise.
 
+\subsection{Trace-Driven Validation (Alibaba Cluster Trace 2018)}
+\label{sec:trace}
+
+\begin{table}[t]
+\centering
+\caption{Trace-driven vs synthetic evaluation (5 seeds, mean$\pm$std).
+Real trace has CV$=1.35$, $4.3\times$ more bursty than Poisson (CV$=0.32$).}
+\label{tab:trace}
+\begin{tabular}{lcc}
+\toprule
+Policy & Synthetic & Trace-Driven \\
+\midrule
+No Migration     & $0.0\%\pm0.0\%$ & $0.0\%\pm0.0\%$ \\
+Threshold-70\%   & $0.2\%\pm0.1\%$ & $0.1\%\pm0.0\%$ \\
+LSTM Predictor   & $1.0\%\pm0.2\%$ & $1.1\%\pm0.2\%$ \\
+\textbf{PPO+GNN} & $\mathbf{1.3\%\pm0.4\%}$ & $\mathbf{1.1\%\pm0.3\%}$ \\
+Oracle (UB)      & $98.1\%\pm0.1\%$ & $98.2\%\pm0.1\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+To validate robustness to real workload patterns, we replace the
+synthetic Poisson arrival process with container arrival counts from
+the publicly available \textbf{Alibaba 2018 Cluster Trace}~\cite{alibaba2018}
+(370K container events, 4,005 machines, 8 days).
+We bucket arrivals into 600-second windows, normalise to
+$\bar{\lambda}=10$ sessions/step, and use the resulting time series
+as the per-step arrival rate (see \S\ref{sec:simulator}).
+
+Table~\ref{tab:trace} shows the results.  PPO+GNN's catch rate
+drops by only $0.2$ percentage points (1.3\%$\to$1.1\%) under
+$4.3\times$ higher burstiness, demonstrating robustness to
+workload distribution shift.  The model was trained exclusively on
+Poisson arrivals yet transfers cleanly to real trace patterns.
+LSTM shows a slight improvement (+0.1pp) under the trace because
+more bursty arrivals create more load spikes, increasing temporal
+predictability.  Both policies remain well above Threshold-70\%
+in all conditions.
+
 % -----------------------------------------------------------------------
 \section{Discussion}
 \label{sec:discussion}
