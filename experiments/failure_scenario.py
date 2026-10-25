@@ -33,6 +33,7 @@ from sim.cluster import ClusterSimulator, SimConfig
 from sim.session import Session, SessionStatus
 from sim.topology import ServerNode
 from model.ppo_agent import PPOAgent
+from model.mlp_agent import MLPAgent
 from baselines.baselines import (
     NoMigrationPolicy, ThresholdPolicy, OraclePolicy
 )
@@ -196,6 +197,7 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
         "No Migration":    "#d62728",
         "Threshold 70%":   "#ff7f0e",
         "LSTM Predict":    "#9467bd",
+        "PPO+MLP":         "#8c564b",
         "Oracle (UB)":     "#2ca02c",
         "PPO+GNN (ours)":  "#1f77b4",
     }
@@ -291,6 +293,15 @@ def run_failure_experiment(model_path: str = "results/checkpoints/best_model.pt"
         ppo.load(model_path)
         ppo.model.eval()
 
+    mlp = MLPAgent(n_servers=16)
+    mlp_path = "results/ablation/best_MLP.pt"
+    if Path(mlp_path).exists():
+        mlp.load(mlp_path)
+        mlp.model.eval()
+        print(f"Loaded MLP from {mlp_path}")
+    else:
+        print(f"Warning: {mlp_path} not found — using untrained MLP")
+
     no_mig = NoMigrationPolicy()
     thresh = ThresholdPolicy(0.70)
     oracle = OraclePolicy()
@@ -300,6 +311,7 @@ def run_failure_experiment(model_path: str = "results/checkpoints/best_model.pt"
         ("No Migration",   no_mig.select_action, False, None),
         ("Threshold 70%",  thresh.select_action,  False, None),
         ("LSTM Predict",   lstm.select_action,    False, None),
+        ("PPO+MLP",        None,                   True,  mlp),
         ("Oracle (UB)",    oracle.select_action,   False, None),
         ("PPO+GNN (ours)", None,                   True,  ppo),
     ]
