@@ -301,8 +301,9 @@ aggregation), regardless of how many historical timesteps it observes.
 
 We use a two-layer GraphSAGE~\cite{graphsage} encoder.  At layer $l$:
 \begin{equation}
-  \mathbf{h}_v^{(l)} = \text{LayerNorm}\Bigl(
-    W_l \cdot \bigl[\mathbf{h}_v^{(l-1)} \,\|\, \text{MEAN}_{u \in \mathcal{N}(v)} \mathbf{h}_u^{(l-1)}\bigr]
+  \mathbf{h}_v^{(l)} = \text{LN}\!\Bigl(
+    W_l \cdot \bigl[\mathbf{h}_v^{(l-1)} \,\|\,
+    \textstyle\text{MEAN}_{u \in \mathcal{N}(v)} \mathbf{h}_u^{(l-1)}\bigr]
     + \mathbf{h}_v^{(l-1)}
   \Bigr)
   \label{eq:sage}
@@ -494,20 +495,21 @@ propagation patterns that the GNN captures through message passing.
 
 \begin{table}[t]
 \centering
+\small
 \caption{Zero-shot generalization to larger clusters. PPO trained only
 on $N{=}16$ and evaluated on $N{=}25$ and $N{=}64$ without retraining.
 Metrics averaged over 5 seeds.}
 \label{tab:scale}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrc}
 \toprule
-Policy & $N$ & Catch & Infer.\ (ms) & Scale factor \\
+Policy & $N$ & Catch & Infer.\ (ms) & Scale \\
 \midrule
 \multirow{3}{*}{Threshold-70\%}
  & 16 & 0.2\% & 0.024 & --- \\
  & 25 & 0.2\% & 0.045 & --- \\
  & 64 & 0.5\% & 0.165 & $6.9\times$ \\
 \midrule
-\multirow{3}{*}{LSTM Predictor}
+\multirow{3}{*}{LSTM}
  & 16 & 0.9\% & 0.641 & --- \\
  & 25 & 1.3\% & 0.827 & --- \\
  & 64 & 3.5\% & 3.552 & $5.5\times$ \\
@@ -515,9 +517,9 @@ Policy & $N$ & Catch & Infer.\ (ms) & Scale factor \\
 \multirow{3}{*}{\textbf{PPO+GNN}}
  & 16 & 1.0\% & 1.207 & --- \\
  & 25 & 1.6\% & 1.212 & --- \\
- & 64 & 3.4\% & 1.291 & \textbf{1.1$\times$} \\
+ & 64 & 3.4\% & 1.291 & $\mathbf{1.1\times}$ \\
 \midrule
-Oracle (UB) & 16--64 & $\approx$98\% & $<$0.5 & --- \\
+Oracle & 16--64 & $\approx$98\% & $<$0.5 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
