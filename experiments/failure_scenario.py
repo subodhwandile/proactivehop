@@ -43,7 +43,7 @@ from baselines.lstm_baseline import LSTMPolicy
 FAILURE_STEP = 40      # server fails at step 40
 TOTAL_STEPS = 120      # total simulation length
 TARGET_SERVER = 3      # which server fails
-N_SESSIONS_ON_TARGET = 80  # seed extra sessions on target server
+N_SESSIONS_ON_TARGET = 25  # seed extra sessions on target server
 
 
 def inject_failure(sim, server_id: int):
@@ -65,7 +65,7 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
         seed=seed,
         session_arrival_rate=5.0,
         session_duration_mean=200.0,   # long sessions — won't expire mid-experiment
-        base_load=0.55,                # match training distribution
+        base_load=0.35,                # low base keeps sessions alive until crash
         spike_probability=0.04,
         spike_magnitude=0.35,
         enable_failures=False,         # manual failure injection only
@@ -87,19 +87,19 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
 
     step_metrics = []
     failed_step = None
-    pre_migrated = set()
+    pre_migrated_actual = set()   # sessions that ACTUALLY completed a speculative move
     reactive_reconnected = set()
 
     for step in range(TOTAL_STEPS):
-        # Pre-failure degradation: ramp target server's failure_rate from step 20 onward
-        # GNN observes rising failure_rate → should pre-migrate
-        if step >= 20 and step < FAILURE_STEP:
+        # Pre-failure degradation: ramp target server from step 30 onward
+        # Directly set cpu_util so load = max(cpu_util, ...) gives a clear signal.
+        # At step 30: cpu_util=0.35 (baseline).  At step 39: cpu_util=0.95 (near-max).
+        # GNN observes rising load + failure_rate → should speculatively push sessions.
+        if step >= 30 and step < FAILURE_STEP:
             target_node = sim.topo.get_node(TARGET_SERVER)
-            # Gradually increase failure_rate from ~0.002 to 0.05 (25x normal)
-            ramp_frac = (step - 20) / (FAILURE_STEP - 20)
-            target_node.failure_rate = 0.002 + ramp_frac * 0.048
-            # Also add extra load on target server to signal stress
-            target_node.cpu_util = min(0.92, target_node.cpu_util + 0.012)
+            ramp_frac = (step - 30) / max(FAILURE_STEP - 30, 1)
+            target_node.cpu_util = 0.35 + ramp_frac * 0.60
+            target_node.failure_rate = 0.002 + ramp_frac * 0.098  # 0.1 at crash
 
         # Inject failure at step FAILURE_STEP
         if step == FAILURE_STEP:
@@ -130,20 +130,26 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
             decisions = policy_fn(obs, sim)
 
         # Track pre-migrations of target sessions (before failure)
-        if step < FAILURE_STEP:
-            for sid, tgt in decisions.items():
-                if sid in target_sessions_initial:
-                    pre_migrated.add(sid)
-
+        # MUST happen AFTER sim.step() so we can check actual current_server
         obs, reward, done, info = sim.step(decisions)
         m = info["metrics"]
+
+        if step < FAILURE_STEP:
+            for sid in target_sessions_initial:
+                if sid in sim.sessions and sid not in pre_migrated_actual:
+                    s = sim.sessions[sid]
+                    # Speculative move: session left target server AND last latency < 50ms
+                    if (s.current_server != TARGET_SERVER and
+                            len(s.reconnect_latencies_ms) > 0 and
+                            s.reconnect_latencies_ms[-1] < 50):
+                        pre_migrated_actual.add(sid)
 
         # Track which target sessions got reactive reconnect after failure
         if step >= FAILURE_STEP:
             for sid in target_sessions_initial:
                 if sid in sim.sessions:
                     s = sim.sessions[sid]
-                    if s.current_server != TARGET_SERVER and sid not in pre_migrated:
+                    if s.current_server != TARGET_SERVER and sid not in pre_migrated_actual:
                         reactive_reconnected.add(sid)
 
         step_metrics.append({
@@ -177,10 +183,10 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
 
     return {
         "policy": policy_name,
-        "pre_migrated_count": len(pre_migrated),
+        "pre_migrated_count": len(pre_migrated_actual),
         "reactive_count": len(reactive_reconnected),
         "total_target_sessions": len(target_sessions_initial),
-        "pre_migration_rate": len(pre_migrated) / max(len(target_sessions_initial), 1),
+        "pre_migration_rate": len(pre_migrated_actual) / max(len(target_sessions_initial), 1),
         "all_latencies": all_lats,
         "speculative_latencies": spec_lats,
         "reactive_latencies": react_lats,
@@ -281,7 +287,7 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
 FAILURE_SEEDS = [42, 43, 44, 45, 46]
 
 
-def run_failure_experiment(model_path: str = "results/checkpoints/best_model.pt"):
+def run_failure_experiment(model_path: str = "results/ablation/best_GNN.pt"):
     print("\n" + "=" * 70)
     print(f"FAILURE SCENARIO: Server {TARGET_SERVER} crashes at step {FAILURE_STEP}")
     print(f"Sessions on target: ~{N_SESSIONS_ON_TARGET} seeded + organic")
@@ -292,6 +298,9 @@ def run_failure_experiment(model_path: str = "results/checkpoints/best_model.pt"
     if Path(model_path).exists():
         ppo.load(model_path)
         ppo.model.eval()
+        print(f"Loaded GNN from {model_path}")
+    else:
+        print(f"Warning: {model_path} not found — using untrained GNN")
 
     mlp = MLPAgent(n_servers=16)
     mlp_path = "results/ablation/best_MLP.pt"

@@ -124,12 +124,61 @@ def train_agent(agent, agent_name: str, n_episodes: int, log_path: str):
     return log
 
 
+def eval_episode(agent, cfg_seed: int, steps: int = 100) -> tuple[float, dict]:
+    """Run one episode WITHOUT calling agent.update() — for held-out evaluation only."""
+    cfg = SimConfig(
+        topology=ABLATION_CFG.topology,
+        n_servers=ABLATION_CFG.n_servers,
+        seed=cfg_seed,
+        session_arrival_rate=ABLATION_CFG.session_arrival_rate,
+        session_duration_mean=ABLATION_CFG.session_duration_mean,
+        base_load=ABLATION_CFG.base_load,
+        spike_probability=ABLATION_CFG.spike_probability,
+        spike_magnitude=ABLATION_CFG.spike_magnitude,
+        enable_failures=ABLATION_CFG.enable_failures,
+        max_steps=steps,
+    )
+    sim = ClusterSimulator(cfg)
+    obs = sim.reset()
+    ep_reward = 0.0
+
+    for _ in range(steps):
+        action = agent.select_action(obs)
+        decisions = {}
+        for sv in range(sim.n):
+            if action[sv] == 0:
+                continue
+            node = sim.topo.get_node(sv)
+            if node.load < 0.5 or not node.is_alive:
+                continue
+            neighbors = sim.topo.neighbors(sv)
+            live = [nb for nb in neighbors
+                    if sim.topo.get_node(nb).is_alive
+                    and sim.topo.get_node(nb).load < 0.7]
+            if not live:
+                continue
+            target = min(live, key=lambda nb: sim.topo.get_node(nb).load)
+            for sid in list(sim.server_sessions[sv])[:20]:
+                if sid in sim.sessions and sim.sessions[sid].status == SessionStatus.ACTIVE:
+                    decisions[sid] = target
+
+        obs, reward, done, info = sim.step(decisions)
+        # NOTE: no store_reward() / update() — pure inference
+        ep_reward += reward
+        if done:
+            break
+
+    agent._buffer_clear()  # discard any stray rollout data
+    summary = sim.summary()
+    return ep_reward, summary
+
+
 def evaluate_agent(agent, n_eval_episodes: int = 20) -> dict:
-    """Evaluate trained agent on held-out seeds."""
+    """Evaluate trained agent on held-out seeds (no gradient updates)."""
     all_cr, all_p95, all_fp = [], [], []
     for ep in range(n_eval_episodes):
         seed = 100 + ep  # held-out seeds
-        _, summary = run_episode(agent, seed)
+        _, summary = eval_episode(agent, seed)
         all_cr.append(summary.get("catch_rate", 0))
         all_p95.append(summary.get("p95_reconnect_ms", 0))
         all_fp.append(summary.get("false_positive_rate", 0))
