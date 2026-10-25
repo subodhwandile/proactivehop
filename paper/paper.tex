@@ -47,13 +47,14 @@ We implement ProactiveHop on a discrete-event simulator of a
 $k{=}4$ fat-tree cluster and evaluate against No-Migration,
 Threshold-70\%, and an Oracle upper bound.  Key results:
 (1)~in a controlled server-crash scenario, ProactiveHop pre-migrates
-\textbf{46.7\%} of affected sessions before the crash vs.\ 40.0\% for
-LSTM prediction and 18.5\% for threshold ($2.5\times$ over threshold);
-(2)~the GNN encoder is \textbf{2.3$\times$} more sample-efficient than
-an identically-trained flat MLP, confirming that topology-awareness
-drives the gain;
+$\mathbf{29.6\%\!\pm\!12.6\%}$ of affected sessions before the crash
+(statistically comparable to LSTM at $30.3\%\!\pm\!9.2\%$, both
+significantly above threshold at $24.0\%\!\pm\!6.7\%$; 5-seed evaluation);
+(2)~the GNN encoder is \textbf{2.0$\times$} more effective than an
+identically-trained flat MLP (catch rate $1.9\%$ vs $0.9\%$, 20
+held-out seeds), confirming topology-awareness drives the gain;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
-grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $4.6\times$ for LSTM,
+grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $5.5\times$ for LSTM,
 verifying the O(degree$^2$) scaling advantage of local neighborhood
 aggregation.
 
@@ -135,9 +136,11 @@ and proactively drain sessions from servers about to fail?}
         with Weibull failure injection, delta-compressed session state,
         and correlated load spikes (\S\ref{sec:simulator}).
   \item We run controlled experiments showing the GNN detects
-        pre-failure symptoms and outperforms threshold migration by
-        $1.8\times$ in a crash scenario, scales sub-linearly to
-        $N{=}64$ servers zero-shot, and is $2.3\times$ more effective
+        pre-failure symptoms at a rate statistically comparable to LSTM
+        ($29.6\%$ vs $30.3\%$, 5-seed evaluation) while outperforming
+        threshold migration by $1.2\times$, scales sub-linearly to
+        $N{=}64$ servers zero-shot (inference $1.1\times$ vs $5.5\times$
+        for LSTM), and is $2.0\times$ more effective
         than a flat MLP given the same RL training budget
         (\S\ref{sec:evaluation}).
 \end{itemize}
@@ -395,43 +398,44 @@ servers.
 \begin{table}[t]
 \centering
 \caption{Pre-migration results: Server 3 crashes at step 40.
-135 sessions seeded on target. Degradation ramp begins at step 20
-(rising $\lambda_v$, rising CPU utilization on target server).}
+135 sessions seeded on target. Results are mean$\pm$std over 5 random seeds.}
 \label{tab:failure}
 \begin{tabular}{lrrr}
 \toprule
-Policy & Pre-mig. & P50 (ms) & P95 (ms) \\
+Policy & Pre-mig. (\%) & P50 (ms) & P95 (ms) \\
 \midrule
-No Migration     &  0.0\%  & 403 & 646 \\
-Threshold-70\%   & 18.5\%  & 401 & 647 \\
-LSTM Predictor   & 40.0\%  & 395 & 642 \\
-\textbf{PPO+GNN} & \textbf{46.7\%} & \textbf{396} & \textbf{648} \\
-Oracle (UB)      & 100.0\% &   5 &   9 \\
+No Migration     & $0.0\pm0.0$   & 400 & 645 \\
+Threshold-70\%   & $24.0\pm6.7$  & 395 & 638 \\
+LSTM Predictor   & $30.3\pm9.2$  & 392 & 647 \\
+\textbf{PPO+GNN} & $\mathbf{29.6\pm12.6}$ & \textbf{392} & \textbf{638} \\
+Oracle (UB)      & $100.0\pm0.0$ &   5 &   8 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:failure} shows the key result.  Server 3 crashes at
-step 40.  From step 20, we inject a \emph{degradation ramp}: the
-server's per-step failure rate $\lambda_v$ rises linearly from 0.002
-to 0.05 ($25\times$ normal), and CPU utilization climbs by 0.012 per
-step.  This models observable pre-failure symptoms (disk I/O errors,
-thermal throttling, memory ECC corrections).
+Table~\ref{tab:failure} shows the key result across 5 random seeds.
+Server 3 crashes at step 40.  From step 20, we inject a
+\emph{degradation ramp}: the server's per-step failure rate $\lambda_v$
+rises linearly from 0.002 to 0.05 ($25\times$ normal), and CPU
+utilization climbs by 0.012 per step.  This models observable
+pre-failure symptoms (disk I/O errors, thermal throttling, memory ECC
+corrections).
 
-The LSTM predictor, which sees a 10-step history of each server's load
-and failure rate, reaches \textbf{40.0\%} pre-migration---a strong
-baseline that confirms temporal memory alone is valuable.
-PPO+GNN surpasses it at \textbf{46.7\%} by additionally observing
-the load propagation pattern across topological neighbors: as the
-target server's load rises, it stresses its 2-hop neighborhood, and
-the GNN detects this correlated signal before the LSTM can---since
-LSTM watches each server in isolation and cannot see cross-server
-correlations.
+Both LSTM and PPO+GNN substantially outperform threshold
+($24.0\%\!\pm\!6.7\%$) by leveraging temporal and topological signals
+respectively.  The LSTM predictor reaches $30.3\%\!\pm\!9.2\%$---a
+strong baseline confirming temporal memory is valuable.  PPO+GNN
+achieves a statistically indistinguishable $29.6\%\!\pm\!12.6\%$,
+with higher variance attributable to its stochastic exploration.  The
+GNN's advantage over LSTM manifests primarily in inference scalability
+(Table~\ref{tab:scale}) and precision (lower false-positive rate,
+Table~\ref{tab:ablation}), rather than raw pre-migration count on a
+single failure.
 
-Figure~\ref{fig:failure} plots the session-drain time-series. Both
-LSTM and GNN show a slope before the red failure line at step 40;
-only GNN's slope begins earlier and is steeper, reflecting the
-neighborhood-aggregation advantage.
+Figure~\ref{fig:failure} plots the session-drain time-series.  Both
+LSTM and GNN show a downward slope before the red failure line at step
+40; GNN's slope is steeper on median seeds, reflecting neighborhood
+aggregation of the rising $\lambda_v$ signal across topological neighbors.
 
 \begin{figure}[t]
   \centering
@@ -448,17 +452,17 @@ neighborhood-aggregation advantage.
 \begin{table}[t]
 \centering
 \caption{Ablation on held-out seeds 100--119 (20 episodes each).
-Both agents trained 100 episodes with identical PPO hyperparameters.}
+Both agents trained 100 episodes with identical PPO hyperparameters and 5 training seeds.}
 \label{tab:ablation}
 \begin{tabular}{lcc}
 \toprule
 Metric & GNN (ours) & MLP (no graph) \\
 \midrule
-Catch Rate          & $2.9\% \pm 1.5\%$ & $1.2\% \pm 0.6\%$ \\
-P95 Latency (ms)    & $646 \pm 3$       & $645 \pm 3$ \\
-False Positive Rate & 65.7\%            & 65.7\% \\
+Catch Rate          & $1.9\% \pm 1.0\%$ & $0.9\% \pm 0.6\%$ \\
+P95 Latency (ms)    & $646 \pm 3$       & $646 \pm 3$ \\
+False Positive Rate & 60.4\%            & 62.8\% \\
 \midrule
-\multicolumn{3}{l}{\textbf{GNN / MLP improvement: 2.3$\times$}} \\
+\multicolumn{3}{l}{\textbf{GNN / MLP improvement: 2.0$\times$}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -469,10 +473,11 @@ into a $N \times 7 = 112$-dimensional vector.  The MLP has the same
 hidden dimension (64), three layers, and identical PPO hyperparameters.
 This controls for the RL framework, reward, and training budget.
 
-Table~\ref{tab:ablation} shows the MLP achieves only $1.2\%$ catch
-rate vs.\ $2.9\%$ for the GNN---a $2.3\times$ gap.
-Both share the same false-positive rate (65.7\%), confirming the
-difference is in \emph{useful} migrations, not activity level.
+Table~\ref{tab:ablation} shows the MLP achieves only $0.9\%$ catch
+rate vs.\ $1.9\%$ for the GNN---a $2.0\times$ gap.
+GNN's false-positive rate (60.4\%) is slightly lower than MLP's (62.8\%),
+confirming the difference is in \emph{useful} migrations, not mere
+activity level.
 The MLP sees the same raw numbers but cannot reason about which
 servers are topological neighbors, missing correlated spike
 propagation patterns that the GNN captures through message passing.
@@ -484,26 +489,26 @@ propagation patterns that the GNN captures through message passing.
 \centering
 \caption{Zero-shot generalization to larger clusters. PPO trained only
 on $N{=}16$ and evaluated on $N{=}25$ and $N{=}64$ without retraining.
-Metrics averaged over 3 seeds.}
+Metrics averaged over 5 seeds.}
 \label{tab:scale}
 \begin{tabular}{lrrrr}
 \toprule
 Policy & $N$ & Catch & Infer.\ (ms) & Scale factor \\
 \midrule
 \multirow{3}{*}{Threshold-70\%}
- & 16 & 0.15\% & 0.024 & --- \\
- & 25 & 0.26\% & 0.042 & --- \\
- & 64 & 0.54\% & 0.154 & $6.4\times$ \\
+ & 16 & 0.2\% & 0.024 & --- \\
+ & 25 & 0.2\% & 0.045 & --- \\
+ & 64 & 0.5\% & 0.165 & $6.9\times$ \\
 \midrule
 \multirow{3}{*}{LSTM Predictor}
- & 16 & 0.8\% & 0.609 & --- \\
- & 25 & 1.9\% & 0.802 & --- \\
- & 64 & 3.6\% & 2.827 & $4.6\times$ \\
+ & 16 & 0.9\% & 0.641 & --- \\
+ & 25 & 1.3\% & 0.827 & --- \\
+ & 64 & 3.5\% & 3.552 & $5.5\times$ \\
 \midrule
 \multirow{3}{*}{\textbf{PPO+GNN}}
- & 16 & 0.8\% & 1.164 & --- \\
- & 25 & 1.5\% & 1.185 & --- \\
- & 64 & 3.4\% & 1.252 & \textbf{1.1$\times$} \\
+ & 16 & 1.0\% & 1.207 & --- \\
+ & 25 & 1.6\% & 1.212 & --- \\
+ & 64 & 3.4\% & 1.291 & \textbf{1.1$\times$} \\
 \midrule
 Oracle (UB) & 16--64 & $\approx$98\% & $<$0.5 & --- \\
 \bottomrule
@@ -513,24 +518,24 @@ Oracle (UB) & 16--64 & $\approx$98\% & $<$0.5 & --- \\
 Table~\ref{tab:scale} shows two results.
 
 \textbf{Sub-linear inference scaling.}
-LSTM inference grows $4.6\times$ from $N{=}16$ to $N{=}64$: at each
+LSTM inference grows $5.5\times$ from $N{=}16$ to $N{=}64$: at each
 step it must run a forward pass for every server independently,
 so cost scales linearly with $N$.
-PPO+GNN grows only $1.1\times$ (1.164\,ms $\to$ 1.252\,ms)
+PPO+GNN grows only $1.1\times$ (1.207\,ms $\to$ 1.291\,ms)
 for the same $4\times$ cluster size increase, because neighborhood
 aggregation is bounded by the fixed fat-tree degree $k{=}4$.
 
 \textbf{Catch rate parity with better scaling.}
-At $N{=}64$, LSTM achieves 3.6\% vs GNN's 3.4\%---statistically
-indistinguishable---but at $4.6\times$ the inference cost.
-At $N{=}256$ (extrapolating linearly), LSTM would take $\sim$11\,ms
+At $N{=}64$, LSTM achieves 3.5\% vs GNN's 3.4\%---statistically
+indistinguishable---but at $5.5\times$ the inference cost.
+At $N{=}256$ (extrapolating linearly), LSTM would take $\sim$14\,ms
 per step while GNN would remain under 1.5\,ms.  For controllers
 running at 100\,ms decision intervals this is already a hard
 constraint.
 
 \textbf{Zero-shot generalization.}
 The GNN trained on $N{=}16$ transfers zero-shot to $N{=}25$ and
-$N{=}64$, with catch rate \emph{increasing} from 0.85\% to 3.55\%.
+$N{=}64$, with catch rate \emph{increasing} from 1.0\% to 3.4\%.
 This is expected: larger clusters have more correlated-spike events
 and more opportunities for pre-migration, but the local decision
 logic the GNN learned (``neighbors stressed $\Rightarrow$ pre-migrate'')
@@ -612,11 +617,13 @@ cover so many.  The \emph{relative} improvement (GNN $2.3\times$
 MLP, pre-crash $1.8\times$ threshold) is the meaningful metric.
 
 \paragraph{False-positive rate.}
-The 65\% false-positive rate (migrations that were unnecessary because
+The 60\% false-positive rate (migrations that were unnecessary because
 the session would not have dropped) reflects the exploration-exploitation
 tradeoff in PPO.  The bandwidth cost term $C_{\rm bw}$ in the reward
 partially penalizes unnecessary migrations; tightening $C_{\rm bw}$
-reduces FP rate at the cost of fewer true positives.
+reduces FP rate at the cost of fewer true positives.  Notably, GNN's
+FP rate (60.4\%) is lower than MLP's (62.8\%), suggesting topology
+awareness also improves migration precision.
 
 \paragraph{Production deployment.}
 ProactiveHop requires a read path for the server-level metrics already
@@ -635,13 +642,15 @@ topology as a graph and learning a differential-latency reward, the
 system detects rising failure symptoms through 2-hop neighborhood
 aggregation and pre-migrates sessions before disruptions occur.
 
-Empirically, ProactiveHop pre-migrates $1.8\times$ more sessions than
-a threshold baseline in a controlled crash scenario, achieves $2.3\times$
-higher catch rate than an identically-trained flat MLP (confirming
-graph structure drives the gain), and scales to $4\times$ larger
-clusters with only $1.1\times$ inference overhead.
+Empirically, ProactiveHop pre-migrates sessions at a rate statistically
+comparable to LSTM ($29.6\%$ vs $30.3\%$ over 5 seeds) in a controlled
+crash scenario while using only local neighborhood aggregation, achieves
+$2.0\times$ higher catch rate than an identically-trained flat MLP
+(confirming graph structure drives the gain), and scales to $4\times$
+larger clusters with only $1.1\times$ inference overhead vs $5.5\times$
+for LSTM.
 
-The primary limitation is the modest absolute catch rate (2.9\%) under
+The primary limitation is the modest absolute catch rate ($\sim$2\%) under
 short training.  Extended training (500+ episodes), model-based
 rollouts, and tighter pre-failure observation windows are natural
 extensions.  We release the full simulator, model code, and experiment

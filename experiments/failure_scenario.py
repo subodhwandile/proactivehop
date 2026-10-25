@@ -276,10 +276,14 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
     print(f"Saved fig4c_session_drain.{{pdf,png}}")
 
 
+FAILURE_SEEDS = [42, 43, 44, 45, 46]
+
+
 def run_failure_experiment(model_path: str = "results/checkpoints/best_model.pt"):
     print("\n" + "=" * 70)
     print(f"FAILURE SCENARIO: Server {TARGET_SERVER} crashes at step {FAILURE_STEP}")
     print(f"Sessions on target: ~{N_SESSIONS_ON_TARGET} seeded + organic")
+    print(f"Running {len(FAILURE_SEEDS)} seeds: {FAILURE_SEEDS}")
     print("=" * 70)
 
     ppo = PPOAgent(n_servers=16, device="cpu")
@@ -300,42 +304,59 @@ def run_failure_experiment(model_path: str = "results/checkpoints/best_model.pt"
         ("PPO+GNN (ours)", None,                   True,  ppo),
     ]
 
-    results = []
+    # Collect per-seed results for each policy
+    agg = {}   # policy_name -> list of single-seed result dicts
     for name, fn, is_ppo, agent in experiments:
-        print(f"\nRunning: {name}")
-        r = run_failure_scenario(fn, name, is_ppo, agent, seed=42)
-        results.append(r)
-        print(f"  Pre-migrated: {r['pre_migrated_count']}/{r['total_target_sessions']} "
-              f"({r['pre_migration_rate']:.1%})")
-        print(f"  P50 latency for affected sessions: {r['p50_ms']:.0f}ms")
-        print(f"  P95 latency for affected sessions: {r['p95_ms']:.0f}ms")
+        print(f"\nRunning: {name}  ({len(FAILURE_SEEDS)} seeds)")
+        agg[name] = []
+        for seed in FAILURE_SEEDS:
+            r = run_failure_scenario(fn, name, is_ppo, agent, seed=seed)
+            agg[name].append(r)
+            print(f"  seed={seed}: pre_mig={r['pre_migration_rate']:.1%} "
+                  f"P50={r['p50_ms']:.0f}ms P95={r['p95_ms']:.0f}ms")
+
+    # Aggregate mean±std across seeds
+    summary_rows = []
+    for name, seed_results in agg.items():
+        pmr = np.array([r["pre_migration_rate"] for r in seed_results])
+        p50 = np.array([r["p50_ms"] for r in seed_results])
+        p95 = np.array([r["p95_ms"] for r in seed_results])
+        summary_rows.append({
+            "policy": name,
+            "pre_migration_rate_mean": float(pmr.mean()),
+            "pre_migration_rate_std":  float(pmr.std()),
+            "p50_mean": float(p50.mean()),
+            "p50_std":  float(p50.std()),
+            "p95_mean": float(p95.mean()),
+            "p95_std":  float(p95.std()),
+            # keep one representative seed (seed=42) for plotting
+            "_repr": seed_results[0],
+        })
 
     # Summary table
-    print("\n" + "=" * 70)
-    print("FAILURE SCENARIO RESULTS")
-    print("=" * 70)
-    print(f"{'Policy':<22} {'Pre-Migrated':>14} {'P50 (ms)':>10} {'P95 (ms)':>10}")
-    print("-" * 60)
-    for r in results:
-        marker = " ←" if "GNN" in r["policy"] else ("  ★" if "Oracle" in r["policy"] else "")
-        spec_p50 = (float(np.percentile(r["speculative_latencies"], 50))
-                    if r["speculative_latencies"] else "-")
-        spec_p50_str = f"{spec_p50:.0f}ms" if isinstance(spec_p50, float) else spec_p50
-        print(f"{r['policy']:<22} "
-              f"{r['pre_migration_rate']:>12.1%}  "
-              f"{r['p50_ms']:>8.0f}ms "
-              f"{r['p95_ms']:>8.0f}ms  speculative-p50={spec_p50_str}{marker}")
+    print("\n" + "=" * 80)
+    print(f"FAILURE SCENARIO RESULTS  (mean±std over {len(FAILURE_SEEDS)} seeds)")
+    print("=" * 80)
+    print(f"{'Policy':<22} {'Pre-Migrated (%)':>20} {'P50 (ms)':>14} {'P95 (ms)':>14}")
+    print("-" * 75)
+    for row in summary_rows:
+        marker = " ←" if "GNN" in row["policy"] else ("  ★" if "Oracle" in row["policy"] else "")
+        print(f"{row['policy']:<22} "
+              f"{row['pre_migration_rate_mean']*100:>8.1f}±{row['pre_migration_rate_std']*100:.1f}%"
+              f"  {row['p50_mean']:>10.0f}±{row['p50_std']:.0f}ms"
+              f"  {row['p95_mean']:>10.0f}±{row['p95_std']:.0f}ms"
+              f"{marker}")
+    print("=" * 80)
 
-    # Save + plot
+    # Save + plot (use seed=42 representative runs for plots)
     Path("results").mkdir(exist_ok=True)
+    safe_rows = [{k: v for k, v in row.items() if k != "_repr"} for row in summary_rows]
     with open("results/failure_scenario.json", "w") as f:
-        json.dump([{k: v for k, v in r.items()
-                    if k not in ("all_latencies", "speculative_latencies",
-                                 "reactive_latencies", "step_metrics")}
-                   for r in results], f, indent=2)
+        json.dump(safe_rows, f, indent=2)
 
-    plot_failure_results(results)
-    return results
+    repr_results = [row["_repr"] for row in summary_rows]
+    plot_failure_results(repr_results)
+    return summary_rows
 
 
 if __name__ == "__main__":

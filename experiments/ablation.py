@@ -39,7 +39,7 @@ ABLATION_CFG = SimConfig(
 
 N_EPISODES = 100
 CHECKPOINT_DIR = "results/ablation"
-SEEDS = [42, 43, 44]
+SEEDS = [42, 43, 44, 45, 46]
 
 
 def run_episode(agent, cfg_seed: int, steps: int = 100) -> tuple[float, dict]:

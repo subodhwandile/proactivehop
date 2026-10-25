@@ -1,47 +1,47 @@
 [
   {
     "policy": "No Migration",
-    "pre_migrated_count": 0,
-    "reactive_count": 135,
-    "total_target_sessions": 135,
-    "pre_migration_rate": 0.0,
-    "p50_ms": 403.24316237471544,
-    "p95_ms": 645.6852626628055
+    "pre_migration_rate_mean": 0.0,
+    "pre_migration_rate_std": 0.0,
+    "p50_mean": 400.26331865783357,
+    "p50_std": 3.394976545451562,
+    "p95_mean": 644.8130431005147,
+    "p95_std": 2.539947652934362
   },
   {
     "policy": "Threshold 70%",
-    "pre_migrated_count": 25,
-    "reactive_count": 110,
-    "total_target_sessions": 135,
-    "pre_migration_rate": 0.18518518518518517,
-    "p50_ms": 400.76207795205136,
-    "p95_ms": 646.6127884841267
+    "pre_migration_rate_mean": 0.2399158709662307,
+    "pre_migration_rate_std": 0.06657315217322621,
+    "p50_mean": 394.6354082598192,
+    "p50_std": 6.522484651939398,
+    "p95_mean": 638.1262399148375,
+    "p95_std": 6.273207347942191
   },
   {
     "policy": "LSTM Predict",
-    "pre_migrated_count": 54,
-    "reactive_count": 81,
-    "total_target_sessions": 135,
-    "pre_migration_rate": 0.4,
-    "p50_ms": 395.24760240517486,
-    "p95_ms": 641.7082207750616
+    "pre_migration_rate_mean": 0.3028067099434006,
+    "pre_migration_rate_std": 0.0921761295433153,
+    "p50_mean": 392.3921317394661,
+    "p50_std": 2.821429353595406,
+    "p95_mean": 646.9531274925359,
+    "p95_std": 9.20227601813183
   },
   {
     "policy": "Oracle (UB)",
-    "pre_migrated_count": 135,
-    "reactive_count": 0,
-    "total_target_sessions": 135,
-    "pre_migration_rate": 1.0,
-    "p50_ms": 5.0381575577773505,
-    "p95_ms": 8.518318112455804
+    "pre_migration_rate_mean": 1.0,
+    "pre_migration_rate_std": 0.0,
+    "p50_mean": 5.002399276063793,
+    "p50_std": 0.041015738762882066,
+    "p95_mean": 8.436236656755165,
+    "p95_std": 0.21686051187893626
   },
   {
     "policy": "PPO+GNN (ours)",
-    "pre_migrated_count": 63,
-    "reactive_count": 72,
-    "total_target_sessions": 135,
-    "pre_migration_rate": 0.4666666666666667,
-    "p50_ms": 395.68792721082514,
-    "p95_ms": 647.5576554454295
+    "pre_migration_rate_mean": 0.29596789674487517,
+    "pre_migration_rate_std": 0.1261895379478281,
+    "p50_mean": 391.7185122196212,
+    "p50_std": 2.6260264907308986,
+    "p95_mean": 637.9437369083528,
+    "p95_std": 7.882473373658505
   }
 ]

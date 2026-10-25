@@ -30,7 +30,7 @@ from baselines.lstm_baseline import LSTMPolicy
 
 SCALE_SIZES = [16, 32, 64]
 EVAL_STEPS = 400
-SEEDS = [42, 43, 44]
+SEEDS = [42, 43, 44, 45, 46]
 
 
 def run_ppo_at_scale(agent, n_servers: int, steps: int, seed: int) -> tuple[dict, float]:
