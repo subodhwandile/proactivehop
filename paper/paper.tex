@@ -23,7 +23,7 @@ via Graph Neural Networks and Reinforcement Learning}}
 
 \author{
   Subodh Wandile\\
-  \texttt{subodh.wandile@research.edu}
+  \texttt{subodhwandile10@gmail.com}
 }
 
 \date{}
@@ -45,7 +45,7 @@ links---that are invisible to per-server threshold heuristics.
 
 We implement ProactiveHop on a discrete-event simulator of a
 $k{=}4$ fat-tree cluster and evaluate against No-Migration,
-Threshold-70\%, and an Oracle upper bound.  Key results:
+Threshold-70\%, LSTM Predictor, PPO+MLP, and an Oracle upper bound.  Key results:
 (1)~in a controlled server-crash scenario, PPO+GNN pre-migrates
 $\mathbf{31.5\%\!\pm\!16.4\%}$ of affected sessions vs.\ only
 $13.1\%\!\pm\!3.9\%$ for an identically-trained PPO+MLP
@@ -175,11 +175,14 @@ stations; our setting is the inverse---\emph{fixed} clients on
 a physical necessity.  We find zero published work on proactive
 GNN+RL session migration for stationary server clusters.
 
-\paragraph{Load-balancing with graph learning.}
-LBGNN~\cite{lbgnn} uses GNNs for traffic load balancing in data
-centers, but focuses on routing tables, not session state migration.
-Session migration incurs a state-transfer cost (bandwidth) absent from
-routing, requiring the differential reward formulation in~\S\ref{sec:formulation}.
+\paragraph{RL for networking.}
+Pensieve~\cite{lbgnn} applies deep RL to adaptive bitrate video
+streaming, treating per-chunk throughput history as the state.
+Like ProactiveHop, it uses a learned policy over a network observation;
+unlike our setting, it operates on a single client--server link with
+no graph topology and no session state migration cost.
+Our work extends the RL-for-networking line to \emph{multi-server
+graph-structured} decisions with an explicit bandwidth penalty.
 
 % -----------------------------------------------------------------------
 \section{Problem Formulation}
@@ -308,7 +311,7 @@ We use a two-layer GraphSAGE~\cite{graphsage} encoder.  At layer $l$:
   \Bigr)
   \label{eq:sage}
 \end{equation}
-with residual connections and dropout (rate 0.1).
+with residual connections and dropout (rate 0.1), where LN denotes Layer Normalization.
 Input features are $\mathbf{h}_v^{(0)} = \mathbf{x}_v^t \in \mathbb{R}^7$,
 hidden dimension $d_h = 64$, output dimension $d_h = 64$.
 
@@ -340,7 +343,8 @@ We train with Proximal Policy Optimization~\cite{ppo} with GAE
 ($\lambda = 0.95$), clip $\epsilon = 0.2$, entropy coefficient 0.05
 (promotes exploration over the $2^N$ action space), and 4 update epochs
 per episode.  Episode length is 100 steps; training runs for 500
-episodes.  All experiments use CPU inference.
+episodes.  All experiments use CPU inference.  Full hyperparameters
+are listed in Table~\ref{tab:hyperparams}.
 
 % -----------------------------------------------------------------------
 \section{Simulator}
@@ -349,9 +353,10 @@ episodes.  All experiments use CPU inference.
 We implement a discrete-event cluster simulator (\texttt{sim/})
 with the following components:
 
-\textbf{Topology}: fat-tree with $k=4$ (16 servers, 20 switches), random
-geometric, and Barabási--Albert scale-free graphs.  All paper results
-use fat-tree.
+\textbf{Topology}: fat-tree with $k=4$ (16 servers, 20 switches).
+All paper experiments use this topology; zero-shot transfer to larger
+fat-trees ($k{=}6$, $N{=}25$; $k{=}8$, $N{=}64$) is evaluated in
+\S\ref{sec:scalability}.
 
 \textbf{Session model}: sessions arrive as a Poisson process (rate
 $\lambda_{\rm arr} = 10$/step), have Pareto-distributed lifetimes
@@ -391,6 +396,10 @@ servers.
         This is an upper bound unavailable in practice.
   \item \textbf{PPO+GNN (ours)}: trained 500 episodes on a fixed seed;
         evaluated on held-out seeds.
+  \item \textbf{PPO+MLP (ablation)}: identical PPO setup but the GNN
+        encoder is replaced by a flat MLP receiving all $N \times 7$
+        node features concatenated.  Same training budget, reward, and
+        hyperparameters.  Isolates the contribution of graph structure.
 \end{itemize}
 
 \subsection{Failure Scenario: The Smoking-Gun Experiment}
@@ -558,17 +567,17 @@ mismatch).
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{../results/plots/fig2_training_curve.png}
-  \caption{Training curve over 150 episodes. Reward grows from
-  $\approx\!10^5$ at episode 0 to $\sim\!5\!\times\!10^5$ at
-  convergence. Best catch rate observed: 10.3\%.}
+  \caption{Training curve over 500 episodes. Reward grows from
+  $\approx\!10^5$ at episode 0 to $\sim\!5\!\times\!10^5$ by episode 100,
+  with continued improvement to episode 500. Best catch rate observed: 10.3\%.}
   \label{fig:training}
 \end{figure}
 
 Figure~\ref{fig:training} shows reward climbing from episode 0
 (untrained random policy, reward $\approx\!10^5$) to a plateau at
 $\sim\!5\!\times\!10^5$ by episode 100, with continued improvement
-thereafter.  The best single-episode catch rate observed during
-training was 10.3\%, though mean performance stabilizes at
+through episode 500.  The best single-episode catch rate observed
+during training was 10.3\%, though mean performance stabilizes at
 $\approx$3\%.  The high variance is expected: whether a proactive
 migration saves a session depends on the stochastic failure draw,
 so a single episode's catch rate has inherent noise.
@@ -633,7 +642,7 @@ the session would not have dropped) reflects the exploration-exploitation
 tradeoff in PPO.  The bandwidth cost term $C_{\rm bw}$ in the reward
 partially penalizes unnecessary migrations; tightening $C_{\rm bw}$
 reduces FP rate at the cost of fewer true positives.  Notably, GNN's
-FP rate (60.4\%) is lower than MLP's (62.8\%), suggesting topology
+FP rate (60.2\%) is lower than MLP's (64.9\%), suggesting topology
 awareness also improves migration precision.
 
 \paragraph{Production deployment.}
@@ -661,11 +670,12 @@ $1.8\times$ higher catch rate than MLP in i.i.d.\ evaluation (2.2\%
 vs 1.2\%, 500 episodes), and scales to $4\times$ larger clusters with
 only $1.1\times$ inference overhead vs $5.5\times$ for LSTM.
 
-The primary limitation is the modest absolute catch rate ($\sim$2\%) under
-short training.  Extended training (500+ episodes), model-based
-rollouts, and tighter pre-failure observation windows are natural
-extensions.  We release the full simulator, model code, and experiment
-scripts to enable reproducibility.
+The primary limitation is the modest absolute catch rate ($\sim$2\%)
+and the purely simulation-based evaluation.  Model-based rollouts,
+tighter pre-failure observation windows, and real deployment on a
+live cluster are natural extensions.  Full simulator, model code, and
+experiment scripts are publicly available at
+\url{https://github.com/subodhwandile/proactivehop}.
 
 % -----------------------------------------------------------------------
 \bibliographystyle{plain}
@@ -677,7 +687,8 @@ scripts to enable reproducibility.
 
 \begin{table}[h]
 \centering
-\caption{ProactiveHop hyperparameters.}
+\caption{ProactiveHop hyperparameters (referenced from \S\ref{sec:model}).}
+\label{tab:hyperparams}
 \begin{tabular}{ll}
 \toprule
 Hyperparameter & Value \\
