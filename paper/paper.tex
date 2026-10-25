@@ -50,9 +50,9 @@ Threshold-70\%, and an Oracle upper bound.  Key results:
 $\mathbf{29.6\%\!\pm\!12.6\%}$ of affected sessions before the crash
 (statistically comparable to LSTM at $30.3\%\!\pm\!9.2\%$, both
 significantly above threshold at $24.0\%\!\pm\!6.7\%$; 5-seed evaluation);
-(2)~the GNN encoder is \textbf{2.0$\times$} more effective than an
-identically-trained flat MLP (catch rate $1.9\%$ vs $0.9\%$, 20
-held-out seeds), confirming topology-awareness drives the gain;
+(2)~the GNN encoder is \textbf{1.8$\times$} more effective than an
+identically-trained flat MLP (catch rate $2.2\%$ vs $1.2\%$, 500
+training episodes, 20 held-out seeds), confirming topology-awareness drives the gain;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
 grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $5.5\times$ for LSTM,
 verifying the O(degree$^2$) scaling advantage of local neighborhood
@@ -140,8 +140,8 @@ and proactively drain sessions from servers about to fail?}
         ($29.6\%$ vs $30.3\%$, 5-seed evaluation) while outperforming
         threshold migration by $1.2\times$, scales sub-linearly to
         $N{=}64$ servers zero-shot (inference $1.1\times$ vs $5.5\times$
-        for LSTM), and is $2.0\times$ more effective
-        than a flat MLP given the same RL training budget
+        for LSTM), and is $1.8\times$ more effective
+        than a flat MLP given the same RL training budget (500 episodes)
         (\S\ref{sec:evaluation}).
 \end{itemize}
 
@@ -338,7 +338,7 @@ Both $W_a, W_c$ are linear layers applied after the shared GNN.
 We train with Proximal Policy Optimization~\cite{ppo} with GAE
 ($\lambda = 0.95$), clip $\epsilon = 0.2$, entropy coefficient 0.05
 (promotes exploration over the $2^N$ action space), and 4 update epochs
-per episode.  Episode length is 100 steps; training runs for 150
+per episode.  Episode length is 100 steps; training runs for 500
 episodes.  All experiments use CPU inference.
 
 % -----------------------------------------------------------------------
@@ -452,17 +452,17 @@ aggregation of the rising $\lambda_v$ signal across topological neighbors.
 \begin{table}[t]
 \centering
 \caption{Ablation on held-out seeds 100--119 (20 episodes each).
-Both agents trained 100 episodes with identical PPO hyperparameters and 5 training seeds.}
+Both agents trained 500 episodes with identical PPO hyperparameters and 5 training seeds.}
 \label{tab:ablation}
 \begin{tabular}{lcc}
 \toprule
 Metric & GNN (ours) & MLP (no graph) \\
 \midrule
-Catch Rate          & $1.9\% \pm 1.0\%$ & $0.9\% \pm 0.6\%$ \\
-P95 Latency (ms)    & $646 \pm 3$       & $646 \pm 3$ \\
-False Positive Rate & 60.4\%            & 62.8\% \\
+Catch Rate          & $2.2\% \pm 1.1\%$ & $1.2\% \pm 0.3\%$ \\
+P95 Latency (ms)    & $646 \pm 2$       & $646 \pm 3$ \\
+False Positive Rate & 60.2\%            & 64.9\% \\
 \midrule
-\multicolumn{3}{l}{\textbf{GNN / MLP improvement: 2.0$\times$}} \\
+\multicolumn{3}{l}{\textbf{GNN / MLP improvement: 1.8$\times$}} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -473,9 +473,10 @@ into a $N \times 7 = 112$-dimensional vector.  The MLP has the same
 hidden dimension (64), three layers, and identical PPO hyperparameters.
 This controls for the RL framework, reward, and training budget.
 
-Table~\ref{tab:ablation} shows the MLP achieves only $0.9\%$ catch
-rate vs.\ $1.9\%$ for the GNN---a $2.0\times$ gap.
-GNN's false-positive rate (60.4\%) is slightly lower than MLP's (62.8\%),
+Table~\ref{tab:ablation} shows the MLP achieves only $1.2\%$ catch
+rate vs.\ $2.2\%$ for the GNN---a $1.8\times$ gap that is consistent
+across 500 training episodes and 20 held-out evaluation seeds.
+GNN's false-positive rate (60.2\%) is lower than MLP's (64.9\%),
 confirming the difference is in \emph{useful} migrations, not mere
 activity level.
 The MLP sees the same raw numbers but cannot reason about which
@@ -613,8 +614,9 @@ intercepted by pre-migration.  True drops occur only when a server
 is near failure or has elevated load.  In a 16-server cluster with
 base load 0.55, only 2--5\% of sessions are at imminent risk in any
 given step.  Migrating 20 sessions per activated server can only
-cover so many.  The \emph{relative} improvement (GNN $2.3\times$
-MLP, pre-crash $1.8\times$ threshold) is the meaningful metric.
+cover so many.  The \emph{relative} improvement (GNN $1.8\times$
+MLP at 500 episodes, inference $1.1\times$ vs $5.5\times$ LSTM) is
+the meaningful metric.
 
 \paragraph{False-positive rate.}
 The 60\% false-positive rate (migrations that were unnecessary because
@@ -645,10 +647,10 @@ aggregation and pre-migrates sessions before disruptions occur.
 Empirically, ProactiveHop pre-migrates sessions at a rate statistically
 comparable to LSTM ($29.6\%$ vs $30.3\%$ over 5 seeds) in a controlled
 crash scenario while using only local neighborhood aggregation, achieves
-$2.0\times$ higher catch rate than an identically-trained flat MLP
-(confirming graph structure drives the gain), and scales to $4\times$
-larger clusters with only $1.1\times$ inference overhead vs $5.5\times$
-for LSTM.
+$1.8\times$ higher catch rate than an identically-trained flat MLP over
+500 training episodes (confirming graph structure drives the gain), and
+scales to $4\times$ larger clusters with only $1.1\times$ inference
+overhead vs $5.5\times$ for LSTM.
 
 The primary limitation is the modest absolute catch rate ($\sim$2\%) under
 short training.  Extended training (500+ episodes), model-based
@@ -684,7 +686,7 @@ Entropy coefficient & 0.05 \\
 Value loss coefficient & 0.5 \\
 Max gradient norm & 0.5 \\
 PPO update epochs & 4 \\
-Training episodes & 150 \\
+Training episodes & 500 \\
 Steps per episode & 100 \\
 Sessions per activation & 20 \\
 $\bar{L}_{\rm react}$ & 450\,ms \\

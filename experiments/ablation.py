@@ -37,7 +37,7 @@ ABLATION_CFG = SimConfig(
     max_steps=100,
 )
 
-N_EPISODES = 100
+N_EPISODES = 500
 CHECKPOINT_DIR = "results/ablation"
 SEEDS = [42, 43, 44, 45, 46]
 
