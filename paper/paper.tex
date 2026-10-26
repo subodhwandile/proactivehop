@@ -774,6 +774,69 @@ Session state delta-transfer can be pipelined with the existing
 session-replication mechanism.
 
 % -----------------------------------------------------------------------
+\section{Limitations and Future Work}
+\label{sec:limitations}
+
+\paragraph{Simulation-only evaluation.}
+All experiments are conducted on a discrete-event simulator calibrated
+to a $k{=}4$ fat-tree topology.  The simulator reproduces key
+real-world phenomena---Weibull failure injection, correlated load
+spikes, per-link latency and bandwidth---but cannot capture
+OS scheduling jitter, network stack variability, or application-level
+session state complexity.  A live deployment on a small cloud cluster
+(e.g., 4--8 AWS EC2 instances running a dummy game server) would
+provide a hardware-grounded upper bound on achievable catch rate and
+measure the true cost of session state delta-transfer.
+The Alibaba 2018 trace experiment (\S\ref{sec:trace}) partially
+addresses this by validating robustness to real arrival burstiness,
+but does not substitute for an end-to-end real-system measurement.
+
+\paragraph{Single topology family.}
+The GNN is trained and evaluated exclusively on $k{=}4$ fat-tree
+topologies.  Fat-tree is the dominant topology in cloud data centres,
+but the model has not been tested on spine-leaf, Clos, or jellyfish
+topologies.  Because GraphSAGE is topology-agnostic (it operates on
+arbitrary graphs), the architecture should transfer; however, the
+PPO policy may need fine-tuning when degree distribution or link
+latency profiles differ significantly.  Zero-shot transfer to a
+$k{=}6$ fat-tree ($N{=}54$ servers) would be a low-cost first step.
+
+\paragraph{Modest absolute catch rate.}
+The best observed catch rate is $\sim$2.5\% in i.i.d.\ evaluation.
+This is inherently bounded by the speculative migration mechanism:
+a push only saves a session if the session would have dropped in the
+\emph{same} simulation step, making true positives rare by design.
+Two directions could improve this.  First, a \emph{predictive
+horizon} longer than one step---pre-migrating sessions that are
+likely to drop within the next $H$ steps---would widen the opportunity
+window.  Second, a \emph{model-based} rollout (learning a dynamics
+model of server load evolution and planning ahead) could exploit the
+degradation ramp more aggressively, as the Oracle baseline
+($\sim$92\% catch rate in the crash scenario) demonstrates the
+theoretical ceiling.
+
+\paragraph{Reward sensitivity.}
+The reward function balances three terms: latency saving, bandwidth
+penalty, and availability bonus (Equation~\ref{eq:reward}).  The
+relative weights ($\alpha, \beta, \gamma$) were tuned manually on a
+single held-out seed.  A systematic hyperparameter search (e.g.,
+population-based training over reward weights) could discover
+configurations that reduce the 65\% false-positive rate without
+sacrificing catch rate.  The tradeoff is well-defined and likely
+Pareto-optimal, but the current paper reports only a single point.
+
+\paragraph{Multi-agent coordination.}
+ProactiveHop uses a centralised controller that observes the full
+cluster state and issues per-server migration actions.  In very large
+clusters ($N > 256$) or geo-distributed deployments, a centralised
+controller introduces a single point of failure and a communication
+bottleneck.  A decentralised variant---where each server runs a local
+GNN policy using only its 2-hop neighbourhood---would preserve the
+topology-awareness advantage while eliminating the central dependency.
+The GraphSAGE architecture already computes per-node embeddings from
+local neighbourhoods, making this a natural architectural extension.
+
+% -----------------------------------------------------------------------
 \section{Conclusion}
 \label{sec:conclusion}
 
@@ -792,10 +855,8 @@ than MLP (2.5\% vs 1.9\%) across 20 held-out seeds, and scales to
 $4\times$ larger clusters with only $1.1\times$ inference overhead vs
 $5.5\times$ for LSTM.
 
-The primary limitation is the modest absolute catch rate ($\sim$2\%)
-and the purely simulation-based evaluation.  Model-based rollouts,
-tighter pre-failure observation windows, and real deployment on a
-live cluster are natural extensions.  Full simulator, model code, and
+The primary limitations and directions for future work are discussed
+in \S\ref{sec:limitations}.  Full simulator, model code, and
 experiment scripts are publicly available at
 \url{https://github.com/subodhwandile/proactivehop}.
 
