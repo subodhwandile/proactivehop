@@ -1,0 +1,78 @@
+{
+  "entropy_sweep": [
+    {
+      "label": "entropy=0.01",
+      "lr": 0.0003,
+      "entropy": 0.01,
+      "catch_rate_mean": 0.025099265756402162,
+      "catch_rate_std": 0.010381674754143087,
+      "fp_rate_mean": 0.6419807174898738
+    },
+    {
+      "label": "entropy=0.02",
+      "lr": 0.0003,
+      "entropy": 0.02,
+      "catch_rate_mean": 0.026122637466000832,
+      "catch_rate_std": 0.006682452113936232,
+      "fp_rate_mean": 0.6535878903119051
+    },
+    {
+      "label": "entropy=0.05",
+      "lr": 0.0003,
+      "entropy": 0.05,
+      "catch_rate_mean": 0.020059730707422112,
+      "catch_rate_std": 0.007559503271047758,
+      "fp_rate_mean": 0.6332080049627475
+    },
+    {
+      "label": "entropy=0.1",
+      "lr": 0.0003,
+      "entropy": 0.1,
+      "catch_rate_mean": 0.030935961068947304,
+      "catch_rate_std": 0.02058257878775169,
+      "fp_rate_mean": 0.6551311177357189
+    },
+    {
+      "label": "entropy=0.2",
+      "lr": 0.0003,
+      "entropy": 0.2,
+      "catch_rate_mean": 0.0065325857541033705,
+      "catch_rate_std": 0.005825378916939736,
+      "fp_rate_mean": 0.5472760674712976
+    }
+  ],
+  "lr_sweep": [
+    {
+      "label": "lr=1e-04",
+      "lr": 0.0001,
+      "entropy": 0.05,
+      "catch_rate_mean": 0.020824205394517743,
+      "catch_rate_std": 0.005868436267766889,
+      "fp_rate_mean": 0.644006378294305
+    },
+    {
+      "label": "lr=3e-04",
+      "lr": 0.0003,
+      "entropy": 0.05,
+      "catch_rate_mean": 0.026401761286132384,
+      "catch_rate_std": 0.009173386679574206,
+      "fp_rate_mean": 0.6505015878322159
+    },
+    {
+      "label": "lr=1e-03",
+      "lr": 0.001,
+      "entropy": 0.05,
+      "catch_rate_mean": 0.016281354956419837,
+      "catch_rate_std": 0.005609204172258307,
+      "fp_rate_mean": 0.6575352412065741
+    },
+    {
+      "label": "lr=3e-03",
+      "lr": 0.003,
+      "entropy": 0.05,
+      "catch_rate_mean": 0.02502614807512569,
+      "catch_rate_std": 0.006855740268392809,
+      "fp_rate_mean": 0.641385307016738
+    }
+  ]
+}
