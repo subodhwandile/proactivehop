@@ -49,7 +49,7 @@ Threshold-70\%, LSTM Predictor, PPO+MLP, and an Oracle upper bound.  Key results
 (1)~in a controlled server-crash scenario, PPO+GNN pre-migrates
 $\mathbf{17.3\%\!\pm\!8.8\%}$ of affected sessions vs.\ only
 $0\%$ for No-Migration and $11.0\!\pm\!6.7\%$ for Threshold-70\%,
-while achieving \textbf{$2.3\times$ lower variance} than PPO+MLP
+while achieving \textbf{$2.2\times$ lower std} than PPO+MLP
 ($19.9\%\!\pm\!19.2\%$), demonstrating that topology awareness
 improves \emph{reliability} of pre-migration decisions (5-seed evaluation);
 (2)~in an i.i.d.\ ablation (20 held-out seeds), GNN achieves
@@ -134,12 +134,12 @@ and proactively drain sessions from servers about to fail?}
         (\S\ref{sec:formulation}).
   \item We design a two-layer GraphSAGE encoder that processes only the
         2-hop neighborhood of each node, achieving O(degree$^2$) inference
-        time regardless of cluster size (\S\ref{sec:model}).
+        time that grows as O(degree$^2$) per node (\S\ref{sec:model}).
   \item We implement ProactiveHop on a high-fidelity fat-tree simulator
         with Weibull failure injection, delta-compressed session state,
         and correlated load spikes (\S\ref{sec:simulator}).
   \item We run controlled experiments showing PPO+GNN achieves
-        $2.3\times$ lower decision variance than PPO+MLP in a crash
+        $2.2\times$ lower decision std than PPO+MLP in a crash
         scenario (std 8.8\% vs 19.2\%, 5 seeds), scales
         sub-linearly to $N{=}64$ servers zero-shot (inference $1.1\times$
         vs $5.5\times$ for LSTM), and achieves \textbf{1.3$\times$}
@@ -182,7 +182,7 @@ alive across server failures using consistent hashing and a
 shadow-replica protocol.  Migration is \emph{triggered by failure
 detection}, inheriting the full 400--800\,ms reconnect latency, since
 the system must wait for the failure to be confirmed before acting.
-Ousterhout et al.'s live migration~\cite{livemig2005} pre-copies VM
+Clark et al.'s live migration~\cite{livemig2005} pre-copies VM
 memory pages while the VM is running (warm migration) to minimize
 downtime, but the \emph{trigger} remains a manual operator command or
 a reactive health check.  Neither system uses predictive signals or
@@ -223,7 +223,7 @@ with $N{=}16$--64 servers simultaneously.
 Pensieve~\cite{lbgnn} applies deep RL to adaptive bitrate (ABR) video
 streaming, learning a per-chunk bitrate policy from throughput history.
 CPC~\cite{cpc2019} uses contrastive predictive coding to learn latent
-representations of network state for congestion control.
+representations of sequential data.
 Both operate on a \emph{single} client--server link with scalar state;
 neither has a graph topology or a migration cost.  ProactiveHop extends
 the RL-for-networking line to \emph{multi-server graph-structured}
@@ -232,17 +232,16 @@ cluster graph and the reward explicitly penalises unnecessary
 session state transfers.
 
 \paragraph{Proactive resource management.}
-Prophet~\cite{prophet2020} predicts VM failure from hardware telemetry
-(disk SMART data, memory error rates) and triggers live migration
-before the predicted failure window.  This is the closest work in
-spirit to ProactiveHop: both are proactive and both use rising
-failure-rate signals.  The key differences are (i)~Prophet uses a
-per-VM time-series predictor (LSTM on hardware counters) rather than a
-graph-structured policy over the cluster; (ii)~Prophet migrates full
+Zhao et al.~\cite{prophet2020} predict node failure in cloud service
+systems from runtime performance metrics (CPU, memory, network counters)
+and trigger migration before the predicted failure window.
+The key differences are (i)~their approach uses a
+per-node time-series predictor on performance counters rather than a
+graph-structured policy over the cluster; (ii)~it migrates full
 VMs with operator-confirmed triggers, not real-time sessions with
-sub-second reconnect budgets; and (iii)~Prophet does not jointly
+sub-second reconnect budgets; and (iii)~it does not jointly
 optimise migration decisions across servers.  ProactiveHop combines
-the predictive insight of Prophet with the topology reasoning of
+the predictive insight of Zhao et al.\ with the topology reasoning of
 Decima in a single end-to-end RL policy.
 
 % -----------------------------------------------------------------------
@@ -374,8 +373,7 @@ Before graph convolution, per-edge context is projected and mean-aggregated
 into source nodes:
 \begin{equation}
   \tilde{\mathbf{x}}_v = \mathbf{x}_v
-    + \frac{1}{|\mathcal{E}_v|}
-      \sum_{(v,u)\in\mathcal{E}_v} W_e\,\mathbf{e}_{vu},
+    + \sum_{(v,u)\in\mathcal{E}_v} W_e\,\mathbf{e}_{vu},
   \qquad W_e \in \mathbb{R}^{7 \times 4}
   \label{eq:edge_inject}
 \end{equation}
@@ -439,7 +437,7 @@ and sample $a_v \sim \text{Bernoulli}(\sigma(\pi_v))$.
 
 \textbf{Critic}: $V(s) = W_c \bar{\mathbf{h}} \in \mathbb{R}$.
 
-Both $W_a, W_c$ are linear layers applied after the shared GNN.
+Both $W_a, W_c$ are two-layer MLP heads (hidden size 64, ReLU) applied after the shared GNN.
 
 \subsection{PPO Training}
 
@@ -459,14 +457,14 @@ with the following components:
 
 \textbf{Topology}: fat-tree with $k=4$ (16 servers, 20 switches).
 All paper experiments use this topology; zero-shot transfer to larger
-fat-trees ($k{=}6$, $N{=}25$; $k{=}8$, $N{=}64$) is evaluated in
+fat-trees ($k{=}6$, $N{=}54$; $k{=}8$, $N{=}128$) is evaluated in
 \S\ref{sec:scalability}.
 
 \textbf{Session model}: sessions arrive as a Poisson process (rate
 $\lambda_{\rm arr} = 10$/step), have Pareto-distributed lifetimes
 (mean 60 steps), and carry delta-compressed state ($\sim$500\,KB mean).
 Speculative pre-migration costs $\bar{L}_{\rm spec} = 5$\,ms;
-reactive reconnect costs $\bar{L}_{\rm react} \sim \mathcal{U}(400,500)$\,ms.
+reactive reconnect costs $\bar{L}_{\rm react} \sim \mathcal{N}(400,150^2)$\,ms.
 
 \textbf{Failure model}: each server fails per step with probability
 $p_f = 1 - \exp(-(\Delta t / \text{MTBF})^{1.5})$ (Weibull shape 1.5).
@@ -494,9 +492,9 @@ distribution with shape $\kappa{=}1.5$ and scale $\eta{=}3600$\,s
 hardware: failure rate \emph{increases} with age, matching field
 studies of disk and DRAM failure~\cite{barroso2013datacenter}.
 The per-step probability $p_f = 1 - e^{-(\Delta t / \eta)^\kappa}$
-evaluates to ${\approx}2.8 \times 10^{-4}$ per second at $\Delta t{=}1$\,s,
-corresponding to roughly one server failure per hour across a 16-server
-cluster---consistent with reported MTBF in hyperscale data
+evaluates to ${\approx}4.6 \times 10^{-6}$ per second at $\Delta t{=}1$\,s,
+corresponding to roughly one server failure every $\sim$60 hours
+in a 16-server cluster---consistent with reported MTBF in hyperscale data
 centres~\cite{barroso2013datacenter}.
 
 \paragraph{Session arrival process.}
@@ -586,7 +584,7 @@ exploiting temporal memory of the degradation ramp.  PPO+GNN (17.3\%)
 achieves lower but more \emph{consistent} pre-migration than both
 PPO+MLP ($19.9\pm19.2$\%, high variance) and LSTM ($32.8\pm20.3$\%,
 even higher variance)—GNN's standard deviation (8.8\%) is roughly
-$2.3\times$ smaller than LSTM's.  This variance reduction is
+$2.2\times$ smaller than LSTM's.  This variance reduction is
 practically important: a policy that reliably pre-migrates
 $\sim$17\% of sessions is preferable to one that swings between 5\% and
 60\% across deployments.
@@ -634,15 +632,15 @@ Catch Rate (mean$\pm$std) & \textbf{2.5\%$\pm$1.1\%} & 1.9\%$\pm$0.8\% \\
 False Positive Rate        & 64.9\%  & 64.7\% \\
 P95 Latency (ms)           & $646 \pm 4$        & $646 \pm 2$ \\
 \midrule
-\multicolumn{3}{l}{Crash scenario (Table~\ref{tab:failure}): GNN std \textbf{2.3$\times$ lower} than MLP (8.8\% vs 19.2\%, 5 seeds)} \\
+\multicolumn{3}{l}{Crash scenario (Table~\ref{tab:failure}): GNN std \textbf{2.2$\times$ lower} than MLP (8.8\% vs 19.2\%, 5 seeds)} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 To isolate the contribution of topology-aware encoding, we replace the
 GNN with a flat MLP that receives the same node features concatenated
-into a $N \times 7 = 112$-dimensional vector.  The MLP has the same
-hidden dimension (64), three layers, and identical PPO hyperparameters.
+into a $N \times 7 = 112$-dimensional vector.  The MLP uses three layers
+(widths 256 → 128 → 64) with the same output dimension (64) and identical PPO hyperparameters.
 This controls for the RL framework, reward, and training budget.
 
 Table~\ref{tab:ablation} summarises the i.i.d.\ ablation on 20 held-out
@@ -652,7 +650,7 @@ vs.\ 1.9\%), while false-positive rates are similar (64.9\% vs.\
 ability to identify \emph{which} sessions to migrate, not merely
 \emph{how often} it migrates.  The controlled crash scenario
 (Table~\ref{tab:failure}) further reinforces GNN's advantage:
-decision standard deviation (8.8\%) is $2.3\times$ lower than MLP's
+decision standard deviation (8.8\%) is $2.2\times$ lower than MLP's
 (19.2\%), showing that structural encoding stabilises the policy under
 a realistic failure signal.
 
@@ -730,16 +728,16 @@ mismatch).
   \centering
   \includegraphics[width=\linewidth]{../results/plots/fig2_training_curve.png}
   \caption{Training curve over 500 episodes. Reward grows from
-  $\approx\!10^5$ at episode 0 to $\sim\!5\!\times\!10^5$ by episode 100,
-  with continued improvement to episode 500. Best catch rate observed: 10.3\%.}
+  $\approx\!10^5$ at episode 0 to $\sim\!5\!\times\!10^5$ by episode 200,
+  with continued improvement to episode 500. Best catch rate observed: 7.9\%.}
   \label{fig:training}
 \end{figure}
 
 Figure~\ref{fig:training} shows reward climbing from episode 0
 (untrained random policy, reward $\approx\!10^5$) to a plateau at
-$\sim\!5\!\times\!10^5$ by episode 100, with continued improvement
+$\sim\!5\!\times\!10^5$ by episode 200, with continued improvement
 through episode 500.  The best single-episode catch rate observed
-during training was 10.3\%, though mean performance stabilizes at
+during training was 7.9\%, though mean performance stabilizes at
 $\approx$3\%.  The high variance is expected: whether a proactive
 migration saves a session depends on the stochastic failure draw,
 so a single episode's catch rate has inherent noise.
@@ -878,7 +876,7 @@ than how aggressively the agent migrates.
 \paragraph{Production deployment.}
 ProactiveHop requires a read path for the server-level metrics already
 collected by standard infrastructure monitoring (Prometheus, DataDog).
-The GNN runs on-controller as a lightweight 1.6\,ms inference service.
+The GNN runs on-controller as a lightweight 1.2\,ms inference service.
 Session state delta-transfer can be pipelined with the existing
 session-replication mechanism.
 
@@ -925,11 +923,9 @@ degradation ramp more aggressively, as the Oracle baseline
 theoretical ceiling.
 
 \paragraph{Reward sensitivity.}
-The reward function balances three terms: latency saving, bandwidth
-penalty, and availability bonus (Equation~\ref{eq:reward}).  The
-relative weights ($\alpha, \beta, \gamma$) were tuned manually on a
-single held-out seed.  A systematic hyperparameter search (e.g.,
-population-based training over reward weights) could discover
+The reward function combines two terms: latency saving and bandwidth
+penalty, weighted by $C_{\rm bw} = 5\times10^{-5}$ per KB.  This weight
+was set manually.  A systematic search over $C_{\rm bw}$ could discover
 configurations that reduce the 65\% false-positive rate without
 sacrificing catch rate.  The tradeoff is well-defined and likely
 Pareto-optimal, but the current paper reports only a single point.
@@ -955,7 +951,7 @@ topology as a graph and learning a differential-latency reward, the
 system detects rising failure symptoms through 2-hop neighborhood
 aggregation and pre-migrates sessions before disruptions occur.
 
-Empirically, PPO+GNN achieves $2.3\times$ lower decision variance
+Empirically, PPO+GNN achieves $2.2\times$ lower decision std
 than an identically-trained PPO+MLP in a controlled crash scenario
 (std 8.8\% vs 19.2\%, 5 seeds), confirming that topology-aware
 encoding improves the \emph{reliability} of pre-migration decisions.
