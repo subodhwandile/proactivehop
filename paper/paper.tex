@@ -151,40 +151,99 @@ and proactively drain sessions from servers about to fail?}
 \section{Related Work}
 \label{sec:related}
 
-\paragraph{Reactive session migration.}
-``Staying Alive'' (NSDI'21)~\cite{nsdi21stayingalive} keeps game
-sessions alive across server failures using consistent hashing and a
-shadow-replica protocol.  Migration is \emph{triggered by failure
-detection}, inheriting the full reconnect latency.  ProactiveHop aims
-to drain sessions before the failure is detected.
+Table~\ref{tab:related} positions ProactiveHop against the most closely
+related work across six dimensions.
 
-\paragraph{GNN-based scheduling.}
-Decima~\cite{sigcomm19decima} uses a GNN to schedule jobs in
-Spark clusters, where the DAG of job stages is the graph.
-Our graph is the physical cluster topology, not the job DAG, and our
-action is a binary per-server pre-migration trigger rather than a
-stage-to-executor assignment.  The O(degree$^2$) neighborhood
-aggregation appears in both, but our setting is online (no job DAG
-known in advance) and the reward is a \emph{differential latency
-saving} rather than a job completion time.
+\begin{table}[t]
+\centering
+\small
+\caption{Comparison of session/task migration and RL networking approaches.
+``Proactive'' = acts before failure/overload; ``Topo-aware'' = uses graph
+structure; ``Stateful'' = migrates session state with reconnect cost.}
+\label{tab:related}
+\begin{tabular}{lccccc}
+\toprule
+System & Proactive & Topo-aware & RL & Stateful & Simulated \\
+\midrule
+Staying Alive~\cite{nsdi21stayingalive} & \texttimes & \texttimes & \texttimes & \checkmark & \texttimes \\
+Decima~\cite{sigcomm19decima}           & \checkmark & \checkmark & \checkmark & \texttimes & \checkmark \\
+5G Handoff~\cite{5ghandoff}            & \checkmark & \checkmark & \checkmark & \texttimes & \checkmark \\
+Pensieve~\cite{lbgnn}                  & \texttimes & \texttimes & \checkmark & \texttimes & \checkmark \\
+AuTO~\cite{auto2018}                   & \checkmark & \texttimes & \checkmark & \texttimes & \texttimes \\
+LiveMigration~\cite{livemig2005}       & \checkmark & \texttimes & \texttimes & \checkmark & \texttimes \\
+\textbf{ProactiveHop (ours)}           & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Reactive session migration.}
+``Staying Alive''~\cite{nsdi21stayingalive} keeps real-time sessions
+alive across server failures using consistent hashing and a
+shadow-replica protocol.  Migration is \emph{triggered by failure
+detection}, inheriting the full 400--800\,ms reconnect latency, since
+the system must wait for the failure to be confirmed before acting.
+Ousterhout et al.'s live migration~\cite{livemig2005} pre-copies VM
+memory pages while the VM is running (warm migration) to minimize
+downtime, but the \emph{trigger} remains a manual operator command or
+a reactive health check.  Neither system uses predictive signals or
+graph topology to act before symptoms become failures.
+ProactiveHop targets the window between first observable symptom
+(rising $\lambda_v$, CPU stress) and confirmed failure.
+
+\paragraph{GNN-based cluster scheduling.}
+Decima~\cite{sigcomm19decima} applies GNN+RL to Spark job scheduling,
+where the computation graph (job DAG) is the structured input.
+The GNN aggregates stage-to-stage dependencies; the action is
+assigning stages to executors.  Our graph is the \emph{physical
+cluster topology}, not a job DAG: nodes are servers, edges are network
+links with latency and bandwidth attributes, and the action is a
+binary per-server pre-migration trigger.  The key difference is that
+Decima's graph is given (the submitted job), whereas ProactiveHop
+must reason about \emph{evolving} load and failure signals on a fixed
+physical topology.  AuTO~\cite{auto2018} uses a two-level RL system
+for flow scheduling in data centres, but operates at the flow level
+without session state and without graph-structured encoding.
 
 \paragraph{Mobile handoff via RL.}
-A line of work in mobile networking uses RL for base-station handoff
-(e.g., A3C over 5G topology~\cite{5ghandoff}).  Those approaches
-operate on \emph{mobile} clients moving through a graph of fixed base
-stations; our setting is the inverse---\emph{fixed} clients on
-\emph{stationary} servers where migration is a business decision, not
-a physical necessity.  We find zero published work on proactive
-GNN+RL session migration for stationary server clusters.
+A substantial line of work uses RL for base-station handoff in 5G and
+heterogeneous networks~\cite{5ghandoff}.  These approaches model the
+problem as a Markov decision process where a mobile client moves
+through a graph of fixed base stations; the policy decides when to
+hand off to a neighbouring cell.  The graph topology is the radio
+access network, and the state is signal strength and cell load.
+Our setting is the \emph{inverse}: clients are stationary (game
+sessions, WebRTC peers) and servers can fail or become overloaded.
+Migration is a \emph{business} decision with an explicit bandwidth
+cost (session state transfer), not a physical necessity imposed by
+client movement.  Furthermore, handoff systems operate per-UE on a
+single radio link; ProactiveHop operates over a full fat-tree cluster
+with $N{=}16$--64 servers simultaneously.
 
 \paragraph{RL for networking.}
-Pensieve~\cite{lbgnn} applies deep RL to adaptive bitrate video
-streaming, treating per-chunk throughput history as the state.
-Like ProactiveHop, it uses a learned policy over a network observation;
-unlike our setting, it operates on a single client--server link with
-no graph topology and no session state migration cost.
-Our work extends the RL-for-networking line to \emph{multi-server
-graph-structured} decisions with an explicit bandwidth penalty.
+Pensieve~\cite{lbgnn} applies deep RL to adaptive bitrate (ABR) video
+streaming, learning a per-chunk bitrate policy from throughput history.
+CPC~\cite{cpc2019} uses contrastive predictive coding to learn latent
+representations of network state for congestion control.
+Both operate on a \emph{single} client--server link with scalar state;
+neither has a graph topology or a migration cost.  ProactiveHop extends
+the RL-for-networking line to \emph{multi-server graph-structured}
+decisions, where the observation is a GNN embedding of the live
+cluster graph and the reward explicitly penalises unnecessary
+session state transfers.
+
+\paragraph{Proactive resource management.}
+Prophet~\cite{prophet2020} predicts VM failure from hardware telemetry
+(disk SMART data, memory error rates) and triggers live migration
+before the predicted failure window.  This is the closest work in
+spirit to ProactiveHop: both are proactive and both use rising
+failure-rate signals.  The key differences are (i)~Prophet uses a
+per-VM time-series predictor (LSTM on hardware counters) rather than a
+graph-structured policy over the cluster; (ii)~Prophet migrates full
+VMs with operator-confirmed triggers, not real-time sessions with
+sub-second reconnect budgets; and (iii)~Prophet does not jointly
+optimise migration decisions across servers.  ProactiveHop combines
+the predictive insight of Prophet with the topology reasoning of
+Decima in a single end-to-end RL policy.
 
 % -----------------------------------------------------------------------
 \section{Problem Formulation}
