@@ -304,18 +304,59 @@ aggregation), regardless of how many historical timesteps it observes.
 
 \subsection{GNN Encoder}
 
-We use a two-layer GraphSAGE~\cite{graphsage} encoder.  At layer $l$:
+We use a two-layer GraphSAGE~\cite{graphsage} encoder.
+The forward pass has four stages.
+
+\paragraph{Edge-feature injection.}
+Each directed edge $(v, u)$ carries a feature vector
+$\mathbf{e}_{vu} \in \mathbb{R}^4$
+(link latency, bandwidth, utilization, packet-loss).
+Before graph convolution, per-edge context is projected and mean-aggregated
+into source nodes:
 \begin{equation}
-  \mathbf{h}_v^{(l)} = \text{LN}\!\Bigl(
-    W_l \cdot \bigl[\mathbf{h}_v^{(l-1)} \,\|\,
-    \textstyle\text{MEAN}_{u \in \mathcal{N}(v)} \mathbf{h}_u^{(l-1)}\bigr]
-    + \mathbf{h}_v^{(l-1)}
-  \Bigr)
+  \tilde{\mathbf{x}}_v = \mathbf{x}_v
+    + \frac{1}{|\mathcal{E}_v|}
+      \sum_{(v,u)\in\mathcal{E}_v} W_e\,\mathbf{e}_{vu},
+  \qquad W_e \in \mathbb{R}^{7 \times 4}
+  \label{eq:edge_inject}
+\end{equation}
+where $\mathcal{E}_v$ is the set of edges incident to $v$.
+
+\paragraph{Input projection.}
+The 7-dimensional augmented features are lifted to the hidden dimension:
+\begin{equation}
+  \mathbf{h}_v^{(0)} = \text{ReLU}\!\bigl(W_{\rm in}\,\tilde{\mathbf{x}}_v\bigr),
+  \qquad W_{\rm in} \in \mathbb{R}^{d_h \times 7},\; d_h = 64
+  \label{eq:input_proj}
+\end{equation}
+
+\paragraph{GraphSAGE layers ($l = 1, 2$).}
+Each layer performs neighborhood aggregation followed by a residual update:
+\begin{equation}
+  \tilde{\mathbf{h}}_v^{(l)} =
+    \text{ReLU}\!\Bigl(
+      W_l \cdot \bigl[\mathbf{h}_v^{(l-1)} \,\|\,
+      \textstyle\text{MEAN}_{u \in \mathcal{N}(v)} \mathbf{h}_u^{(l-1)}\bigr]
+    \Bigr)
   \label{eq:sage}
 \end{equation}
-with residual connections and dropout (rate 0.1), where LN denotes Layer Normalization.
-Input features are $\mathbf{h}_v^{(0)} = \mathbf{x}_v^t \in \mathbb{R}^7$,
-hidden dimension $d_h = 64$, output dimension $d_h = 64$.
+\begin{equation}
+  \mathbf{h}_v^{(l)} = \mathbf{h}_v^{(l-1)}
+    + \text{Dropout}\!\bigl(\tilde{\mathbf{h}}_v^{(l)},\, p{=}0.1\bigr)
+  \label{eq:residual}
+\end{equation}
+where $W_l \in \mathbb{R}^{d_h \times 2d_h}$ and all tensors remain in
+$\mathbb{R}^{d_h}$---the input projection ensures no dimension mismatch.
+
+\paragraph{Normalization and output projection.}
+After both layers, a single Layer Normalization followed by a linear
+output projection yields the final node embeddings:
+\begin{equation}
+  \mathbf{z}_v = W_{\rm out}\,\text{LN}\!\bigl(\mathbf{h}_v^{(2)}\bigr),
+  \qquad W_{\rm out} \in \mathbb{R}^{d_h \times d_h}
+  \label{eq:output_proj}
+\end{equation}
+Hidden dimension $d_h = 64$, output dimension $d_h = 64$.
 
 Each layer aggregates only the 1-hop neighborhood.  Two layers
 therefore aggregate the 2-hop neighborhood.  The per-node computation
@@ -555,6 +596,11 @@ so cost scales linearly with $N$.
 PPO+GNN grows only $1.1\times$ (1.207\,ms $\to$ 1.291\,ms)
 for the same $4\times$ cluster size increase, because neighborhood
 aggregation is bounded by the fixed fat-tree degree $k{=}4$.
+\emph{Note on measurement scope:} GNN timing covers the single batched
+GNN forward pass; LSTM timing covers the full per-server decision loop
+including Python iteration overhead.  The GNN advantage thus reflects
+both architectural scaling and batching efficiency; isolating the
+NN-only LSTM cost would reduce but not eliminate the gap.
 
 \textbf{Catch rate parity with better scaling.}
 At $N{=}64$, LSTM achieves 3.5\% vs GNN's 3.4\%---statistically
