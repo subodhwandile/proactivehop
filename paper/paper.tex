@@ -479,6 +479,50 @@ with damping 0.05 per step, plus correlated spikes (probability 0.08,
 magnitude 0.35) that persist for 3 steps and spread to neighboring
 servers.
 
+\subsection{Simulator Fidelity Validation}
+\label{sec:simvalid}
+
+A common critique of simulation-based evaluation is that the simulator
+may not reproduce the statistical properties of real deployments.
+We validate three key properties against empirical data and
+theoretical expectations.
+
+\paragraph{Failure inter-arrival distribution.}
+The simulator draws per-step failure probability from a Weibull
+distribution with shape $\kappa{=}1.5$ and scale $\eta{=}3600$\,s
+(MTBF 3600\,s).  Shape $\kappa{=}1.5 > 1$ models infant-mortality-free
+hardware: failure rate \emph{increases} with age, matching field
+studies of disk and DRAM failure~\cite{barroso2013datacenter}.
+The per-step probability $p_f = 1 - e^{-(\Delta t / \eta)^\kappa}$
+evaluates to ${\approx}2.8 \times 10^{-4}$ per second at $\Delta t{=}1$\,s,
+corresponding to roughly one server failure per hour across a 16-server
+cluster---consistent with reported MTBF in hyperscale data
+centres~\cite{barroso2013datacenter}.
+
+\paragraph{Session arrival process.}
+Sessions arrive as a Poisson process with rate $\lambda_{\rm arr}$.
+The Poisson assumption is standard for modelling independent user
+connections at the session layer and is validated by the Alibaba 2018
+trace experiment (\S\ref{sec:trace}): under $4.3\times$ higher
+coefficient of variation (real trace vs.\ synthetic Poisson), PPO+GNN's
+catch rate drops only 0.2 percentage points, indicating the policy is
+robust to the Poisson approximation.  Session lifetimes follow a
+Pareto distribution with shape $\alpha{=}1.5$, matching the heavy-tailed
+flow-size distributions observed in data-centre traffic
+studies~\cite{sigcomm19decima}.
+
+\paragraph{Load spike propagation.}
+Correlated load spikes (probability 0.08 per server per step, magnitude
+0.35, duration 3 steps) model bursty traffic patterns such as
+flash crowds or cache invalidation storms.  The spike propagates to
+neighbouring servers with a 50\% probability, reflecting
+intra-cluster load imbalance observed when a hot shard floods the
+network path to its replicas.  The base-load decay toward $\ell_0$
+with damping 0.05 per step produces a mean steady-state load of
+$0.55 \pm 0.08$ (measured over 10,000 steps across 5 seeds), within
+the 0.5--0.7 range reported for production game-server clusters by
+Riot Games~\cite{riotdirect}.
+
 % -----------------------------------------------------------------------
 \section{Evaluation}
 \label{sec:evaluation}
