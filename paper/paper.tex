@@ -56,7 +56,7 @@ delivers both higher \emph{recall} and greater \emph{reliability} (5-seed evalua
 under identical PPO training, confirming that topology awareness
 improves migration recall beyond the crash scenario;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
-grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $5.5\times$ for LSTM,
+grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $4.3\times$ for LSTM,
 verifying the sub-linear inference scaling of local neighbourhood aggregation.
 
 ProactiveHop demonstrates that graph-structured RL is a practical
@@ -718,21 +718,21 @@ Metrics averaged over 5 seeds.}
 Policy & $N$ & Catch & Infer.\ (ms) & Scale \\
 \midrule
 \multirow{3}{*}{Threshold-70\%}
- & 16 & 0.2\% & 0.024 & --- \\
- & 25 & 0.2\% & 0.045 & --- \\
- & 64 & 0.5\% & 0.165 & $6.9\times$ \\
+ & 16 & 0.2\% & 0.020 & --- \\
+ & 25 & 0.3\% & 0.037 & --- \\
+ & 64 & 0.8\% & 0.137 & $6.9\times$ \\
 \midrule
 \multirow{3}{*}{LSTM}
- & 16 & 0.9\% & 0.641 & --- \\
- & 25 & 1.3\% & 0.827 & --- \\
- & 64 & 3.5\% & 3.552 & $5.5\times$ \\
+ & 16 & 0.8\% & 0.638 & --- \\
+ & 25 & 1.2\% & 0.818 & --- \\
+ & 64 & 3.3\% & 2.727 & $4.3\times$ \\
 \midrule
 \multirow{3}{*}{\textbf{PPO+GNN}}
- & 16 & 1.0\% & 1.207 & --- \\
- & 25 & 1.6\% & 1.212 & --- \\
- & 64 & 3.4\% & 1.291 & $\mathbf{1.1\times}$ \\
+ & 16 & 0.9\% & 1.073 & --- \\
+ & 25 & 1.4\% & 1.124 & --- \\
+ & 64 & 2.7\% & 1.167 & $\mathbf{1.1\times}$ \\
 \midrule
-Oracle & 16--64 & $\approx$98\% & $<$0.5 & --- \\
+Oracle & 16--64 & ${\approx}50\%$ & $<$0.5 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -740,10 +740,10 @@ Oracle & 16--64 & $\approx$98\% & $<$0.5 & --- \\
 Table~\ref{tab:scale} shows two results.
 
 \textbf{Sub-linear inference scaling.}
-LSTM inference grows $5.5\times$ from $N{=}16$ to $N{=}64$: at each
+LSTM inference grows $4.3\times$ from $N{=}16$ to $N{=}64$: at each
 step it must run a forward pass for every server independently,
-so cost scales linearly with $N$.
-PPO+GNN grows only $1.1\times$ (1.207\,ms $\to$ 1.291\,ms)
+so cost scales roughly linearly with $N$.
+PPO+GNN grows only $1.1\times$ (1.073\,ms $\to$ 1.167\,ms)
 for the same $4\times$ cluster size increase, because neighborhood
 aggregation is bounded by the fixed fat-tree degree $k{=}4$.
 \emph{Note on measurement scope:} GNN timing covers the single batched
@@ -752,17 +752,18 @@ including Python iteration overhead.  The GNN advantage thus reflects
 both architectural scaling and batching efficiency; isolating the
 NN-only LSTM cost would reduce but not eliminate the gap.
 
-\textbf{Catch rate parity with better scaling.}
-At $N{=}64$, LSTM achieves 3.5\% vs GNN's 3.4\%---statistically
-indistinguishable---but at $5.5\times$ the inference cost.
-At $N{=}256$ (extrapolating linearly), LSTM would take $\sim$14\,ms
+\textbf{Catch rate at scale.}
+At $N{=}64$, LSTM achieves 3.3\% vs GNN's 2.7\%---LSTM has marginally
+higher catch rate at scale because it observes temporal trends in load
+(10-step sliding window), but at $4.3\times$ the inference cost.
+At $N{=}256$ (extrapolating linearly), LSTM would take $\sim$12\,ms
 per step while GNN would remain under 1.5\,ms.  For controllers
 running at 100\,ms decision intervals this is already a hard
-constraint.
+constraint, and the inference gap widens with cluster size.
 
 \textbf{Zero-shot generalization.}
 The GNN trained on $N{=}16$ transfers zero-shot to $N{=}25$ and
-$N{=}64$, with catch rate \emph{increasing} from 1.0\% to 3.4\%.
+$N{=}64$, with catch rate \emph{increasing} from 0.9\% to 2.7\%.
 This is expected: larger clusters have more correlated-spike events
 and more opportunities for pre-migration, but the local decision
 logic the GNN learned (``neighbors stressed $\Rightarrow$ pre-migrate'')
@@ -804,10 +805,10 @@ Real trace has CV$=1.35$, $4.3\times$ more bursty than Poisson (CV$=0.32$).}
 Policy & Synthetic & Trace-Driven \\
 \midrule
 No Migration     & $0.0\%\pm0.0\%$ & $0.0\%\pm0.0\%$ \\
-Threshold-70\%   & $0.2\%\pm0.1\%$ & $0.1\%\pm0.0\%$ \\
-LSTM Predictor   & $1.0\%\pm0.2\%$ & $1.1\%\pm0.2\%$ \\
-\textbf{PPO+GNN} & $\mathbf{1.3\%\pm0.4\%}$ & $\mathbf{1.1\%\pm0.3\%}$ \\
-Oracle (UB)      & $98.1\%\pm0.1\%$ & $98.2\%\pm0.1\%$ \\
+Threshold-70\%   & $0.2\%\pm0.1\%$ & $0.2\%\pm0.0\%$ \\
+LSTM Predictor   & $0.9\%\pm0.2\%$ & $0.8\%\pm0.4\%$ \\
+\textbf{PPO+GNN} & $\mathbf{1.1\%\pm0.1\%}$ & $\mathbf{0.9\%\pm0.3\%}$ \\
+Oracle (UB)      & $49.6\%\pm0.1\%$ & $49.7\%\pm0.1\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -821,13 +822,13 @@ $\bar{\lambda}=10$ sessions/step, and use the resulting time series
 as the per-step arrival rate (see \S\ref{sec:simulator}).
 
 Table~\ref{tab:trace} shows the results.  PPO+GNN's catch rate
-drops by only $0.2$ percentage points (1.3\%$\to$1.1\%) under
+drops by only $0.2$ percentage points (1.1\%$\to$0.9\%) under
 $4.3\times$ higher burstiness, demonstrating robustness to
 workload distribution shift.  The model was trained exclusively on
 Poisson arrivals yet transfers cleanly to real trace patterns.
-LSTM shows a slight improvement (+0.1pp) under the trace because
-more bursty arrivals create more load spikes, increasing temporal
-predictability.  Both policies remain well above Threshold-70\%
+LSTM shows a slight decrease under the trace ($-0.1$pp), consistent
+with the higher variability of burst arrivals.
+Both policies remain well above Threshold-70\%
 in all conditions.
 
 \subsection{Hyperparameter Sensitivity}
@@ -931,7 +932,7 @@ deployment constraints favour the GNN:
 (i)~\textbf{zero-shot generalization}: an LSTM trained on $N{=}16$
 cannot be applied to $N{=}64$ without retraining (input dimension
 mismatch), while the GNN transfers directly (Table~\ref{tab:scale});
-(ii)~\textbf{inference scaling}: LSTM inference grows $5.5\times$ for a
+(ii)~\textbf{inference scaling}: LSTM inference grows $4.3\times$ for a
 $4\times$ cluster size increase vs.\ $1.1\times$ for the GNN;
 (iii)~\textbf{decision reliability}: GNN's CoV (0.30) is $2.1\times$
 lower than LSTM's (0.63), meaning its pre-migration rate varies less
@@ -1037,7 +1038,7 @@ in a controlled crash scenario (5 seeds), outperforming both PPO+MLP (17.7\%, Co
 and LSTM (17.6\%, CoV\,=\,0.63).  In i.i.d.\ evaluation, GNN achieves 1.8$\times$ higher catch rate
 than MLP (1.64\% vs 0.90\%, $p{=}0.0006$) across 20 held-out seeds, and scales to
 $4\times$ larger clusters with only $1.1\times$ inference overhead vs
-$5.5\times$ for LSTM.
+$4.3\times$ for LSTM.
 
 The primary limitations and directions for future work are discussed
 in \S\ref{sec:limitations}.  Full simulator, model code, and

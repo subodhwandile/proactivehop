@@ -28,7 +28,7 @@ from baselines.baselines import ThresholdPolicy, OraclePolicy, NoMigrationPolicy
 from baselines.lstm_baseline import LSTMPolicy
 
 
-SCALE_SIZES = [16, 32, 64]
+SCALE_SIZES = [16, 25, 64]
 EVAL_STEPS = 400
 SEEDS = [42, 43, 44, 45, 46]
 
@@ -114,7 +114,7 @@ def run_baseline_at_scale(policy, n_servers: int, steps: int, seed: int) -> tupl
     return summary, median_ms
 
 
-def run_scale_experiment(model_path: str = "results/checkpoints/best_model.pt"):
+def run_scale_experiment(model_path: str = "results/ablation/best_GNN.pt"):
     Path("results").mkdir(exist_ok=True)
 
     # Load PPO trained on 16-node cluster
@@ -136,7 +136,7 @@ def run_scale_experiment(model_path: str = "results/checkpoints/best_model.pt"):
     print("\n" + "=" * 90)
     print("SCALE EXPERIMENT: Catch Rate and Inference Time vs Cluster Size")
     print("=" * 90)
-    print(f"{'Policy':<22} {'N=16':>20} {'N=36':>20} {'N=64':>20}")
+    print(f"{'Policy':<22} {'N=16':>20} {'N=25':>20} {'N=64':>20}")
     print(f"{'':22} {'catch / ms':>20} {'catch / ms':>20} {'catch / ms':>20}")
     print("-" * 90)
 

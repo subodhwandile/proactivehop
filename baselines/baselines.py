@@ -104,6 +104,51 @@ class RandomPolicy:
         return decisions
 
 
+
+class NeighbourAwareThreshold:
+    """
+    Neighbour-aware threshold: migrate when ℓ_v ≥ θ_src AND mean(neighbour loads) < φ_dst.
+    The second condition prevents sending sessions to already-loaded neighbours,
+    making it a stronger per-server heuristic than plain ThresholdPolicy.
+    """
+    name = "Neighbour-Aware Threshold"
+
+    def __init__(self, src_threshold: float = 0.70, dst_threshold: float = 0.60):
+        self.src_threshold = src_threshold
+        self.dst_threshold = dst_threshold
+
+    def select_action(self, obs: dict, sim: ClusterSimulator) -> dict:
+        decisions = {}
+        for server_id in range(sim.n):
+            node = sim.topo.get_node(server_id)
+            if not node.is_alive or node.load < self.src_threshold:
+                continue
+
+            neighbors = sim.topo.neighbors(server_id)
+            live = [nb for nb in neighbors
+                    if sim.topo.get_node(nb).is_alive
+                    and sim.topo.get_node(nb).load < self.dst_threshold]
+            # Also require mean neighbour load below dst_threshold
+            if not live:
+                continue
+            nb_loads = [sim.topo.get_node(nb).load for nb in neighbors
+                        if sim.topo.get_node(nb).is_alive]
+            if nb_loads and np.mean(nb_loads) >= self.dst_threshold:
+                continue
+
+            target = min(live, key=lambda nb: sim.topo.get_node(nb).load)
+            sessions = [
+                sim.sessions[sid]
+                for sid in sim.server_sessions[server_id]
+                if sid in sim.sessions
+                and sim.sessions[sid].status == SessionStatus.ACTIVE
+            ]
+            for s in sessions[:20]:
+                decisions[s.session_id] = target
+
+        return decisions
+
+
 class OraclePolicy:
     """
     Baseline 5: Oracle — knows exactly which server will fail before it fails.

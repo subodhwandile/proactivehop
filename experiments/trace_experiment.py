@@ -35,7 +35,7 @@ from baselines.lstm_baseline import LSTMPolicy
 
 EVAL_STEPS = 400
 SEEDS = [42, 43, 44, 45, 46]   # 5 seeds for statistical rigour
-MODEL_PATH = "results/checkpoints_v2/best_model.pt"
+MODEL_PATH = "results/ablation/best_GNN.pt"
 
 
 def make_cfg(seed: int, use_trace: bool) -> SimConfig:

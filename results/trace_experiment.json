@@ -3,64 +3,64 @@
     "No Migration": {
       "catch_rate_mean": 0.0,
       "catch_rate_std": 0.0,
-      "p95_mean": 645.9730171430474,
+      "p95_mean": 645.0181275901184,
       "fp_rate_mean": 0.0
     },
     "Threshold 70%": {
-      "catch_rate_mean": 0.0017455620026452605,
-      "catch_rate_std": 0.0011663794348432774,
-      "p95_mean": 648.3060095155872,
-      "fp_rate_mean": 0.3659096905274336
+      "catch_rate_mean": 0.0018214056645641473,
+      "catch_rate_std": 0.0006720456560663259,
+      "p95_mean": 646.186960843952,
+      "fp_rate_mean": 0.3759514820780891
     },
     "LSTM Predict": {
-      "catch_rate_mean": 0.009786141523761888,
-      "catch_rate_std": 0.0021047725045916918,
-      "p95_mean": 646.0608182184235,
-      "fp_rate_mean": 0.5878600896580902
+      "catch_rate_mean": 0.009318492631695898,
+      "catch_rate_std": 0.0022769896625453967,
+      "p95_mean": 645.5938403643335,
+      "fp_rate_mean": 0.608477749792726
     },
     "Oracle (UB)": {
-      "catch_rate_mean": 0.9806256354828425,
-      "catch_rate_std": 0.0009855295302641613,
-      "p95_mean": 9.385040790276072,
-      "fp_rate_mean": 0.3725658411255796
+      "catch_rate_mean": 0.495710198791316,
+      "catch_rate_std": 0.000503988759625889,
+      "p95_mean": 594.1430786800096,
+      "fp_rate_mean": 0.4241063654277341
     },
     "PPO+GNN (ours)": {
-      "catch_rate_mean": 0.012568541632132588,
-      "catch_rate_std": 0.003651502242772192,
-      "p95_mean": 645.6162874729623,
-      "fp_rate_mean": 0.5991242818334974
+      "catch_rate_mean": 0.010870618229207424,
+      "catch_rate_std": 0.0010915357595517555,
+      "p95_mean": 642.2396161478188,
+      "fp_rate_mean": 0.5734777172644849
     }
   },
   "Trace-Driven (Alibaba)": {
     "No Migration": {
       "catch_rate_mean": 0.0,
       "catch_rate_std": 0.0,
-      "p95_mean": 646.0926263434083,
+      "p95_mean": 642.7217693044067,
       "fp_rate_mean": 0.0
     },
     "Threshold 70%": {
-      "catch_rate_mean": 0.0014766441980282985,
-      "catch_rate_std": 0.00032934981545777844,
-      "p95_mean": 645.9176687231991,
-      "fp_rate_mean": 0.3622989330386305
+      "catch_rate_mean": 0.0018325774766879688,
+      "catch_rate_std": 0.00033727270474388055,
+      "p95_mean": 646.293409435809,
+      "fp_rate_mean": 0.3579290104621423
     },
     "LSTM Predict": {
-      "catch_rate_mean": 0.010734173428704087,
-      "catch_rate_std": 0.0015750219492755098,
-      "p95_mean": 646.0075201146485,
-      "fp_rate_mean": 0.5914342943250134
+      "catch_rate_mean": 0.008130436227465404,
+      "catch_rate_std": 0.0037124235012714903,
+      "p95_mean": 645.5572811115169,
+      "fp_rate_mean": 0.5844586425707836
     },
     "Oracle (UB)": {
-      "catch_rate_mean": 0.9819526750207744,
-      "catch_rate_std": 0.0013031796365144917,
-      "p95_mean": 8.961978344003091,
-      "fp_rate_mean": 0.3832934819853075
+      "catch_rate_mean": 0.49670087334152646,
+      "catch_rate_std": 0.0005227404090659808,
+      "p95_mean": 593.4820401166297,
+      "fp_rate_mean": 0.4133192178672397
     },
     "PPO+GNN (ours)": {
-      "catch_rate_mean": 0.011146385479682405,
-      "catch_rate_std": 0.0025272843072309758,
-      "p95_mean": 644.1632729813491,
-      "fp_rate_mean": 0.6445664565848737
+      "catch_rate_mean": 0.008841953334394862,
+      "catch_rate_std": 0.0028364077769001306,
+      "p95_mean": 644.4482875280386,
+      "fp_rate_mean": 0.5688324424106381
     }
   }
 }
