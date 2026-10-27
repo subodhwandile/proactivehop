@@ -495,11 +495,13 @@ $\lambda_{\rm arr} = 10$/step), have Pareto-distributed lifetimes
 Persistent pre-migration costs $\bar{L}_{\rm spec} = 5$\,ms (fast session state transfer);
 reactive reconnect costs $\bar{L}_{\rm react} \sim \mathcal{N}(400,150^2)$\,ms.
 
+\begin{sloppypar}
 \textbf{Failure model}: each server fails per step with probability
-$p_f = 1 - \exp(-(\Delta t / \text{MTBF})^{1.5})$ (Weibull shape 1.5).
-Failed servers recover after $\text{Exp}(\text{MTTR})$ steps.
-Drop probability on overloaded \emph{live} servers follows
-$p_{\rm drop}(v) = \sigma((\ell_v - 0.72) \times 15)$.
+$p_f = 1 - \exp\!\bigl(-(\Delta t / \text{MTBF})^{1.5}\bigr)$
+(Weibull shape 1.5). Failed servers recover after $\text{Exp}(\text{MTTR})$
+steps. Drop probability on overloaded \emph{live} servers follows
+$p_{\rm drop}(v) = \sigma\bigl((\ell_v - 0.72) \times 15\bigr)$.
+\end{sloppypar}
 
 \textbf{Load dynamics}: loads decay toward a base load $\ell_0 = 0.55$
 with damping 0.05 per step, plus correlated spikes (probability 0.08,
@@ -615,26 +617,29 @@ which through the load-coupling formula increases the observable
 $\lambda_v$ signal, modelling pre-failure symptoms
 (thermal throttling, disk I/O errors, memory ECC corrections).
 
+\begin{sloppypar}
 All learned policies outperform no migration (0\%) and threshold-only
-(6.8\%).  \textbf{PPO+GNN achieves the highest pre-migration rate (24.8\%)}
-among all learned policies, surpassing both PPO+MLP (17.7\%) and
-LSTM (17.6\%).  Crucially, GNN also achieves the \textbf{lowest CoV (0.30)}---
-$2.1\times$ lower than LSTM (0.63) and $1.4\times$ lower than MLP (0.42).
+(6.8\%).  \textbf{PPO+GNN achieves the highest pre-migration rate
+(24.8\%)} among all learned policies, surpassing both PPO+MLP (17.7\%)
+and LSTM (17.6\%).  Crucially, GNN also achieves the
+\textbf{lowest CoV (0.30)}---$2.1\times$ lower than LSTM (0.63) and
+$1.4\times$ lower than MLP (0.42).
 This combination of highest catch rate \emph{and} lowest variance is a
-practically relevant result, though pairwise Welch tests between GNN and other
-learned policies are not statistically significant at $n{=}5$ seeds
-(GNN vs.\ MLP $p{\approx}0.17$; GNN vs.\ LSTM $p{\approx}0.27$); larger-scale
-evaluation is needed to confirm the mean ranking.
+practically relevant result, though pairwise Welch tests between GNN and
+other learned policies are not statistically significant at $n{=}5$ seeds
+(GNN vs.\ MLP $p{\approx}0.17$; GNN vs.\ LSTM $p{\approx}0.27$);
+larger-scale evaluation is needed to confirm the mean ranking.
+\end{sloppypar}
 
-Under the persistent migration mechanic, LSTM's temporal advantage from the
-old speculative model disappears: without state-push coincidence to exploit,
-LSTM (17.6\%) equals MLP (17.7\%) in raw catch rate.  The GNN's advantage
-comes from structural reasoning---correlating the failing server's rising
-$\lambda_v$ with neighbor load patterns---which remains valid regardless of
-whether failures arrive as smooth ramps or sudden steps.  This is confirmed
-by the i.i.d.\ ablation (Table~\ref{tab:ablation}): without any ramp
-signal, LSTM collapses to 0.9\% (= MLP) while GNN maintains 1.64\%
-($p{=}0.0006$).
+Under the persistent migration mechanic, LSTM (17.6\%) and MLP (17.7\%) achieve
+similar raw catch rates in the crash scenario while GNN leads (24.8\%).
+The GNN's advantage comes from structural reasoning---correlating the failing
+server's rising $\lambda_v$ with neighbor load patterns during the
+degradation ramp.  In i.i.d.\ evaluation without a ramp (Table~\ref{tab:ablation}),
+LSTM recovers to 1.58\%$\pm$0.19\% (comparable to GNN's 1.64\%, $p{=}0.55$),
+because the LSTM's load-trend window provides useful signal when failures
+are random.  The significant GNN vs.\ MLP gap ($p{=}0.0006$) thus persists
+across both evaluation modes.
 
 The GNN encoder contributes stability through topological context:
 it can correlate the failing server's rising $\lambda_v$ with neighbor
@@ -642,9 +647,9 @@ load patterns, producing a reliable signal even when local scalar
 features are ambiguous.  MLP sees the same scalars without relational
 context, leading to lower catch rate (17.7\% vs 24.8\%) and higher variance (CoV 0.42 vs 0.30).
 
-LSTM (17.6\%, CoV\,=\,0.63) matches MLP in raw catch rate but shows
+LSTM (17.6\%, CoV\,=\,0.63) matches MLP in raw catch rate in the crash scenario but shows
 higher variance---structural reasoning proves more robust than temporal
-memory under the persistent migration mechanic.
+memory when the failure is correlated across the topology.
 Threshold-70\% (6.8\%) acts only on load, missing the rising
 failure-rate signal.
 
@@ -662,26 +667,30 @@ PPO+MLP barely drains before the crash, confirming the topology signal
   \label{fig:failure}
 \end{figure}
 
-\subsection{Ablation: GNN vs.\ Flat MLP}
+\subsection{Ablation: GNN vs.\ Flat MLP, LSTM, and Edge-Removed GNN}
 \label{sec:ablation}
 
 \begin{table}[t]
 \centering
 \caption{Ablation on held-out seeds 100--119 (20 episodes each model),
 averaged over 5 independent training seeds (torch init seeds 0--4).
-Catch-rate std reflects variance \emph{across training seeds}, not within a single run.}
+Catch-rate std reflects variance \emph{across training seeds}, not within a single run.
+GNN-NoEdge-eval: trained GNN with edge\_index forced empty at inference.
+GNN-NoEdge-train: GNN retrained from scratch without any edges (200 episodes).}
 \label{tab:ablation}
 \begin{tabular}{lcc}
 \toprule
-Metric & GNN (ours) & MLP (no graph) \\
+Policy & Catch Rate (5 seeds) & vs GNN $p$ \\
 \midrule
-Catch Rate (mean$\pm$std, 5 seeds) & \textbf{1.64\%$\pm$0.17\%} & 0.90\%$\pm$0.21\% \\
-False Positive Rate                 & 64.9\%  & 64.7\% \\
-P95 Latency (ms)                    & $646 \pm 4$        & $646 \pm 2$ \\
-Welch $t$-test $p$-value            & \multicolumn{2}{c}{$p = 0.0006$ ($t = 5.53$)} \\
-Mann--Whitney $p$-value             & \multicolumn{2}{c}{$p = 0.004$ ($U = 25$, one-sided; two-sided $p = 0.0079$)} \\
+\textbf{PPO+GNN (ours)} & \textbf{1.64\%$\pm$0.17\%} & --- \\
+LSTM Predictor (5 seeds) & 1.58\%$\pm$0.19\% & $p{=}0.55$ (n.s.) \\
+GNN-NoEdge-eval & 1.40\%$\pm$0.07\% & $p{=}0.012$ \\
+GNN-NoEdge-train & 1.59\%$\pm$0.20\% & $p{=}0.78$ (n.s.) \\
+PPO+MLP (no graph) & 0.90\%$\pm$0.21\% & $p{=}0.0006$ \\
 \midrule
-\multicolumn{3}{l}{\small Crash scenario: GNN leads all learned policies (24.8\% vs 17.7\% MLP, CoV 0.30 vs 0.42); Table~\ref{tab:failure}.} \\
+\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Welch $t$-tests (two-sided). GNN FP=64.9\%, MLP FP=64.7\%, LSTM FP$\approx$62\%.} \\
+\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize GNN vs MLP Mann-Whitney: $p{=}0.004$ (one-sided), $p{=}0.0079$ (two-sided).} \\
+\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Crash scenario: GNN leads learned policies (24.8\% vs 17.7\% MLP, CoV 0.30 vs 0.42); Table~\ref{tab:failure}.} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -692,16 +701,33 @@ into a $N \times 7 = 112$-dimensional vector.  The MLP uses three layers
 (widths 256 → 128 → 64) with the same output dimension (64) and identical PPO hyperparameters.
 This controls for the RL framework, reward, and training budget.
 
-Table~\ref{tab:ablation} summarises the multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds).  GNN achieves \textbf{1.8$\times$ higher catch rate} (1.64\%
-vs.\ 0.90\%; Welch $t{=}5.53$, $p{=}0.0006$; Mann--Whitney $U{=}25$, $p{=}0.004$), while false-positive rates are similar (64.9\% vs.\
-64.7\%), confirming that topology awareness improves the agent's
-ability to identify \emph{which} sessions to migrate, not merely
-\emph{how often} it migrates.  The controlled crash scenario
-(Table~\ref{tab:failure}) further reinforces GNN's advantage:
-GNN leads all learned policies (24.8\% vs 17.7\% MLP, 17.6\% LSTM)
-and achieves the lowest CoV (0.30 vs 0.42 MLP, 0.63 LSTM),
-showing that structural encoding produces both more accurate and
-more reliable migration decisions.
+Table~\ref{tab:ablation} summarises the multi-seed ablation (5 training seeds $\times$ 20 held-out seeds).
+
+\textbf{GNN vs.\ MLP.}
+GNN achieves \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%;
+Welch $t{=}5.53$, $p{=}0.0006$), while false-positive rates are similar
+(64.9\% vs.\ 64.7\%), confirming that topology awareness improves
+\emph{which} sessions to migrate, not merely \emph{how often}.
+
+\textbf{LSTM in i.i.d.\ evaluation.}
+LSTM achieves 1.58\%$\pm$0.19\%, comparable to GNN ($p{=}0.55$, not significant).
+Under the persistent migration mechanic, the LSTM's per-server load window
+provides useful trend signal even without a crash ramp, closing the gap with
+GNN in i.i.d.\ evaluation.
+The GNN's advantages over LSTM are therefore primarily in
+(i)~the crash scenario (24.8\% vs 17.6\%, lower CoV 0.30 vs 0.63);
+(ii)~inference scaling ($1.1\times$ vs $4.3\times$ for $4\times$ cluster growth);
+(iii)~zero-shot generalization to different $N$.
+
+\textbf{Edge-removal ablation.}
+Stripping edges from the trained GNN at inference time reduces catch rate
+from 1.56\% to 1.40\% ($p{=}0.012$), confirming the trained model exploits
+neighbourhood aggregation.  However, a GNN retrained from scratch without
+edges achieves 1.59\%$\pm$0.20\% ($p{=}0.78$ vs GNN-Full)---topology is
+not strictly necessary for i.i.d.\ performance, as per-node features alone
+suffice to drive comparable learning.  The topology benefit is most decisive
+in the crash scenario (Table~\ref{tab:failure}), where the correlated
+$\lambda_v$ ramp creates a strong structural signal that per-node MLPs miss.
 
 \subsection{Scalability: Zero-Shot Generalization}
 \label{sec:scalability}
@@ -777,18 +803,16 @@ mismatch).
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{../results/plots/fig2_training_curve.png}
-  \caption{Training curve over 500 episodes. Reward grows from
-  $\approx\!10^5$ at episode 0 to $\sim\!5\!\times\!10^5$ by episode 200,
-  with continued improvement to episode 500. Best catch rate observed: 7.9\%.}
+  \caption{Training curve over 500 episodes under the persistent migration
+  mechanic. Reward climbs from $\approx\!1\!\times\!10^5$ to
+  $\approx\!2\!\times\!10^5$ over 500 episodes.  Catch rate stabilises
+  at $\approx$1.7\% (last-50 mean) with a peak of 5.3\% at episode 264.}
   \label{fig:training}
 \end{figure}
 
-Figure~\ref{fig:training} shows reward climbing from episode 0
-(untrained random policy, reward $\approx\!10^5$) to a plateau at
-$\sim\!5\!\times\!10^5$ by episode 200, with continued improvement
-through episode 500.  The best single-episode catch rate observed
-during training was 7.9\%, though mean performance stabilizes at
-$\approx$3\%.  The high variance is expected: whether a proactive
+Figure~\ref{fig:training} shows reward climbing steadily over 500 episodes.
+The catch rate peak of 5.3\% occurs at episode 264 and the last-50-episode
+mean settles at 1.7\%.  The high variance is expected: whether a proactive
 migration saves a session depends on the stochastic failure draw,
 so a single episode's catch rate has inherent noise.
 
@@ -936,17 +960,18 @@ Scaled to a 3,600-step production hour (36 episodes) this is $\approx\!19{,}000$
 \paragraph{Why GNN outperforms LSTM in deployable settings.}
 LSTM requires the temporal degradation ramp to be present and smooth to
 exploit its advantage.  In the i.i.d.\ evaluation (random failures,
-no pre-crash ramp), LSTM's catch rate collapses to 0.9\%---identical to
-flat MLP---because there is no trend to memorize.  Three additional
-deployment constraints favour the GNN:
+no pre-crash ramp), LSTM achieves 1.58\%$\pm$0.19\%---comparable to
+GNN (1.64\%, $p{=}0.55$)---because the 10-step load window provides
+useful trend signal even for random failures.  Despite i.i.d.\ parity,
+three additional deployment constraints favour the GNN:
 (i)~\textbf{zero-shot generalization}: an LSTM trained on $N{=}16$
 cannot be applied to $N{=}64$ without retraining (input dimension
 mismatch), while the GNN transfers directly (Table~\ref{tab:scale});
 (ii)~\textbf{inference scaling}: LSTM inference grows $4.3\times$ for a
 $4\times$ cluster size increase vs.\ $1.1\times$ for the GNN;
 (iii)~\textbf{decision reliability}: GNN's CoV (0.30) is $2.1\times$
-lower than LSTM's (0.63), meaning its pre-migration rate varies less
-across deployment conditions.
+lower than LSTM's (0.63) in the crash scenario, meaning its pre-migration
+rate varies less when topology signals are strong.
 
 \paragraph{False-positive rate.}
 The $\sim$65\% false-positive rate (migrations that were unnecessary because
@@ -968,6 +993,7 @@ session-replication mechanism.
 \label{sec:limitations}
 
 \paragraph{Simulation-only evaluation.}
+\begin{sloppypar}
 All experiments are conducted on a discrete-event simulator calibrated
 to a $k{=}4$ fat-tree topology.  The simulator reproduces key
 real-world phenomena---Weibull failure injection, correlated load
@@ -976,8 +1002,8 @@ OS scheduling jitter, network stack variability, or application-level
 session state complexity.  We note that leading simulation-based RL
 systems research (Decima~\cite{sigcomm19decima}, AuTO~\cite{auto2018})
 also began with simulation to isolate algorithmic contributions
-before real deployments.  Our simulator is
-openly parameterised with arrival rates calibrated against the Alibaba 2018 trace;
+before real deployments.  Our simulator is openly parameterised with
+arrival rates calibrated against the Alibaba 2018 trace;
 any practitioner can substitute real load traces and failure logs to
 produce cluster-specific results.  A live deployment on a small cloud
 cluster (e.g., 4--8 AWS EC2 instances running a dummy game server) would
@@ -986,6 +1012,7 @@ measure the true cost of session state delta-transfer.
 The Alibaba 2018 trace experiment (\S\ref{sec:trace}) partially
 addresses this by validating robustness to real arrival burstiness,
 but does not substitute for an end-to-end real-system measurement.
+\end{sloppypar}
 
 \paragraph{Single topology family.}
 The GNN is trained and evaluated exclusively on $k{=}4$ fat-tree

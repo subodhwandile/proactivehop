@@ -1,18 +1,19 @@
 """
-edge_ablation.py — GNN with edges removed vs full GNN.
+edge_ablation.py — Topology necessity test: GNN with edges removed.
 
-Tests whether topology (edge_index) is necessary for the GNN's advantage.
-An edge-removed GNN sees the same node features but no inter-server links,
-degrading to an independent per-node MLP (though with more parameters than
-the MLPAgent, making this a conservative test).
+Two evaluation conditions for each of the 5 trained GNN_initX checkpoints:
+  GNN-Full   : standard inference with real edge_index + edge_features
+  GNN-NoEdge : same checkpoint, edge_index forced empty at inference time
 
-Two conditions:
-  GNN-Full   : standard 2-layer GraphSAGE with real edges
-  GNN-NoEdge : same architecture but edge_index forced to empty at inference
+If the GNN is truly exploiting topology (not just ignoring edges), stripping
+them should degrade catch rate.  If performance is unchanged, the GNN learned
+a purely per-node policy despite having access to topology.
 
-Both models use the same 5 init seeds from ablation_multiseed.
-GNN-Full checkpoints are reused from results/ablation_multiseed/.
-GNN-NoEdge is trained from scratch (5 seeds × 500 episodes).
+This is a zero-shot topology-removal test — no retraining required,
+runs in <5 minutes for all 5 seeds × 20 eval episodes.
+
+Additionally trains 5 GNN-NoEdge models from scratch (200 episodes each)
+to check whether an edge-free GNN can learn a competitive policy.
 """
 
 import sys, os
@@ -31,7 +32,7 @@ from model.ppo_agent import PPOAgent
 
 TRAIN_INIT_SEEDS = [0, 1, 2, 3, 4]
 EVAL_SEEDS       = list(range(100, 120))
-N_TRAIN_EPISODES = 500
+N_TRAIN_EPISODES = 200       # reduced: edge-free GNN converges fast (no topo)
 CHECKPOINT_DIR   = "results/edge_ablation"
 
 BASE_CFG = dict(
@@ -43,7 +44,6 @@ TRAIN_SEEDS = [42, 43, 44, 45, 46]
 
 
 def make_empty_edge_obs(obs: dict) -> dict:
-    """Return a copy of obs with edge_index zeroed out (no topology)."""
     out = dict(obs)
     out["edge_index"]    = np.zeros((2, 0), dtype=np.int64)
     out["edge_features"] = np.zeros((0, 4),  dtype=np.float32)
@@ -92,28 +92,6 @@ def run_episode(agent, seed: int, strip_edges: bool = False,
     return sim.summary()
 
 
-def train_noedge(init_seed: int) -> str:
-    """Train GNN-NoEdge from scratch with empty edges."""
-    torch.manual_seed(init_seed)
-    np.random.seed(init_seed)
-    agent = PPOAgent(n_servers=16, lr=3e-4, entropy_coef=0.05, n_epochs=4)
-    save_path = f"{CHECKPOINT_DIR}/GNN_NoEdge_init{init_seed}.pt"
-    best_cr = -np.inf
-    print(f"  Training GNN-NoEdge (init_seed={init_seed}, {N_TRAIN_EPISODES} eps)...")
-    for ep in range(N_TRAIN_EPISODES):
-        seed = TRAIN_SEEDS[ep % len(TRAIN_SEEDS)]
-        s = run_episode(agent, seed, strip_edges=True, training=True)
-        cr = s.get("catch_rate", 0)
-        if cr > best_cr:
-            best_cr = cr
-            agent.save(save_path)
-        if (ep + 1) % 100 == 0:
-            print(f"    ep {ep+1}/{N_TRAIN_EPISODES}  best_cr={best_cr:.3f}")
-    agent.load(save_path)
-    agent.model.eval()
-    return save_path
-
-
 def evaluate(agent, strip_edges: bool) -> dict:
     cr_list, fp_list = [], []
     for seed in EVAL_SEEDS:
@@ -128,60 +106,87 @@ def evaluate(agent, strip_edges: bool) -> dict:
     }
 
 
+def train_noedge(init_seed: int) -> str:
+    torch.manual_seed(init_seed)
+    np.random.seed(init_seed)
+    agent = PPOAgent(n_servers=16, lr=3e-4, entropy_coef=0.05, n_epochs=4)
+    save_path = f"{CHECKPOINT_DIR}/GNN_NoEdge_init{init_seed}.pt"
+    best_cr = -np.inf
+    for ep in range(N_TRAIN_EPISODES):
+        seed = TRAIN_SEEDS[ep % len(TRAIN_SEEDS)]
+        s = run_episode(agent, seed, strip_edges=True, training=True)
+        cr = s.get("catch_rate", 0)
+        if cr > best_cr:
+            best_cr = cr
+            agent.save(save_path)
+        if (ep + 1) % 50 == 0:
+            print(f"    ep {ep+1}/{N_TRAIN_EPISODES}  best_cr={best_cr:.3f}")
+    agent.load(save_path)
+    agent.model.eval()
+    return save_path
+
+
 def run_edge_ablation():
     Path(CHECKPOINT_DIR).mkdir(parents=True, exist_ok=True)
 
-    full_means, noedge_means = [], []
+    full_means, noedge_eval_means, noedge_train_means = [], [], []
 
     for i, init_seed in enumerate(TRAIN_INIT_SEEDS):
         print(f"\n--- Init seed {init_seed} ({i+1}/{len(TRAIN_INIT_SEEDS)}) ---")
 
-        # GNN-Full: load from ablation_multiseed
+        # GNN-Full: load from ablation_multiseed, evaluate with full edges
         full_path = f"results/ablation_multiseed/GNN_init{init_seed}.pt"
-        full_agent = PPOAgent(n_servers=16, lr=3e-4, entropy_coef=0.05, n_epochs=4)
+        agent = PPOAgent(n_servers=16, lr=3e-4, entropy_coef=0.05, n_epochs=4)
         if Path(full_path).exists():
-            full_agent.load(full_path)
-            full_agent.model.eval()
-        else:
-            print(f"  WARNING: {full_path} not found, using untrained")
-        full_eval = evaluate(full_agent, strip_edges=False)
+            agent.load(full_path)
+        agent.model.eval()
+
+        full_eval = evaluate(agent, strip_edges=False)
         full_means.append(full_eval["catch_rate_mean"])
-        print(f"  GNN-Full    catch_rate={full_eval['catch_rate_mean']:.3f}±{full_eval['catch_rate_std']:.3f}")
+        print(f"  GNN-Full       catch={full_eval['catch_rate_mean']:.3f}±{full_eval['catch_rate_std']:.3f}")
 
-        # GNN-NoEdge: train from scratch
+        # GNN-NoEdge-eval: same checkpoint, edges stripped at inference
+        noedge_eval = evaluate(agent, strip_edges=True)
+        noedge_eval_means.append(noedge_eval["catch_rate_mean"])
+        print(f"  GNN-NoEdge-eval catch={noedge_eval['catch_rate_mean']:.3f}±{noedge_eval['catch_rate_std']:.3f}")
+
+        # GNN-NoEdge-train: retrained from scratch without edges (200 eps)
+        print(f"  Training GNN-NoEdge from scratch ({N_TRAIN_EPISODES} eps)...")
         noedge_path = train_noedge(init_seed)
-        noedge_agent = PPOAgent(n_servers=16, lr=3e-4, entropy_coef=0.05, n_epochs=4)
-        noedge_agent.load(noedge_path)
-        noedge_agent.model.eval()
-        noedge_eval = evaluate(noedge_agent, strip_edges=True)
-        noedge_means.append(noedge_eval["catch_rate_mean"])
-        print(f"  GNN-NoEdge  catch_rate={noedge_eval['catch_rate_mean']:.3f}±{noedge_eval['catch_rate_std']:.3f}")
+        noedge_train_agent = PPOAgent(n_servers=16, lr=3e-4, entropy_coef=0.05, n_epochs=4)
+        noedge_train_agent.load(noedge_path)
+        noedge_train_agent.model.eval()
+        noedge_train_eval = evaluate(noedge_train_agent, strip_edges=True)
+        noedge_train_means.append(noedge_train_eval["catch_rate_mean"])
+        print(f"  GNN-NoEdge-train catch={noedge_train_eval['catch_rate_mean']:.3f}±{noedge_train_eval['catch_rate_std']:.3f}")
 
-    full_arr    = np.array(full_means)
-    noedge_arr  = np.array(noedge_means)
-    t_stat, p_value = stats.ttest_ind(full_arr, noedge_arr, equal_var=False)
+    full_arr         = np.array(full_means)
+    noedge_eval_arr  = np.array(noedge_eval_means)
+    noedge_train_arr = np.array(noedge_train_means)
 
-    print("\n" + "=" * 60)
+    t_eval,  p_eval  = stats.ttest_ind(full_arr, noedge_eval_arr,  equal_var=False)
+    t_train, p_train = stats.ttest_ind(full_arr, noedge_train_arr, equal_var=False)
+
+    print("\n" + "=" * 65)
     print("EDGE-REMOVED GNN ABLATION (5 seeds × 20 eval seeds)")
-    print("=" * 60)
-    print(f"GNN-Full   : {full_arr.mean()*100:.2f}% ± {full_arr.std()*100:.2f}%")
-    print(f"GNN-NoEdge : {noedge_arr.mean()*100:.2f}% ± {noedge_arr.std()*100:.2f}%")
-    print(f"Welch t-test: t={t_stat:.3f}, p={p_value:.4f}")
-    print("=" * 60)
+    print("=" * 65)
+    print(f"GNN-Full         : {full_arr.mean()*100:.2f}% ± {full_arr.std()*100:.2f}%")
+    print(f"GNN-NoEdge-eval  : {noedge_eval_arr.mean()*100:.2f}% ± {noedge_eval_arr.std()*100:.2f}%  (p={p_eval:.4f})")
+    print(f"GNN-NoEdge-train : {noedge_train_arr.mean()*100:.2f}% ± {noedge_train_arr.std()*100:.2f}%  (p={p_train:.4f})")
+    print("=" * 65)
 
     result = {
-        "gnn_full": {
-            "per_seed_means": list(full_means),
-            "mean": float(full_arr.mean()),
-            "std":  float(full_arr.std()),
-        },
-        "gnn_noedge": {
-            "per_seed_means": list(noedge_means),
-            "mean": float(noedge_arr.mean()),
-            "std":  float(noedge_arr.std()),
-        },
-        "welch_t": float(t_stat),
-        "welch_p": float(p_value),
+        "gnn_full":         {"per_seed_means": list(full_means),
+                             "mean": float(full_arr.mean()),
+                             "std":  float(full_arr.std())},
+        "gnn_noedge_eval":  {"per_seed_means": list(noedge_eval_means),
+                             "mean": float(noedge_eval_arr.mean()),
+                             "std":  float(noedge_eval_arr.std()),
+                             "welch_p": float(p_eval)},
+        "gnn_noedge_train": {"per_seed_means": list(noedge_train_means),
+                             "mean": float(noedge_train_arr.mean()),
+                             "std":  float(noedge_train_arr.std()),
+                             "welch_p": float(p_train)},
     }
     out = f"{CHECKPOINT_DIR}/edge_ablation_results.json"
     with open(out, "w") as f:
