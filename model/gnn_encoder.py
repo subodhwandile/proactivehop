@@ -73,7 +73,7 @@ class GNNEncoder(nn.Module):
         if edge_attr is not None and edge_index.shape[1] > 0:
             src_nodes = edge_index[0]  # (E,)
             edge_context = self.edge_proj(edge_attr)  # (E, node_feat_dim)
-            # Mean-aggregate edge context per node
+            # Sum-aggregate edge context per node (scatter_add)
             node_edge_ctx = torch.zeros(x.shape[0], x.shape[1],
                                         device=x.device, dtype=x.dtype)
             node_edge_ctx.scatter_add_(0,

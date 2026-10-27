@@ -50,15 +50,14 @@ $0\%$ for No-Migration and $6.8\!\pm\!6.7\%$ for Threshold-70\%,
 while achieving \textbf{the lowest coefficient of variation (CoV\,=\,0.30)} among
 all learned policies---$2.1\times$ lower CoV than LSTM (CoV\,=\,0.63)
 and $1.4\times$ lower than PPO+MLP (CoV\,=\,0.42)---demonstrating that topology awareness
-delivers both higher \emph{precision} and greater \emph{reliability} (5-seed evaluation);
+delivers both higher \emph{recall} and greater \emph{reliability} (5-seed evaluation);
 (2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
 \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%, Welch $t$=5.53, $p$=0.0006) than MLP
 under identical PPO training, confirming that topology awareness
-improves migration precision beyond the crash scenario;
+improves migration recall beyond the crash scenario;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
 grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $5.5\times$ for LSTM,
-verifying the O(degree$^2$) scaling advantage of local neighborhood
-aggregation.
+verifying the sub-linear inference scaling of local neighbourhood aggregation.
 
 ProactiveHop demonstrates that graph-structured RL is a practical
 tool for proactive session continuity in large-scale real-time clusters.
@@ -97,7 +96,7 @@ production systems:
         with fresh DTLS/SRTP negotiation takes 1--3\,s~\cite{bloggeek}.
         Applications must trigger this manually---``the browser will
         not trigger one on its own''~\cite{mdnwebrtc}.  Jitsi's
-        open issue \#2438 (open through 2026) confirms in-place SFU
+        GitHub issue \#2438 confirms in-place SFU
         failover remains unsolved~\cite{jitsi2438}.
   \item \textbf{Routing latency (Riot Games):} Riot built an entire
         private backbone (Riot Direct) specifically to avoid reactive
@@ -140,16 +139,17 @@ and proactively drain sessions from servers about to fail?}
         that makes proactive migration intrinsically profitable
         (\S\ref{sec:formulation}).
   \item We design a two-layer GraphSAGE encoder that processes only the
-        2-hop neighborhood of each node, achieving O(degree$^2$) inference
-        time that grows as O(degree$^2$) per node (\S\ref{sec:model}).
+        1-hop neighbourhood of each node, with per-layer cost
+        O($|E| \cdot d_h + N \cdot d_h^2$)---linear in $N$ for bounded degree
+        (\S\ref{sec:model}).
   \item We implement ProactiveHop on a high-fidelity fat-tree simulator
         with Weibull failure injection, delta-compressed session state,
         and correlated load spikes (\S\ref{sec:simulator}).
   \item We run controlled experiments showing PPO+GNN achieves
-        PPO+GNN achieves the highest catch rate (24.8\%$\pm$7.5\%) and
+        the highest catch rate (24.8\%$\pm$7.5\%) and
         lowest CoV (0.30) in a crash scenario (5 seeds), scales
         sub-linearly to $N{=}64$ servers zero-shot (inference $1.1\times$
-        vs $5.5\times$ for LSTM), and achieves \textbf{1.4$\times$}
+        vs $5.5\times$ for LSTM), and achieves \textbf{1.8$\times$}
         higher catch rate than MLP (1.64\% vs 0.90\%, $p{=}0.0006$, Welch $t$-test, 5 seeds) in i.i.d.\ evaluation
         (\S\ref{sec:evaluation}).
 \end{itemize}
@@ -272,9 +272,10 @@ load, $p_v^{\rm drop} = \sigma\!\bigl((\ell_v - 0.72) \cdot 15\bigr)$
 $a_v \in \{0,1\}$ = alive flag, and $\lambda_v$ = load-coupled failure hazard rate,
 $\lambda_v = 20\cdot\bigl[p_{\rm base} + 0.005\cdot\max(0,\,\ell_v - 0.70)\bigr]$,
 where $p_{\rm base} = 1 - e^{-(\Delta t/\text{MTBF})^{1.5}}$
-is the baseline Weibull per-step probability.  The load-coupling term
-means overloaded servers ($\ell_v > 0.70$) report elevated $\lambda_v$,
-giving the GNN a direct predictive signal for imminent failure.
+is the baseline Weibull per-step probability.  Note that $\lambda_v$ is
+a deterministic function of $\ell_v$ plus the fixed MTBF baseline; it
+provides the GNN a \emph{scaled and thresholded} view of overload risk
+distinct from the raw $\ell_v$ value.
 
 Each link $e = (u,v) \in E$ has features
 $\mathbf{e}_{uv} = [\text{latency},\; \text{bandwidth},\; \text{utilization},\; \text{loss}]$.
@@ -366,6 +367,18 @@ $\{\mathbf{x}_u : u \in \mathcal{N}(v)\}$.  Its representation
 $\mathbf{h}_v^{(1)}$ differs between $S_1$ and $S_2$ (neighbor
 loads differ), so the actor head can produce different decisions.
 \end{proof}
+
+\begin{remark}
+Under the persistent migration mechanic, a migrated session's TP
+classification is determined by the \emph{old} server's counterfactual
+drop probability.  For $\ell_v = 0.72$ (the proof's baseline), the
+per-step counterfactual TP rate is $p_{\rm drop}(0.72) = 0.5$.  The
+argument above therefore illustrates the \emph{discrimination} advantage
+of the GNN---it can detect overloaded neighbors and avoid sending sessions
+to congested targets---even if the reward difference between S1 and S2
+requires accounting for downstream target-overload effects beyond
+the one-step counterfactual.
+\end{remark}
 
 \noindent
 The proposition is tight: LSTM also cannot distinguish $S_1$ from
@@ -471,15 +484,15 @@ are listed in Table~\ref{tab:hyperparams}.
 We implement a discrete-event cluster simulator (\texttt{sim/})
 with the following components:
 
-\textbf{Topology}: fat-tree with $k=4$ (16 servers, 20 switches).
+\textbf{Topology}: fat-tree with $k=4$ (16 servers).
 All paper experiments use this topology; zero-shot transfer to larger
-fat-trees ($k{=}6$, $N{=}54$; $k{=}8$, $N{=}128$) is evaluated in
+fat-trees ($k{=}5$, $N{=}25$; $k{=}8$, $N{=}64$) is evaluated in
 \S\ref{sec:scalability}.
 
 \textbf{Session model}: sessions arrive as a Poisson process (rate
 $\lambda_{\rm arr} = 10$/step), have Pareto-distributed lifetimes
 (mean 60 steps), and carry delta-compressed state ($\sim$500\,KB mean).
-Speculative pre-migration costs $\bar{L}_{\rm spec} = 5$\,ms;
+Persistent pre-migration costs $\bar{L}_{\rm spec} = 5$\,ms (fast session state transfer);
 reactive reconnect costs $\bar{L}_{\rm react} \sim \mathcal{N}(400,150^2)$\,ms.
 
 \textbf{Failure model}: each server fails per step with probability
@@ -504,14 +517,18 @@ theoretical expectations.
 \paragraph{Failure inter-arrival distribution.}
 The simulator draws per-step failure probability from a Weibull
 distribution with shape $\kappa{=}1.5$ and scale $\eta{=}3600$\,s
-(MTBF 3600\,s).  Shape $\kappa{=}1.5 > 1$ models infant-mortality-free
-hardware: failure rate \emph{increases} with age, matching field
-studies of disk and DRAM failure~\cite{barroso2013datacenter}.
+(MTBF 3600\,s).  Shape $\kappa{=}1.5$ was chosen to match empirical
+hazard rates reported in field studies of disk and DRAM
+failure~\cite{barroso2013datacenter}.  Note that the simulator applies
+the Weibull CDF as an \emph{i.i.d.\ per-step} probability---each
+timestep draws a fresh Bernoulli sample at the same fixed hazard
+rate---rather than as a true aging process across steps.
 The per-step probability $p_f = 1 - e^{-(\Delta t / \eta)^\kappa}$
-evaluates to ${\approx}4.6 \times 10^{-6}$ per second at $\Delta t{=}1$\,s,
-corresponding to roughly one server failure every $\sim$60 hours
-in a 16-server cluster---consistent with reported MTBF in hyperscale data
-centres~\cite{barroso2013datacenter}.
+evaluates to ${\approx}4.6 \times 10^{-6}$ per server per second,
+corresponding to roughly one server failure every ${\approx}60$ hours
+\emph{per server}, or one cluster-level failure every ${\approx}3.8$ hours
+across a 16-server cluster---consistent with reported MTBF in
+hyperscale data centres~\cite{barroso2013datacenter}.
 
 \paragraph{Session arrival process.}
 Sessions arrive as a Poisson process with rate $\lambda_{\rm arr}$.
@@ -533,9 +550,10 @@ neighbouring servers with a 50\% probability, reflecting
 intra-cluster load imbalance observed when a hot shard floods the
 network path to its replicas.  With spike probability 0.08 per step
 and duration 10 steps, servers spend roughly 44\% of time in a spike
-state; the measured steady-state composite load (post-warmup, 5 seeds,
-500 steps each) is $0.92 \pm 0.10$, representing a heavily-utilised
-cluster typical of peak play periods~\cite{riotdirect}.
+state; the measured peak composite load during spiking (post-warmup, 5 seeds,
+500 steps each) reaches $0.92 \pm 0.10$, consistent with heavily-utilised
+clusters during burst periods~\cite{riotdirect}.  Between spikes, load
+decays toward the base ($\ell_0{=}0.55$) where drop probability is low.
 
 % -----------------------------------------------------------------------
 \section{Evaluation}
@@ -564,14 +582,16 @@ cluster typical of peak play periods~\cite{riotdirect}.
         hyperparameters.  Isolates the contribution of graph structure.
 \end{itemize}
 
-\subsection{Failure Scenario: The Smoking-Gun Experiment}
+\subsection{Failure Scenario: Controlled Pre-Failure Ramp}
 \label{sec:failure}
 
 \begin{table}[t]
 \centering
 \caption{Pre-migration results: Server 3 crashes at step 40.
 25 sessions seeded on target (plus organic arrivals). Results are mean$\pm$std over 5 random seeds.
-CoV = std/mean; lower CoV = more consistent policy.
+CoV = std/mean. Pairwise Welch tests between GNN and other learned policies are
+not significant at $n{=}5$ (GNN vs MLP $p{\approx}0.17$; GNN vs LSTM $p{\approx}0.27$);
+the CoV ranking is descriptive.
 PPO+MLP uses the same RL framework but a flat MLP encoder (no graph).}
 \label{tab:failure}
 \begin{tabular}{lrrrc}
@@ -600,9 +620,11 @@ All learned policies outperform no migration (0\%) and threshold-only
 among all learned policies, surpassing both PPO+MLP (17.7\%) and
 LSTM (17.6\%).  Crucially, GNN also achieves the \textbf{lowest CoV (0.30)}---
 $2.1\times$ lower than LSTM (0.63) and $1.4\times$ lower than MLP (0.42).
-This combination of highest precision \emph{and} lowest variance is the
-key practical result: GNN is not only the best policy on average, it is
-also the most predictable.
+This combination of highest catch rate \emph{and} lowest variance is a
+practically relevant result, though pairwise Welch tests between GNN and other
+learned policies are not statistically significant at $n{=}5$ seeds
+(GNN vs.\ MLP $p{\approx}0.17$; GNN vs.\ LSTM $p{\approx}0.27$); larger-scale
+evaluation is needed to confirm the mean ranking.
 
 Under the persistent migration mechanic, LSTM's temporal advantage from the
 old speculative model disappears: without state-push coincidence to exploit,
@@ -657,7 +679,7 @@ Catch Rate (mean$\pm$std, 5 seeds) & \textbf{1.64\%$\pm$0.17\%} & 0.90\%$\pm$0.2
 False Positive Rate                 & 64.9\%  & 64.7\% \\
 P95 Latency (ms)                    & $646 \pm 4$        & $646 \pm 2$ \\
 Welch $t$-test $p$-value            & \multicolumn{2}{c}{$p = 0.0006$ ($t = 5.53$)} \\
-Mann--Whitney $p$-value             & \multicolumn{2}{c}{$p = 0.004$ ($U = 25$)} \\
+Mann--Whitney $p$-value             & \multicolumn{2}{c}{$p = 0.004$ ($U = 25$, one-sided; two-sided $p = 0.0079$)} \\
 \midrule
 \multicolumn{3}{l}{\small Crash scenario: GNN leads all learned policies (24.8\% vs 17.7\% MLP, CoV 0.30 vs 0.42); Table~\ref{tab:failure}.} \\
 \bottomrule
@@ -877,8 +899,9 @@ range when the learning rate does not push into instability.
 \paragraph{Why catch rates are modest and variable.}
 Catch rate measures the fraction of \emph{true drops} intercepted by
 pre-migration.  True drops occur only when a server is near failure or
-has elevated load; in a 16-server cluster at base load 0.55, only
-2--5\% of sessions are at risk per step.  This makes the metric
+has elevated load; in a healthy cluster running below the sigmoid threshold
+($\ell_v < 0.72$), drop probability is low, so the per-step at-risk
+population is small.  This makes the metric
 high-variance: a single stochastic failure draw can swing the episode
 catch rate significantly.  We therefore report the \emph{crash
 scenario} (Table~\ref{tab:failure}) as the primary ablation, where
@@ -894,12 +917,10 @@ Consider a cluster of $N{=}16$ servers each hosting 10,000 concurrent
 sessions (160,000 total).  GNN's 1.64\% catch rate saves
 $\approx\!2{,}624$ sessions per 100-step episode from a 400\,ms reconnect;
 MLP saves $\approx\!1{,}440$.  The difference of 1,184 sessions $\times$
-$(450 - 5)$\,ms $= 527$\,s of avoided reconnect latency per episode.
-Scaled to a 3,600-step production hour this is $\approx\!19{,}000$\,s of
-saved latency per cluster per hour---equivalent to preventing roughly
-47,000 player-visible lag spikes.  At fleet scale (1,000 clusters), the
-difference between GNN and MLP routing is on the order of 13 hours of
-avoided reconnect storms per hour of operation.
+$(450 - 5)$\,ms $= 527$\,s of avoided reconnect latency per 100-step episode.
+Scaled to a 3,600-step production hour (36 episodes) this is $\approx\!19{,}000$\,s
+(${\approx}5.3$ hours) of saved latency per cluster-hour---equivalent to preventing roughly
+47,000 player-visible lag spikes per cluster-hour of operation.
 
 \paragraph{Why GNN outperforms LSTM in deployable settings.}
 LSTM requires the temporal degradation ramp to be present and smooth to
@@ -923,10 +944,8 @@ tradeoff in PPO.  The bandwidth cost term $C_{\rm bw}$ in the reward
 partially penalizes unnecessary migrations; tightening $C_{\rm bw}$
 reduces FP rate at the cost of fewer true positives.  GNN and MLP
 produce similar FP rates (64.9\% vs 64.7\%), indicating that
-topology awareness improves \emph{which} sessions to migrate rather
-than how aggressively the agent migrates.
-
-\paragraph{Production deployment.}
+topology awareness improves \emph{which} sessions to migrate (recall)
+rather than how aggressively the agent migrates.
 ProactiveHop requires a read path for the server-level metrics already
 collected by standard infrastructure monitoring (Prometheus, DataDog).
 The GNN runs on-controller as a lightweight 1.2\,ms inference service.
@@ -945,10 +964,9 @@ spikes, per-link latency and bandwidth---but cannot capture
 OS scheduling jitter, network stack variability, or application-level
 session state complexity.  We note that leading simulation-based RL
 systems research (Decima~\cite{sigcomm19decima}, AuTO~\cite{auto2018})
-follows the same simulation-then-deploy methodology: simulation isolates
-algorithmic contributions from infrastructure noise, enabling controlled
-ablations that would be infeasible on live clusters.  Our simulator is
-openly parameterised and calibrated against the Alibaba 2018 trace;
+also began with simulation to isolate algorithmic contributions
+before real deployments.  Our simulator is
+openly parameterised with arrival rates calibrated against the Alibaba 2018 trace;
 any practitioner can substitute real load traces and failure logs to
 produce cluster-specific results.  A live deployment on a small cloud
 cluster (e.g., 4--8 AWS EC2 instances running a dummy game server) would
@@ -966,7 +984,9 @@ topologies.  Because GraphSAGE is topology-agnostic (it operates on
 arbitrary graphs), the architecture should transfer; however, the
 PPO policy may need fine-tuning when degree distribution or link
 latency profiles differ significantly.  Zero-shot transfer to a
-$k{=}6$ fat-tree ($N{=}54$ servers) would be a low-cost first step.
+$k{=}5$ fat-tree ($N{=}25$ servers) has already been evaluated
+(\S\ref{sec:scalability}); extending to spine-leaf or jellyfish
+topologies would be a natural next step.
 
 \paragraph{Modest absolute catch rate.}
 The best observed catch rate is $\sim$1.6\% in i.i.d.\ evaluation (2.3\% at the default entropy setting).
@@ -979,7 +999,7 @@ likely to drop within the next $H$ steps---would widen the opportunity
 window.  Second, a \emph{model-based} rollout (learning a dynamics
 model of server load evolution and planning ahead) could exploit the
 degradation ramp more aggressively, as the Oracle baseline
-($\sim$92\% catch rate in the crash scenario) demonstrates the
+(${\approx}68\%$ catch rate in the crash scenario, Table~\ref{tab:failure}) demonstrates the
 theoretical ceiling.
 
 \paragraph{Reward sensitivity.}
@@ -1025,6 +1045,10 @@ experiment scripts are publicly available at
 \url{https://github.com/subodhwandile/proactivehop}.
 
 % -----------------------------------------------------------------------
+\section*{Funding}
+This research did not receive any specific grant from funding agencies in the
+public, commercial, or not-for-profit sectors.
+
 \section*{CRediT Author Statement}
 \textbf{Subodh Wandile:} Conceptualization, Methodology, Software, Formal analysis,
 Investigation, Data curation, Writing -- original draft, Writing -- review \& editing,
@@ -1041,7 +1065,7 @@ experiment results that support the findings of this study are openly available 
 The Alibaba 2018 cluster trace used in the trace-fidelity experiment is publicly
 available at \url{https://github.com/alibaba/clusterdata}.
 
-\section*{Use of AI Tools}
+\section*{Declaration of Generative AI and AI-Assisted Technologies in the Writing Process}
 GitHub Copilot (code completion) was used during software development.
 Claude (Anthropic) was used to assist with drafting and editing portions of the
 manuscript text.  All scientific content, experimental design, results, and
