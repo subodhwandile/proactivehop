@@ -1,5 +1,4 @@
-\documentclass[10pt,twocolumn]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[review,1p]{elsarticle}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -8,28 +7,27 @@
 \usepackage{xcolor}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\usepackage{cite}
 \usepackage{microtype}
 \usepackage{caption}
 \usepackage{subcaption}
+
+\journal{Journal of King Saud University -- Computer and Information Sciences}
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
 \newtheorem{proposition}{Proposition}
 \newtheorem{remark}{Remark}
 
-\title{\textbf{ProactiveHop: Topology-Aware Proactive Session Migration\\
-via Graph Neural Networks and Reinforcement Learning}}
-
-\author{
-  Subodh Wandile\\
-  \texttt{subodhwandile10@gmail.com}
-}
-
-\date{}
-
 \begin{document}
-\maketitle
+
+\begin{frontmatter}
+
+\title{ProactiveHop: Topology-Aware Proactive Session Migration
+via Graph Neural Networks and Reinforcement Learning}
+
+\author[1]{Subodh Wandile}
+\ead{subodhwandile10@gmail.com}
+\address[1]{Independent Researcher}
 
 \begin{abstract}
 Stateful real-time servers (game servers, video conferencing endpoints,
@@ -64,6 +62,14 @@ aggregation.
 ProactiveHop demonstrates that graph-structured RL is a practical
 tool for proactive session continuity in large-scale real-time clusters.
 \end{abstract}
+
+\begin{keyword}
+graph neural networks \sep reinforcement learning \sep proactive session migration \sep
+server cluster management \sep proximal policy optimization \sep fat-tree topology \sep
+load-coupled failure prediction
+\end{keyword}
+
+\end{frontmatter}
 
 % -----------------------------------------------------------------------
 \section{Introduction}
@@ -262,8 +268,12 @@ where $u_v$ = CPU utilization, $m_v$ = memory utilization,
 $\sigma_v$ = session ratio (sessions / capacity), $\ell_v$ = composite
 load, $p_v^{\rm drop} = \sigma\!\bigl((\ell_v - 0.72) \cdot 15\bigr)$
 = drop probability (steep sigmoid for clean gradient),
-$a_v \in \{0,1\}$ = alive flag, and $\lambda_v$ = per-step failure rate
-(scaled $\times 100$ to NN input range).
+$a_v \in \{0,1\}$ = alive flag, and $\lambda_v$ = load-coupled failure hazard rate,
+$\lambda_v = 20\cdot\bigl[p_{\rm base} + 0.005\cdot\max(0,\,\ell_v - 0.70)\bigr]$,
+where $p_{\rm base} = 1 - e^{-(\Delta t/\text{MTBF})^{1.5}}$
+is the baseline Weibull per-step probability.  The load-coupling term
+means overloaded servers ($\ell_v > 0.70$) report elevated $\lambda_v$,
+giving the GNN a direct predictive signal for imminent failure.
 
 Each link $e = (u,v) \in E$ has features
 $\mathbf{e}_{uv} = [\text{latency},\; \text{bandwidth},\; \text{utilization},\; \text{loss}]$.
@@ -277,9 +287,14 @@ $\mathbf{e}_{uv} = [\text{latency},\; \text{bandwidth},\; \text{utilization},\; 
 $a_t[v] = 1$ triggers migration of the 20 most at-risk sessions on
 server $v$ to the least-loaded live neighbor.
 
-\textbf{Transition}: the simulator applies decisions, advances arrivals
-and departures, injects correlated load spikes (probability 0.08 per
-step), and samples Weibull failures (shape $k{=}1.5$, scale MTBF).
+\textbf{Transition}: the simulator applies \emph{persistent} migration
+decisions---sessions move immediately to the target server.
+At step end, a \emph{counterfactual} drop check runs at the original server:
+if the server's drop probability would have fired, the migration is a
+true positive (TP); otherwise it is a false positive (FP).
+The simulator also advances arrivals and departures, injects correlated
+load spikes (probability 0.08 per step), and samples load-coupled Weibull
+failures (shape $k{=}1.5$, scale MTBF; see $\lambda_v$ above).
 
 \textbf{Reward.} Let $m_t$ be the step metrics tuple.  We use a
 \emph{differential latency reward}:
@@ -288,10 +303,10 @@ step), and samples Weibull failures (shape $k{=}1.5$, scale MTBF).
         - C_{\rm bw} \cdot B_t
   \label{eq:reward}
 \end{equation}
-where $m_t^{\rm TP}$ = true-positive migrations (session moved before
-its drop event), $\bar{L}_{\rm react} = 450$\,ms = mean reactive
-reconnect latency, $\bar{L}_{\rm spec} = 5$\,ms = mean speculative
-reconnect latency, $C_{\rm bw} = 5 \times 10^{-5}$ = bandwidth
+where $m_t^{\rm TP}$ = true-positive migrations (sessions moved proactively
+to a server whose old host would have dropped them), $\bar{L}_{\rm react} = 450$\,ms = mean reactive
+reconnect latency, $\bar{L}_{\rm spec} = 5$\,ms = mean proactive handoff
+latency (live session transfer cost), $C_{\rm bw} = 5 \times 10^{-5}$ = bandwidth
 penalty coefficient, and $B_t$ = migration bandwidth in KB.
 
 This formulation has a critical property: \emph{the no-migration
@@ -573,10 +588,10 @@ Oracle (UB)      & $91.9\pm7.5$   &   5 & 137 \\
 
 Table~\ref{tab:failure} shows pre-migration results across 5 random seeds.
 Server 3 crashes at step 40.  From step 30 we inject a
-\emph{degradation ramp}: CPU utilization rises from 0.35 to 0.95 and
-per-step failure rate $\lambda_v$ climbs from 0.002 to 0.1,
-modelling observable pre-failure symptoms (thermal throttling, disk I/O
-errors, memory ECC corrections).
+\emph{degradation ramp}: CPU utilization rises from 0.35 to 0.95,
+which through the load-coupling formula increases the observable
+$\lambda_v$ signal, modelling pre-failure symptoms
+(thermal throttling, disk I/O errors, memory ECC corrections).
 
 All learned policies outperform no migration (0\%) and threshold-only
 (11.0\%).  LSTM achieves the highest pre-migration rate (32.8\%) by
@@ -963,7 +978,29 @@ experiment scripts are publicly available at
 \url{https://github.com/subodhwandile/proactivehop}.
 
 % -----------------------------------------------------------------------
-\bibliographystyle{plain}
+\section*{CRediT Author Statement}
+\textbf{Subodh Wandile:} Conceptualization, Methodology, Software, Formal analysis,
+Investigation, Data curation, Writing -- original draft, Writing -- review \& editing,
+Visualization.
+
+\section*{Declaration of Competing Interests}
+The author declares that he has no known competing financial interests or personal
+relationships that could have appeared to influence the work reported in this paper.
+
+\section*{Data Availability}
+The simulator, model code, training scripts, pre-trained checkpoints, and all
+experiment results that support the findings of this study are openly available at
+\url{https://github.com/subodhwandile/proactivehop}.
+The Alibaba 2018 cluster trace used in the trace-fidelity experiment is publicly
+available at \url{https://github.com/alibaba/clusterdata}.
+
+\section*{Use of AI Tools}
+GitHub Copilot (code completion) was used during software development.
+Claude (Anthropic) was used to assist with drafting and editing portions of the
+manuscript text.  All scientific content, experimental design, results, and
+conclusions are the sole responsibility of the author.
+
+\bibliographystyle{elsarticle-num}
 \bibliography{references}
 
 \appendix
