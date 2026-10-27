@@ -24,7 +24,8 @@ class ServerNode:
     mem_util: float = 0.0
     active_sessions: int = 0
     max_sessions: int = 1000
-    failure_rate: float = 0.001        # per-timestep failure probability
+    failure_rate: float = 0.001        # base Weibull scale (used to compute hazard_rate)
+    hazard_rate: float = 0.0           # current per-step failure probability (load-coupled, updated each step)
     is_alive: bool = True
     region: int = 0                    # rack/zone label
 
@@ -54,7 +55,7 @@ class ServerNode:
             self.load,
             self.drop_probability,
             float(self.is_alive),
-            self.failure_rate * 100,   # scale for NN
+            self.hazard_rate,          # dynamic load-coupled failure hazard (replaces static failure_rate)
         ], dtype=np.float32)
 
 

@@ -2,7 +2,7 @@
 lstm_baseline.py — LSTM load-prediction baseline.
 
 A per-server LSTM observes a sliding window of the last WINDOW_SIZE steps
-of [load, failure_rate, session_ratio] for each server and predicts load
+of [load, hazard_rate, session_ratio] for each server and predicts load
 HORIZON steps ahead.  If predicted load > MIGRATE_THRESHOLD, it triggers
 migration of top-20 sessions — identical migration action as all other
 policies.
@@ -34,7 +34,7 @@ from sim.session import SessionStatus
 
 WINDOW_SIZE = 10       # steps of history fed to LSTM
 HORIZON = 5            # predict load this many steps ahead
-FEAT_DIM = 3           # per-server features: load, failure_rate, session_ratio
+FEAT_DIM = 3           # per-server features: load, hazard_rate, session_ratio
 HIDDEN_DIM = 64
 N_LAYERS = 2
 MIGRATE_THRESHOLD = 0.65   # predicted load threshold to trigger migration
@@ -117,8 +117,7 @@ def collect_training_data(n_episodes: int = 100, steps: int = 200,
                 node = sim.topo.get_node(sv)
                 f = [
                     float(node.load),
-                    float(node.failure_rate * 100),
-                    float(min(len(sim.server_sessions[sv]) / 200.0, 1.0)),
+                    float(node.hazard_rate),                    float(min(len(sim.server_sessions[sv]) / 200.0, 1.0)),
                 ]
                 feats.append(f)
             step_feats.append(feats)
@@ -211,7 +210,7 @@ class LSTMPolicy:
         n_sess = len(sim.server_sessions[sv])
         return [
             float(node.load),
-            float(node.failure_rate * 100),
+            float(node.hazard_rate),
             float(min(n_sess / 200.0, 1.0)),   # session ratio proxy
         ]
 

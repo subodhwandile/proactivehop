@@ -109,9 +109,9 @@ class ClusterSimulator:
         self.history: list[StepMetrics] = []
         self.current_step = 0
 
-        # Speculative migration state:
-        # session_id -> (target_server, push_time, prev_checkpoint)
-        self._pending_speculative: dict[str, tuple] = {}
+        # Persistent migration state:
+        # session_id -> old_server_id (populated per-step, cleared at start of each step)
+        self._migrated_this_step: dict[str, int] = {}
 
     # ------------------------------------------------------------------
     # Main simulation loop
@@ -135,6 +135,7 @@ class ClusterSimulator:
             obs, reward, done, info
         """
         metrics = StepMetrics(step=self.current_step)
+        self._migrated_this_step = {}  # reset per-step tracking
 
         # 1. Arrive new sessions
         self._arrive_sessions()
@@ -146,8 +147,8 @@ class ClusterSimulator:
         if self.cfg.enable_failures:
             self._apply_failures(metrics)
 
-        # 4. Execute speculative migrations (policy decisions)
-        self._execute_speculative_migrations(migration_decisions, metrics)
+        # 4. Execute persistent migrations (policy decisions)
+        self._execute_persistent_migrations(migration_decisions, metrics)
 
         # 5. Evaluate which sessions drop this timestep
         self._evaluate_drops(metrics)
@@ -264,15 +265,20 @@ class ClusterSimulator:
     # ------------------------------------------------------------------
 
     def _apply_failures(self, metrics: StepMetrics):
+        dt = self.cfg.timestep_sec
+        mtbf = self.cfg.server_mtbf
         for i in range(self.n):
             node = self.topo.get_node(i)
             if not node.is_alive:
-                self._recovery_remaining[i] -= self.cfg.timestep_sec
+                self._recovery_remaining[i] -= dt
                 if self._recovery_remaining[i] <= 0:
                     self.topo.recover_node(i)
             else:
-                # Weibull failure: shape=1.5, scale=MTBF
-                p_fail = 1.0 - np.exp(-(self.cfg.timestep_sec / self.cfg.server_mtbf) ** 1.5)
+                # Load-coupled Weibull hazard: overloaded servers fail more often
+                p_fail_base = 1.0 - np.exp(-(dt / mtbf) ** 1.5)
+                p_fail = p_fail_base + 0.005 * max(0.0, node.load - 0.70)
+                p_fail = min(p_fail, 0.05)   # cap at 5% per step
+                node.hazard_rate = p_fail * 20.0  # scale to [0,1] range for GNN feature
                 if self.rng.random() < p_fail:
                     self.topo.apply_failure(i)
                     self._recovery_remaining[i] = float(
@@ -283,15 +289,14 @@ class ClusterSimulator:
     # Migration execution
     # ------------------------------------------------------------------
 
-    def _execute_speculative_migrations(
+    def _execute_persistent_migrations(
         self,
         decisions: dict[str, int],
         metrics: StepMetrics,
     ):
         """
-        For each session the policy wants to pre-migrate:
-          - Record the speculative push (bandwidth cost)
-          - Mark session as MIGRATING with target
+        Persistent migration: immediately move each session to its target.
+        Track old server in _migrated_this_step for counterfactual TP/FP eval.
         """
         for session_id, target in decisions.items():
             if session_id not in self.sessions:
@@ -299,20 +304,18 @@ class ClusterSimulator:
             s = self.sessions[session_id]
             if s.status != SessionStatus.ACTIVE:
                 continue
+            src = s.current_server
+            if not self.topo.get_node(src).is_alive:
+                continue
             if not self.topo.get_node(target).is_alive:
                 continue
 
-            # Bandwidth cost = delta state size
             bw_cost = s.state.delta_size_kb(s.prev_checkpoint_hash)
             metrics.migration_bandwidth_kb += bw_cost
             metrics.total_migrations += 1
 
-            s.start_speculative_push(target)
-            self._pending_speculative[session_id] = (
-                target,
-                self.current_step,
-                s.prev_checkpoint_hash,
-            )
+            self._move_session(session_id, src, target)
+            self._migrated_this_step[session_id] = src
 
     # ------------------------------------------------------------------
     # Drop evaluation
@@ -320,52 +323,50 @@ class ClusterSimulator:
 
     def _evaluate_drops(self, metrics: StepMetrics):
         """
-        For each active session, sample whether it drops this timestep.
-        Drop probability comes from the server's current drop_probability.
+        Evaluate session drops for this timestep.
+
+        For sessions moved this step (persistent migration):
+          - Sample counterfactual p_drop at the OLD server
+          - TP if old server would have dropped it; FP otherwise
+
+        For sessions not moved:
+          - Sample p_drop at current server normally
         """
         reconnect_latencies = []
 
         for sid, s in list(self.sessions.items()):
-            node = self.topo.get_node(s.current_server)
-            p_drop = node.drop_probability
+            if sid in self._migrated_this_step:
+                # Counterfactual: would the old server have dropped this session?
+                old_server = self._migrated_this_step[sid]
+                old_node = self.topo.get_node(old_server)
+                p_drop = old_node.drop_probability
+                p_drop_session = min(1.0, max(0.0,
+                    p_drop + float(self.rng.normal(0, 0.01))))
 
-            # Small per-session noise
-            p_drop_session = min(1.0, p_drop + float(self.rng.normal(0, 0.01)))
-
-            if self.rng.random() < p_drop_session:
-                # Session drops
-                s.record_drop()
-
-                if sid in self._pending_speculative:
-                    # Speculative migration was prepared — near-zero latency resume
-                    target, push_step, _ = self._pending_speculative.pop(sid)
-                    if self.topo.get_node(target).is_alive:
-                        lat = float(self.rng.normal(
-                            self.cfg.speculative_reconnect_latency_ms_mean,
-                            self.cfg.speculative_reconnect_latency_ms_std,
-                        ))
-                        lat = max(1.0, lat)
-                        s.record_reconnect(lat, was_speculative=True)
-                        self._move_session(sid, s.current_server, target)
-                        metrics.true_positive_migrations += 1
-                        reconnect_latencies.append(lat)
-                    else:
-                        # Target also failed — fall back to reactive
-                        self._reactive_reconnect(sid, s, metrics, reconnect_latencies)
+                if self.rng.random() < p_drop_session:
+                    # TP: migration was justified
+                    lat = float(self.rng.normal(
+                        self.cfg.speculative_reconnect_latency_ms_mean,
+                        self.cfg.speculative_reconnect_latency_ms_std,
+                    ))
+                    lat = max(1.0, lat)
+                    s.record_reconnect(lat, was_speculative=True)
+                    metrics.true_positive_migrations += 1
+                    reconnect_latencies.append(lat)
                 else:
+                    # FP: migration was unnecessary
+                    metrics.false_positive_migrations += 1
+            else:
+                # Standard path: evaluate drop at current server
+                node = self.topo.get_node(s.current_server)
+                p_drop = node.drop_probability
+                p_drop_session = min(1.0, max(0.0,
+                    p_drop + float(self.rng.normal(0, 0.01))))
+
+                if self.rng.random() < p_drop_session:
+                    s.record_drop()
                     metrics.drops_unhandled += 1
                     self._reactive_reconnect(sid, s, metrics, reconnect_latencies)
-
-        # Resolve false positives: speculative push but no drop
-        for sid in list(self._pending_speculative.keys()):
-            if sid in self.sessions and self.sessions[sid].status == SessionStatus.MIGRATING:
-                s = self.sessions[sid]
-                if s.status != SessionStatus.DROPPED:
-                    # False positive — cancel speculative push
-                    self._pending_speculative.pop(sid)
-                    s.status = SessionStatus.ACTIVE
-                    s.speculative_target = None
-                    metrics.false_positive_migrations += 1
 
         if reconnect_latencies:
             metrics.avg_reconnect_latency_ms = float(np.mean(reconnect_latencies))
