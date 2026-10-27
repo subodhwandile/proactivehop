@@ -893,8 +893,18 @@ catch rates span 1.2\%--2.1\% ($\pm 0.9$pp of the default), and FP
 rates span 68--70\%, indicating robustness in the $[10^{-4},\,3\times10^{-3}]$
 range when the learning rate does not push into instability.
 
-% -----------------------------------------------------------------------
-\section{Discussion}
+\paragraph{Topology-aware heuristics vs.\ learned policies.}
+A natural question is whether a \emph{handcrafted} topology-aware
+heuristic---without RL---can close the gap.  We evaluated a
+\textbf{Neighbour-Aware Threshold} that conditions migration on two criteria:
+$\ell_v \geq 0.70$ \emph{and} mean neighbour load $< 0.60$ (avoiding
+saturated targets).  In i.i.d.\ evaluation, this achieves 0.12\%
+catch rate---3$\times$ better than plain Threshold-70\% (0.04\%)
+but $13\times$ below PPO+GNN (1.64\%).  The lesson: topology-aware
+heuristics avoid obviously wasteful migrations (sending sessions to
+overloaded neighbours) but cannot learn \emph{when} to proactively drain
+a server before a failure event; that requires credit assignment over
+multi-step episodes, which only RL provides.
 \label{sec:discussion}
 
 \paragraph{Why catch rates are modest and variable.}

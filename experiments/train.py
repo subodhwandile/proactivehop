@@ -146,4 +146,10 @@ def train(
 
 
 if __name__ == "__main__":
-    train()
+    train(
+        n_episodes=500,
+        steps_per_episode=100,
+        seed=42,
+        checkpoint_dir="results/checkpoints_persistent",
+        log_file="results/training_log_persistent.json",
+    )
