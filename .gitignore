@@ -10,8 +10,6 @@ env/
 # Large checkpoint files — keep only best
 results/checkpoints/ep_*.pt
 results/checkpoints_v2/ep_*.pt
-results/ablation/best_GNN.pt
-results/ablation/best_MLP.pt
 
 # LaTeX build artifacts
 paper/*.aux
