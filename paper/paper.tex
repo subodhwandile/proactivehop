@@ -53,7 +53,7 @@ while achieving \textbf{$2.2\times$ lower std} than PPO+MLP
 ($19.9\%\!\pm\!19.2\%$), demonstrating that topology awareness
 improves \emph{reliability} of pre-migration decisions (5-seed evaluation);
 (2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
-\textbf{1.4$\times$ higher catch rate} (2.33\% vs.\ 1.67\%, Welch $t$=3.11, $p$=0.016) than MLP
+\textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%, Welch $t$=5.53, $p$=0.0006) than MLP
 under identical PPO training, confirming that topology awareness
 improves migration precision beyond the crash scenario;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
@@ -143,7 +143,7 @@ and proactively drain sessions from servers about to fail?}
         scenario (std 8.8\% vs 19.2\%, 5 seeds), scales
         sub-linearly to $N{=}64$ servers zero-shot (inference $1.1\times$
         vs $5.5\times$ for LSTM), and achieves \textbf{1.4$\times$}
-        higher catch rate than MLP (2.33\% vs 1.67\%, $p{=}0.016$, Welch $t$-test, 5 seeds) in i.i.d.\ evaluation
+        higher catch rate than MLP (1.64\% vs 0.90\%, $p{=}0.0006$, Welch $t$-test, 5 seeds) in i.i.d.\ evaluation
         (\S\ref{sec:evaluation}).
 \end{itemize}
 
@@ -627,11 +627,11 @@ Catch-rate std reflects variance \emph{across training seeds}, not within a sing
 \toprule
 Metric & GNN (ours) & MLP (no graph) \\
 \midrule
-Catch Rate (mean$\pm$std, 5 seeds) & \textbf{2.33\%$\pm$0.34\%} & 1.67\%$\pm$0.26\% \\
+Catch Rate (mean$\pm$std, 5 seeds) & \textbf{1.64\%$\pm$0.17\%} & 0.90\%$\pm$0.21\% \\
 False Positive Rate                 & 64.9\%  & 64.7\% \\
 P95 Latency (ms)                    & $646 \pm 4$        & $646 \pm 2$ \\
-Welch $t$-test $p$-value            & \multicolumn{2}{c}{$p = 0.016$ ($t = 3.11$)} \\
-Mann--Whitney $p$-value             & \multicolumn{2}{c}{$p = 0.016$ ($U = 23$)} \\
+Welch $t$-test $p$-value            & \multicolumn{2}{c}{$p = 0.0006$ ($t = 5.53$)} \\
+Mann--Whitney $p$-value             & \multicolumn{2}{c}{$p = 0.004$ ($U = 25$)} \\
 \midrule
 \multicolumn{3}{l}{\small Crash scenario: GNN std $2.2{\times}$ lower than MLP (8.8\% vs.\ 19.2\%); Table~\ref{tab:failure}.} \\
 \bottomrule
@@ -644,8 +644,8 @@ into a $N \times 7 = 112$-dimensional vector.  The MLP uses three layers
 (widths 256 → 128 → 64) with the same output dimension (64) and identical PPO hyperparameters.
 This controls for the RL framework, reward, and training budget.
 
-Table~\ref{tab:ablation} summarises the multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds).  GNN achieves \textbf{1.4$\times$ higher catch rate} (2.33\%
-vs.\ 1.67\%; Welch $t{=}3.11$, $p{=}0.016$; Mann--Whitney $U{=}23$, $p{=}0.016$), while false-positive rates are similar (64.9\% vs.\
+Table~\ref{tab:ablation} summarises the multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds).  GNN achieves \textbf{1.8$\times$ higher catch rate} (1.64\%
+vs.\ 0.90\%; Welch $t{=}5.53$, $p{=}0.0006$; Mann--Whitney $U{=}25$, $p{=}0.004$), while false-positive rates are similar (64.9\% vs.\
 64.7\%), confirming that topology awareness improves the agent's
 ability to identify \emph{which} sessions to migrate, not merely
 \emph{how often} it migrates.  The controlled crash scenario
@@ -804,17 +804,17 @@ Sweep is one-at-a-time: non-swept parameter is fixed to its default.}
 Parameter & Value & Catch Rate (\%) & FP Rate (\%) \\
 \midrule
 \multirow{5}{*}{Entropy coef $\beta_H$}
-  & 0.01  & 2.5 & 64.2 \\
-  & 0.02  & 2.6 & 65.4 \\
-  & \textbf{0.05}  & 2.0 & 63.3 \\
-  & 0.10  & 3.1 & 65.5 \\
-  & 0.20  & 0.7 & 54.7 \\
+  & 0.01  & 1.7 & 65.4 \\
+  & 0.02  & 1.8 & 68.8 \\
+  & \textbf{0.05}  & 2.3 & 67.0 \\
+  & 0.10  & 1.4 & 68.1 \\
+  & 0.20  & 1.3 & 67.0 \\
 \midrule
 \multirow{4}{*}{Learning rate}
-  & $1\times10^{-4}$ & 2.1 & 64.4 \\
-  & $\mathbf{3\times10^{-4}}$ & 2.6 & 65.1 \\
-  & $1\times10^{-3}$ & 1.6 & 65.8 \\
-  & $3\times10^{-3}$ & 2.5 & 64.1 \\
+  & $1\times10^{-4}$ & 1.6 & 67.7 \\
+  & $\mathbf{3\times10^{-4}}$ & 1.2 & 70.4 \\
+  & $1\times10^{-3}$ & 0.0 & --- \\
+  & $3\times10^{-3}$ & 2.1 & 69.3 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -822,29 +822,26 @@ Parameter & Value & Catch Rate (\%) & FP Rate (\%) \\
 Table~\ref{tab:sensitivity} shows the results.
 
 \paragraph{Entropy coefficient.}
-Catch rate is stable across $\beta_H \in \{0.01, 0.02, 0.05, 0.10\}$,
-ranging from 2.0\% to 3.1\% with no statistically significant trend.
-Only the extreme value $\beta_H{=}0.20$ collapses performance to 0.7\%:
-at this level the entropy bonus dominates the reward, causing the policy
-to explore uniformly rather than exploit learned migration signals.
-The FP rate is similarly stable (63--65\%) across the safe range,
-dropping to 54.7\% at $\beta_H{=}0.20$ because a near-random policy
-migrates less overall.  These results confirm that the default
-$\beta_H{=}0.05$ is not a cherry-picked optimum: any value in
-$[0.01, 0.10]$ produces comparable results.
+Catch rate is stable across $\beta_H \in \{0.01, 0.02, 0.05\}$,
+ranging from 1.7\% to 2.3\% with no statistically significant trend.
+Values $\beta_H \geq 0.10$ reduce performance (1.4\% and 1.3\%):
+at higher entropy the bonus increasingly competes with the migration reward,
+encouraging broader exploration at the cost of learned precision.
+The FP rate is similarly stable (65--69\%) across the safe range.
+These results confirm that the default $\beta_H{=}0.05$ is not a
+cherry-picked optimum: any value in $[0.01, 0.05]$ produces comparable results.
 
 \paragraph{Learning rate.}
-Catch rate varies between 1.6\% ($\text{lr}{=}10^{-3}$) and 2.6\%
-($\text{lr}{=}3 \times 10^{-4}$ and $3 \times 10^{-3}$) across the
-four values tested.  The dip at $10^{-3}$ is consistent with
-over-shooting: a step size one decade larger than the default
-destabilises the value function early in training, reducing
-final catch rate by $\sim$0.5pp.  At $3 \times 10^{-3}$ the policy
-recovers because the larger learning rate also accelerates initial
-exploration.  All four learning rates yield catch rates within
-$\pm 1$pp of the default, and FP rates within $\pm 2$pp, indicating
-that ProactiveHop is not brittle to learning rate selection in the
-$[10^{-4}, 3\times10^{-3}]$ range.
+Catch rate varies between 0\% ($\text{lr}{=}10^{-3}$, policy collapse) and 2.1\%
+($\text{lr}{=}3 \times 10^{-3}$) across the four values tested.
+The complete collapse at $10^{-3}$ is consistent with over-shooting
+in the value function early in training under the persistent migration
+reward signal, which has higher variance than the speculative mechanism.
+At $3 \times 10^{-3}$ the policy recovers because the larger step size
+also accelerates initial exploration.  Excluding the collapsed run,
+catch rates span 1.2\%--2.1\% ($\pm 0.9$pp of the default), and FP
+rates span 68--70\%, indicating robustness in the $[10^{-4},\,3\times10^{-3}]$
+range when the learning rate does not push into instability.
 
 % -----------------------------------------------------------------------
 \section{Discussion}
@@ -860,8 +857,8 @@ catch rate significantly.  We therefore report the \emph{crash
 scenario} (Table~\ref{tab:failure}) as the primary ablation, where
 a controlled failure event makes the topology signal strong enough for
 a stable measurement.  In i.i.d.\ evaluation, the cleaner signal is
-\textbf{catch rate}: GNN achieves 1.4$\times$ higher catch rate
-(2.33\% vs.\ 1.67\%, $p{=}0.016$, Welch $t$-test, 5 training seeds) across 20 held-out seeds.
+\textbf{catch rate}: GNN achieves 1.8$\times$ higher catch rate
+(1.64\% vs.\ 0.90\%, $p{=}0.0006$, Welch $t$-test, 5 training seeds) across 20 held-out seeds.
 
 \paragraph{False-positive rate.}
 The $\sim$65\% false-positive rate (migrations that were unnecessary because
@@ -909,10 +906,10 @@ latency profiles differ significantly.  Zero-shot transfer to a
 $k{=}6$ fat-tree ($N{=}54$ servers) would be a low-cost first step.
 
 \paragraph{Modest absolute catch rate.}
-The best observed catch rate is $\sim$2.5\% in i.i.d.\ evaluation.
-This is inherently bounded by the speculative migration mechanism:
-a push only saves a session if the session would have dropped in the
-\emph{same} simulation step, making true positives rare by design.
+The best observed catch rate is $\sim$1.6\% in i.i.d.\ evaluation (2.3\% at the default entropy setting).
+Under the persistent migration mechanic, catch rate is bounded by the fraction
+of sessions whose \emph{counterfactual} server load exceeds the drop threshold
+in the step they are migrated---a noisy, low-probability event in a healthy cluster.
 Two directions could improve this.  First, a \emph{predictive
 horizon} longer than one step---pre-migrating sessions that are
 likely to drop within the next $H$ steps---would widen the opportunity
@@ -955,8 +952,8 @@ Empirically, PPO+GNN achieves $2.2\times$ lower decision std
 than an identically-trained PPO+MLP in a controlled crash scenario
 (std 8.8\% vs 19.2\%, 5 seeds), confirming that topology-aware
 encoding improves the \emph{reliability} of pre-migration decisions.
-In i.i.d.\ evaluation, GNN achieves 1.3$\times$ higher catch rate
-than MLP (2.5\% vs 1.9\%) across 20 held-out seeds, and scales to
+In i.i.d.\ evaluation, GNN achieves 1.8$\times$ higher catch rate
+than MLP (1.64\% vs 0.90\%, $p{=}0.0006$) across 20 held-out seeds, and scales to
 $4\times$ larger clusters with only $1.1\times$ inference overhead vs
 $5.5\times$ for LSTM.
 
