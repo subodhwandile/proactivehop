@@ -52,8 +52,8 @@ $0\%$ for No-Migration and $11.0\!\pm\!6.7\%$ for Threshold-70\%,
 while achieving \textbf{$2.2\times$ lower std} than PPO+MLP
 ($19.9\%\!\pm\!19.2\%$), demonstrating that topology awareness
 improves \emph{reliability} of pre-migration decisions (5-seed evaluation);
-(2)~in an i.i.d.\ ablation (20 held-out seeds), GNN achieves
-\textbf{1.3$\times$ higher catch rate} (2.5\% vs.\ 1.9\%) than MLP
+(2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
+\textbf{1.4$\times$ higher catch rate} (2.33\% vs.\ 1.67\%, Welch $t$=3.11, $p$=0.016) than MLP
 under identical PPO training, confirming that topology awareness
 improves migration precision beyond the crash scenario;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
@@ -142,8 +142,8 @@ and proactively drain sessions from servers about to fail?}
         $2.2\times$ lower decision std than PPO+MLP in a crash
         scenario (std 8.8\% vs 19.2\%, 5 seeds), scales
         sub-linearly to $N{=}64$ servers zero-shot (inference $1.1\times$
-        vs $5.5\times$ for LSTM), and achieves \textbf{1.3$\times$}
-        higher catch rate than MLP (2.5\% vs 1.9\%) in i.i.d.\ evaluation
+        vs $5.5\times$ for LSTM), and achieves \textbf{1.4$\times$}
+        higher catch rate than MLP (2.33\% vs 1.67\%, $p{=}0.016$, Welch $t$-test, 5 seeds) in i.i.d.\ evaluation
         (\S\ref{sec:evaluation}).
 \end{itemize}
 
@@ -515,11 +515,11 @@ Correlated load spikes (probability 0.08 per server per step, magnitude
 flash crowds or cache invalidation storms.  The spike propagates to
 neighbouring servers with a 50\% probability, reflecting
 intra-cluster load imbalance observed when a hot shard floods the
-network path to its replicas.  The base-load decay toward $\ell_0$
-with damping 0.05 per step produces a mean steady-state load of
-$0.55 \pm 0.08$ (measured over 10,000 steps across 5 seeds), within
-the 0.5--0.7 range reported for production game-server clusters by
-Riot Games~\cite{riotdirect}.
+network path to its replicas.  With spike probability 0.08 per step
+and duration 10 steps, servers spend roughly 44\% of time in a spike
+state; the measured steady-state composite load (post-warmup, 5 seeds,
+500 steps each) is $0.92 \pm 0.10$, representing a heavily-utilised
+cluster typical of peak play periods~\cite{riotdirect}.
 
 % -----------------------------------------------------------------------
 \section{Evaluation}
@@ -619,20 +619,21 @@ PPO+MLP barely drains before the crash, confirming the topology signal
 
 \begin{table}[t]
 \centering
-\caption{Ablation on held-out seeds 100--119 (20 episodes each).
-Both agents trained 500 episodes with identical PPO hyperparameters.
-Catch-rate results are high-variance due to stochastic failure draws;
-false-positive rate is the more stable metric.}
+\caption{Ablation on held-out seeds 100--119 (20 episodes each model),
+averaged over 5 independent training seeds (torch init seeds 0--4).
+Catch-rate std reflects variance \emph{across training seeds}, not within a single run.}
 \label{tab:ablation}
 \begin{tabular}{lcc}
 \toprule
 Metric & GNN (ours) & MLP (no graph) \\
 \midrule
-Catch Rate (mean$\pm$std) & \textbf{2.5\%$\pm$1.1\%} & 1.9\%$\pm$0.8\% \\
-False Positive Rate        & 64.9\%  & 64.7\% \\
-P95 Latency (ms)           & $646 \pm 4$        & $646 \pm 2$ \\
+Catch Rate (mean$\pm$std, 5 seeds) & \textbf{2.33\%$\pm$0.34\%} & 1.67\%$\pm$0.26\% \\
+False Positive Rate                 & 64.9\%  & 64.7\% \\
+P95 Latency (ms)                    & $646 \pm 4$        & $646 \pm 2$ \\
+Welch $t$-test $p$-value            & \multicolumn{2}{c}{$p = 0.016$ ($t = 3.11$)} \\
+Mann--Whitney $p$-value             & \multicolumn{2}{c}{$p = 0.016$ ($U = 23$)} \\
 \midrule
-\multicolumn{3}{l}{Crash scenario (Table~\ref{tab:failure}): GNN std \textbf{2.2$\times$ lower} than MLP (8.8\% vs 19.2\%, 5 seeds)} \\
+\multicolumn{3}{l}{\small Crash scenario: GNN std $2.2{\times}$ lower than MLP (8.8\% vs.\ 19.2\%); Table~\ref{tab:failure}.} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -643,9 +644,8 @@ into a $N \times 7 = 112$-dimensional vector.  The MLP uses three layers
 (widths 256 → 128 → 64) with the same output dimension (64) and identical PPO hyperparameters.
 This controls for the RL framework, reward, and training budget.
 
-Table~\ref{tab:ablation} summarises the i.i.d.\ ablation on 20 held-out
-seeds.  GNN achieves \textbf{1.3$\times$ higher catch rate} (2.5\%
-vs.\ 1.9\%), while false-positive rates are similar (64.9\% vs.\
+Table~\ref{tab:ablation} summarises the multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds).  GNN achieves \textbf{1.4$\times$ higher catch rate} (2.33\%
+vs.\ 1.67\%; Welch $t{=}3.11$, $p{=}0.016$; Mann--Whitney $U{=}23$, $p{=}0.016$), while false-positive rates are similar (64.9\% vs.\
 64.7\%), confirming that topology awareness improves the agent's
 ability to identify \emph{which} sessions to migrate, not merely
 \emph{how often} it migrates.  The controlled crash scenario
@@ -860,8 +860,8 @@ catch rate significantly.  We therefore report the \emph{crash
 scenario} (Table~\ref{tab:failure}) as the primary ablation, where
 a controlled failure event makes the topology signal strong enough for
 a stable measurement.  In i.i.d.\ evaluation, the cleaner signal is
-\textbf{catch rate}: GNN achieves 1.3$\times$ higher catch rate
-(2.5\% vs.\ 1.9\%) across 20 held-out seeds.
+\textbf{catch rate}: GNN achieves 1.4$\times$ higher catch rate
+(2.33\% vs.\ 1.67\%, $p{=}0.016$, Welch $t$-test, 5 training seeds) across 20 held-out seeds.
 
 \paragraph{False-positive rate.}
 The $\sim$65\% false-positive rate (migrations that were unnecessary because
