@@ -49,7 +49,7 @@ $\mathbf{24.8\%\!\pm\!7.5\%}$ of affected sessions---the highest among all learn
 $0\%$ for No-Migration and $6.8\!\pm\!6.7\%$ for Threshold-70\%,
 while achieving \textbf{the lowest coefficient of variation (CoV\,=\,0.30)} among
 all learned policies---$2.1\times$ lower CoV than LSTM (CoV\,=\,0.63)
-and $1.4\times$ lower than PPO+MLP (CoV\,=\,0.42)---demonstrating that the
+and $1.4\times$ lower than PPO+MLP (CoV\,=\,0.42)---suggesting that the
 GNN architecture delivers both higher \emph{recall} and greater \emph{reliability} (5-seed evaluation, not significant at $n{=}5$, descriptive);
 (2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
 \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%, Welch $t$=5.53, $p$=0.0006) than MLP
@@ -340,31 +340,28 @@ fixed $\theta \in [0,1]$.  It is a function solely of $\ell_v$.
 There exist two cluster states $S_1, S_2$ and a server $v$ such that:
 \begin{enumerate}
   \item $\ell_v(S_1) = \ell_v(S_2)$ (identical local load),
-  \item The optimal migration decision for $v$ differs between $S_1$ and $S_2$,
-  \item Any threshold policy $\mathcal{T}(\theta)$ makes the same decision
-        in $S_1$ and $S_2$,
-  \item A 1-hop GNN distinguishes $S_1$ from $S_2$ and can make the
-        correct decision in both.
+  \item The 1-hop GNN's representation of $v$ differs between $S_1$ and $S_2$,
+        so the actor head \emph{can} produce different migration decisions,
+  \item Any threshold policy $\mathcal{T}(\theta)$ produces the \emph{same}
+        decision in $S_1$ and $S_2$,
+  \item No fixed threshold can produce both decisions; the GNN has the
+        representational capacity to do so.
 \end{enumerate}
 \end{proposition}
 
 \begin{proof}
-Let $\ell_v = 0.72$ in both states (just above threshold for any
-$\theta \leq 0.72$).
+Let $\ell_v = 0.72$ in both states.
 
 \textbf{State $S_1$}: All neighbors $u \in \mathcal{N}(v)$ have load
-$\ell_u = 0.3$.  Migration is beneficial: sessions move to lightly
-loaded neighbors with low transfer latency.
+$\ell_u = 0.3$.  Migration sends sessions to lightly loaded neighbors.
 
 \textbf{State $S_2$}: All neighbors have $\ell_u = 0.85$.
-Migration is harmful: the only available targets are saturated,
-so migrated sessions will immediately re-drop on the target, wasting
-bandwidth $B_t$ with no latency saving ($m_t^{\rm TP} = 0$).
+All available targets are saturated, so migration is likely to cause
+unnecessary bandwidth cost with limited benefit.
 
-Under the reward in Eq.~(\ref{eq:reward}), a threshold policy
-$\mathcal{T}(\theta)$ takes identical action in $S_1$ and $S_2$:
-for $\theta \leq 0.72$ it migrates in both; for $\theta > 0.72$
-it stays in both.  No fixed $\theta$ is optimal for both states.
+Any $\mathcal{T}(\theta)$ with $\theta \leq 0.72$ migrates in both states;
+with $\theta > 0.72$ it migrates in neither.
+No fixed $\theta$ can make different decisions in $S_1$ and $S_2$.
 
 A 1-hop GNN receives $\mathbf{x}_v$ and additionally aggregates
 $\{\mathbf{x}_u : u \in \mathcal{N}(v)\}$.  Its representation
@@ -559,11 +556,8 @@ and duration 10 steps, servers spend roughly 44\% of time in a spike
 state; the measured peak composite load during spiking (post-warmup, 5 seeds,
 500 steps each) reaches $0.92 \pm 0.10$, consistent with heavily-utilised
 clusters during burst periods~\cite{riotdirect}.
-Note: at $\ell_v{=}0.92$, $p_{\rm drop}{\approx}0.95$ per step, meaning spiking
-servers shed sessions rapidly; the 8\% per-step spike probability implies
-on average only one server spikes at a time in a 16-server cluster,
-keeping the cluster-wide drop rate low.
-Between spikes, load
+The 44\% spiking fraction keeps a substantial share of servers transiently
+above the $\ell_v{=}0.72$ drop threshold; between spikes, load
 decays toward the base ($\ell_0{=}0.55$) where drop probability is low.
 
 % -----------------------------------------------------------------------
@@ -585,9 +579,9 @@ decays toward the base ($\ell_0{=}0.55$) where drop probability is low.
   \item \textbf{Oracle}: thresholds $p_{\rm drop}(v)$ (feature index 4 in
         the 7-dim observation vector) at $5 \times 10^{-3}$ and
         pre-migrates all sessions from any server above threshold.
-        Because it uses the same observable signal as the agent,
-        it is a \emph{strategy} upper bound (optimal greedy response)
-        rather than an information upper bound.
+        It is a $p_{\rm drop}$-threshold heuristic; because it uses the
+        same observable signal as the agent, it bounds what an optimal
+        greedy policy over that signal could achieve.
   \item \textbf{PPO+GNN (ours)}: trained 500 episodes over 5 random seeds (seeds 0--4);
         evaluated on held-out seeds.
   \item \textbf{PPO+MLP (ablation)}: identical PPO setup but the GNN
@@ -666,21 +660,23 @@ Threshold-70\% (6.8\%) acts only on load, missing the rising
 failure-rate signal.
 
 Figure~\ref{fig:failure} plots the session-drain time-series.
-All learned policies begin draining Server 3 before the step-30 ramp
-due to its elevated load; Threshold-70\% and No-Migration do not.
-The catch rate differences (Table~\ref{tab:failure}) therefore reflect
-the quality of the \emph{load-driven migration policy}: GNN selects
-higher-value sessions to migrate (lower FP rate), while the ramp's
-$\lambda_v$ signal can amplify this advantage when it exists.
+PPO+GNN and PPO+MLP pre-drain Server 3 before the step-30 ramp
+through load-balancing; LSTM begins draining \emph{during} the ramp
+(steps 32--38), responding to the rising $\lambda_v$ signal.
+No-Migration drains via reactive session drops after the step-40 crash.
+The different drain timings contribute to catch-rate differences in
+Table~\ref{tab:failure}.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{../results/plots/fig4c_session_drain.png}
   \caption{Sessions remaining on Server 3 over time. The degradation ramp
   starts at step 30 and the crash occurs at step 40 (red dashed line).
-  Load-balancing policies begin draining Server 3 before step 30 due to
-  elevated load; the catch rate metric counts all sessions that reached
-  a safe server before the step-40 crash, regardless of migration timing.}
+  PPO+GNN and PPO+MLP drain before step 30 via load-balancing;
+  LSTM drains during steps 32--38 in response to the rising $\lambda_v$
+  signal; No-Migration drains via reactive drops after step 40.
+  Catch rate counts sessions that left via a counterfactual-TP migration
+  before step 40 (5-ms handoff latency recorded on old-server TP check).}
   \label{fig:failure}
 \end{figure}
 
@@ -705,7 +701,7 @@ GNN-NoEdge-eval & 1.40\%$\pm$0.07\% & $p{=}0.012$ \\
 GNN-NoEdge-train & 1.59\%$\pm$0.20\% & $p{=}0.78$ (n.s.) \\
 PPO+MLP (no graph) & 0.90\%$\pm$0.21\% & $p{=}0.0006$ \\
 \midrule
-\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Welch $t$-tests (two-sided). GNN FP=64.9\%, MLP FP=64.7\%, LSTM FP$\approx$62\%.} \\
+\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Welch $t$-tests (two-sided). GNN-NoEdge-eval: paired $t{=}4.17$, $p{=}0.014$ (same 5 seeds). Holm step-down: $p{=}0.0006$ and $p{=}0.012$ survive; $p{=}0.55$ fails.} \\
 \multicolumn{3}{p{0.9\columnwidth}}{\footnotesize GNN vs MLP Mann-Whitney: $p{=}0.004$ (one-sided), $p{=}0.0079$ (two-sided).} \\
 \multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Crash scenario: GNN leads learned policies (24.8\% vs 17.7\% MLP, CoV 0.30 vs 0.42); Table~\ref{tab:failure}.} \\
 \bottomrule
@@ -725,8 +721,8 @@ GNN achieves \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%;
 Welch $t{=}5.53$, $p{=}0.0006$), while false-positive rates are similar
 (64.9\% vs.\ 64.7\%), suggesting that the shared-weight GNN encoder
 improves \emph{which} sessions to migrate, not merely \emph{how often}.
-(Holm correction: at 4 tests the threshold is $\alpha/1{=}0.05$;
-only $p{=}0.0006$ and $p{=}0.012$ survive.)
+(Holm step-down, 4 tests, $\alpha{=}0.05$: $0.0006 < 0.05/4{=}0.0125$
+and $0.012 < 0.05/3{=}0.0167$ survive; $p{=}0.55$ fails at $0.025$.)
 
 \textbf{LSTM in i.i.d.\ evaluation.}
 LSTM achieves 1.58\%$\pm$0.19\%, comparable to GNN ($p{=}0.55$, not significant).
@@ -741,8 +737,8 @@ The GNN's advantages over LSTM are therefore primarily in
 \textbf{Edge-removal ablation.}
 In a dedicated edge-ablation run, the same 5 GNN checkpoints score
 1.56\%$\pm$0.08\% with full edges (GNN-Full).
-Stripping edges at inference reduces this to 1.40\% ($p{=}0.012$,
-Welch; a paired test on the same checkpoints gives the same direction).
+Stripping edges at inference reduces this to 1.40\% (Welch $p{=}0.012$;
+paired $t{=}4.17$, $p{=}0.014$ two-sided on the same 5 seeds).
 This confirms the trained model exploits
 neighbourhood aggregation.  However, a GNN retrained from scratch without
 edges achieves 1.59\%$\pm$0.20\% ($p{=}0.78$ vs GNN-Full)---topology is
@@ -760,7 +756,12 @@ miss, though no NoEdge evaluation was run in the crash scenario.
 \small
 \caption{Zero-shot generalization to larger clusters. PPO trained only
 on $N{=}16$ and evaluated on $N{=}25$ and $N{=}64$ without retraining.
-Metrics averaged over 5 seeds.}
+Single best checkpoint (\texttt{best\_GNN.pt}) and single \texttt{lstm\_predictor.pt};
+5 evaluation seeds.
+GNN catch rate at $N{=}16$ here (0.9\%) is lower than Table~\ref{tab:ablation}
+(1.64\%) because Table~\ref{tab:ablation} averages over 5 \emph{independently
+trained} seeds, each evaluated on 20 held-out seeds; this table uses a single checkpoint
+evaluated on 5 seeds.}
 \label{tab:scale}
 \begin{tabular}{lrrrc}
 \toprule
