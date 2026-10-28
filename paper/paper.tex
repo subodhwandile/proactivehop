@@ -49,12 +49,13 @@ $\mathbf{24.8\%\!\pm\!7.5\%}$ of affected sessions---the highest among all learn
 $0\%$ for No-Migration and $6.8\!\pm\!6.7\%$ for Threshold-70\%,
 while achieving \textbf{the lowest coefficient of variation (CoV\,=\,0.30)} among
 all learned policies---$2.1\times$ lower CoV than LSTM (CoV\,=\,0.63)
-and $1.4\times$ lower than PPO+MLP (CoV\,=\,0.42)---demonstrating that topology awareness
-delivers both higher \emph{recall} and greater \emph{reliability} (5-seed evaluation);
+and $1.4\times$ lower than PPO+MLP (CoV\,=\,0.42)---demonstrating that the
+GNN architecture delivers both higher \emph{recall} and greater \emph{reliability} (5-seed evaluation, not significant at $n{=}5$, descriptive);
 (2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
 \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%, Welch $t$=5.53, $p$=0.0006) than MLP
-under identical PPO training, confirming that topology awareness
-improves migration recall beyond the crash scenario;
+under identical PPO training, confirmed by Mann-Whitney ($p{=}0.004$ one-sided);
+edge-removal ablation (GNN-NoEdge-eval $p{=}0.012$) shows the trained model
+uses topology, though an edge-free GNN trained from scratch matches performance ($p{=}0.78$);
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
 grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $4.3\times$ for LSTM,
 verifying the near-linear inference scaling of local neighbourhood aggregation.
@@ -101,8 +102,8 @@ production systems:
         with fresh DTLS/SRTP negotiation takes 1--3\,s~\cite{bloggeek}.
         Applications must trigger this manually---``the browser will
         not trigger one on its own''~\cite{mdnwebrtc}.  Jitsi's
-        GitHub issue \#2438 confirms in-place SFU
-        failover remains unsolved~\cite{jitsi2438}.
+        GitHub pull request \#2438 shows in-place SFU failover
+        is being addressed but not yet standard~\cite{jitsi2438}.
   \item \textbf{Routing latency (Riot Games):} Riot built an entire
         private backbone (Riot Direct) specifically to avoid reactive
         path failures that pushed round-trip latency from 14\,ms to
@@ -147,7 +148,7 @@ and proactively drain sessions from servers about to fail?}
         1-hop neighbourhood of each node, with per-layer cost
         O($|E| \cdot d_h + N \cdot d_h^2$)---linear in $N$ for bounded degree
         (\S\ref{sec:model}).
-  \item We implement ProactiveHop on a high-fidelity fat-tree simulator
+  \item We implement ProactiveHop on a fat-tree simulator
         with Weibull failure injection, delta-compressed session state,
         and correlated load spikes (\S\ref{sec:simulator}).
   \item We run controlled experiments showing PPO+GNN achieves
@@ -189,10 +190,10 @@ LiveMigration~\cite{livemig2005}       & \checkmark & \texttimes & \texttimes & 
 \end{table}
 
 \paragraph{Reactive session migration.}
-``Staying Alive''~\cite{nsdi21stayingalive} keeps real-time sessions
-alive across server failures using consistent hashing and a
-shadow-replica protocol.  Migration is \emph{triggered by failure
-detection}, inheriting the full 400--800\,ms reconnect latency, since
+``Staying Alive''~\cite{nsdi21stayingalive} reselects connection paths
+at the network edge when the current path degrades, keeping sessions
+alive without full reconnect.  Migration is \emph{triggered reactively},
+inheriting the full 400--800\,ms reconnect latency, since
 the system must wait for the failure to be confirmed before acting.
 Clark et al.'s live migration~\cite{livemig2005} pre-copies VM
 memory pages while the VM is running (warm migration) to minimize
@@ -244,7 +245,7 @@ cluster graph and the reward explicitly penalises unnecessary
 session state transfers.
 
 \paragraph{Proactive resource management.}
-Zhao et al.~\cite{prophet2020} predict node failure in cloud service
+Lin et al.~\cite{prophet2020} predict node failure in cloud service
 systems from runtime performance metrics (CPU, memory, network counters)
 and trigger migration before the predicted failure window.
 The key differences are (i)~their approach uses a
@@ -360,17 +361,15 @@ Migration is harmful: the only available targets are saturated,
 so migrated sessions will immediately re-drop on the target, wasting
 bandwidth $B_t$ with no latency saving ($m_t^{\rm TP} = 0$).
 
-Under the reward in Eq.~(\ref{eq:reward}), the optimal action is
-\emph{migrate} in $S_1$ and \emph{do not migrate} in $S_2$.
-Any $\mathcal{T}(\theta)$ with $\theta \leq 0.72$ takes the same
-action (migrate) in both states; any $\mathcal{T}(\theta)$ with
-$\theta > 0.72$ also takes the same action (do not migrate) in both.
-No fixed $\theta$ is optimal for both.
+Under the reward in Eq.~(\ref{eq:reward}), a threshold policy
+$\mathcal{T}(\theta)$ takes identical action in $S_1$ and $S_2$:
+for $\theta \leq 0.72$ it migrates in both; for $\theta > 0.72$
+it stays in both.  No fixed $\theta$ is optimal for both states.
 
 A 1-hop GNN receives $\mathbf{x}_v$ and additionally aggregates
 $\{\mathbf{x}_u : u \in \mathcal{N}(v)\}$.  Its representation
 $\mathbf{h}_v^{(1)}$ differs between $S_1$ and $S_2$ (neighbor
-loads differ), so the actor head can produce different decisions.
+loads differ), so the actor head \emph{can} produce different decisions.
 \end{proof}
 
 \begin{remark}
@@ -378,11 +377,11 @@ Under the persistent migration mechanic, a migrated session's TP
 classification is determined by the \emph{old} server's counterfactual
 drop probability.  For $\ell_v = 0.72$ (the proof's baseline), the
 per-step counterfactual TP rate is $p_{\rm drop}(0.72) = 0.5$.  The
-argument above therefore illustrates the \emph{discrimination} advantage
-of the GNN---it can detect overloaded neighbors and avoid sending sessions
-to congested targets---even if the reward difference between S1 and S2
-requires accounting for downstream target-overload effects beyond
-the one-step counterfactual.
+proposition therefore establishes a \emph{representational} result:
+the GNN can encode a decision boundary in $(\ell_v, \bar{\ell}_{\mathcal{N}(v)})$ space
+that no scalar threshold can.  Whether the RL optimisation finds that
+boundary under the one-step counterfactual reward is an empirical
+question (\S\ref{sec:ablation}), not a consequence of this proposition.
 \end{remark}
 
 \noindent
@@ -403,7 +402,7 @@ The forward pass has four stages.
 Each directed edge $(v, u)$ carries a feature vector
 $\mathbf{e}_{vu} \in \mathbb{R}^4$
 (link latency, bandwidth, utilization, packet-loss).
-Before graph convolution, per-edge context is projected and mean-aggregated
+Before graph convolution, per-edge context is projected and sum-aggregated
 into source nodes:
 \begin{equation}
   \tilde{\mathbf{x}}_v = \mathbf{x}_v
@@ -491,7 +490,7 @@ with the following components:
 
 \textbf{Topology}: fat-tree with $k=4$ (16 servers).
 All paper experiments use this topology; zero-shot transfer to larger
-fat-trees ($k{=}5$, $N{=}25$; $k{=}8$, $N{=}64$) is evaluated in
+clusters ($N{=}25$; $N{=}64$) is evaluated in
 \S\ref{sec:scalability}.
 
 \textbf{Session model}: sessions arrive as a Poisson process (rate
@@ -559,7 +558,12 @@ network path to its replicas.  With spike probability 0.08 per step
 and duration 10 steps, servers spend roughly 44\% of time in a spike
 state; the measured peak composite load during spiking (post-warmup, 5 seeds,
 500 steps each) reaches $0.92 \pm 0.10$, consistent with heavily-utilised
-clusters during burst periods~\cite{riotdirect}.  Between spikes, load
+clusters during burst periods~\cite{riotdirect}.
+Note: at $\ell_v{=}0.92$, $p_{\rm drop}{\approx}0.95$ per step, meaning spiking
+servers shed sessions rapidly; the 8\% per-step spike probability implies
+on average only one server spikes at a time in a 16-server cluster,
+keeping the cluster-wide drop rate low.
+Between spikes, load
 decays toward the base ($\ell_0{=}0.55$) where drop probability is low.
 
 % -----------------------------------------------------------------------
@@ -578,10 +582,13 @@ decays toward the base ($\ell_0{=}0.55$) where drop probability is low.
         [load, failure\_rate, session\_count] per server and predicts
         load 5 steps ahead. Migrates if predicted load $>0.65$.
         This baseline has \emph{temporal memory but no topology}.
-  \item \textbf{Oracle}: knows the exact drop-probability of every
-        session at every step; migrates all imminently-dropping sessions.
-        This is an upper bound unavailable in practice.
-  \item \textbf{PPO+GNN (ours)}: trained 500 episodes on a fixed seed;
+  \item \textbf{Oracle}: thresholds $p_{\rm drop}(v)$ (feature index 4 in
+        the 7-dim observation vector) at $5 \times 10^{-3}$ and
+        pre-migrates all sessions from any server above threshold.
+        Because it uses the same observable signal as the agent,
+        it is a \emph{strategy} upper bound (optimal greedy response)
+        rather than an information upper bound.
+  \item \textbf{PPO+GNN (ours)}: trained 500 episodes over 5 random seeds (seeds 0--4);
         evaluated on held-out seeds.
   \item \textbf{PPO+MLP (ablation)}: identical PPO setup but the GNN
         encoder is replaced by a flat MLP receiving all $N \times 7$
@@ -659,16 +666,21 @@ Threshold-70\% (6.8\%) acts only on load, missing the rising
 failure-rate signal.
 
 Figure~\ref{fig:failure} plots the session-drain time-series.
-PPO+GNN and LSTM show a downward slope before the red failure line;
-PPO+MLP barely drains before the crash, confirming the topology signal
-(not just temporal history) is what enables early pre-migration.
+All learned policies begin draining Server 3 before the step-30 ramp
+due to its elevated load; Threshold-70\% and No-Migration do not.
+The catch rate differences (Table~\ref{tab:failure}) therefore reflect
+the quality of the \emph{load-driven migration policy}: GNN selects
+higher-value sessions to migrate (lower FP rate), while the ramp's
+$\lambda_v$ signal can amplify this advantage when it exists.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{../results/plots/fig4c_session_drain.png}
-  \caption{Sessions remaining on Server 3 over time. PPO+GNN begins
-  draining at step 20 (when $\lambda_v$ starts rising). Other policies
-  act only at or after the crash (red dashed line, step 40).}
+  \caption{Sessions remaining on Server 3 over time. The degradation ramp
+  starts at step 30 and the crash occurs at step 40 (red dashed line).
+  Load-balancing policies begin draining Server 3 before step 30 due to
+  elevated load; the catch rate metric counts all sessions that reached
+  a safe server before the step-40 crash, regardless of migration timing.}
   \label{fig:failure}
 \end{figure}
 
@@ -711,8 +723,10 @@ Table~\ref{tab:ablation} summarises the multi-seed ablation (5 training seeds $\
 \textbf{GNN vs.\ MLP.}
 GNN achieves \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%;
 Welch $t{=}5.53$, $p{=}0.0006$), while false-positive rates are similar
-(64.9\% vs.\ 64.7\%), confirming that topology awareness improves
-\emph{which} sessions to migrate, not merely \emph{how often}.
+(64.9\% vs.\ 64.7\%), suggesting that the shared-weight GNN encoder
+improves \emph{which} sessions to migrate, not merely \emph{how often}.
+(Holm correction: at 4 tests the threshold is $\alpha/1{=}0.05$;
+only $p{=}0.0006$ and $p{=}0.012$ survive.)
 
 \textbf{LSTM in i.i.d.\ evaluation.}
 LSTM achieves 1.58\%$\pm$0.19\%, comparable to GNN ($p{=}0.55$, not significant).
@@ -725,14 +739,18 @@ The GNN's advantages over LSTM are therefore primarily in
 (iii)~zero-shot generalization to different $N$.
 
 \textbf{Edge-removal ablation.}
-Stripping edges from the trained GNN at inference time reduces catch rate
-from 1.56\% to 1.40\% ($p{=}0.012$), confirming the trained model exploits
+In a dedicated edge-ablation run, the same 5 GNN checkpoints score
+1.56\%$\pm$0.08\% with full edges (GNN-Full).
+Stripping edges at inference reduces this to 1.40\% ($p{=}0.012$,
+Welch; a paired test on the same checkpoints gives the same direction).
+This confirms the trained model exploits
 neighbourhood aggregation.  However, a GNN retrained from scratch without
 edges achieves 1.59\%$\pm$0.20\% ($p{=}0.78$ vs GNN-Full)---topology is
 not strictly necessary for i.i.d.\ performance, as per-node features alone
-suffice to drive comparable learning.  The topology benefit is most decisive
-in the crash scenario (Table~\ref{tab:failure}), where the correlated
-$\lambda_v$ ramp creates a strong structural signal that per-node MLPs miss.
+suffice to drive comparable learning.  The topology benefit is \emph{consistent
+with} the crash scenario (Table~\ref{tab:failure}), where the correlated
+$\lambda_v$ ramp creates a structural signal that per-node encoders may
+miss, though no NoEdge evaluation was run in the crash scenario.
 
 \subsection{Scalability: Zero-Shot Generalization}
 \label{sec:scalability}
@@ -915,7 +933,7 @@ Catch rate varies between 0\% ($\text{lr}{=}10^{-3}$, policy collapse) and 2.1\%
 ($\text{lr}{=}3 \times 10^{-3}$) across the four values tested.
 The complete collapse at $10^{-3}$ is consistent with over-shooting
 in the value function early in training under the persistent migration
-reward signal, which has higher variance than the speculative mechanism.
+reward signal, which has higher variance than the threshold-based reward.
 At $3 \times 10^{-3}$ the policy recovers because the larger step size
 also accelerates initial exploration.  Excluding the collapsed run,
 catch rates span 1.2\%--2.1\% ($\pm 0.9$pp of the default), and FP
@@ -928,8 +946,10 @@ heuristic---without RL---can close the gap.  We evaluated a
 \textbf{Neighbour-Aware Threshold} that conditions migration on two criteria:
 $\ell_v \geq 0.70$ \emph{and} mean neighbour load $< 0.60$ (avoiding
 saturated targets).  In i.i.d.\ evaluation, this achieves 0.12\%
-catch rate---3$\times$ better than plain Threshold-70\% (0.04\%)
-but $13\times$ below PPO+GNN (1.64\%).  The lesson: topology-aware
+catch rate---below plain Threshold-70\% (0.2\%, Table~\ref{tab:scale}),
+because the additional neighbour-load constraint reduces migration
+frequency and thus catch opportunities.  Yet both heuristics fall $13\times$
+below PPO+GNN (1.64\%).  The lesson: topology-aware
 heuristics avoid obviously wasteful migrations (sending sessions to
 overloaded neighbours) but cannot learn \emph{when} to proactively drain
 a server before a failure event; that requires credit assignment over
@@ -1084,9 +1104,12 @@ are not strictly necessary in the i.i.d.\ setting; the GNN advantage
 over MLP may derive primarily from the shared-weight node encoder
 rather than relational message passing.  Topology's contribution is
 clearest in the crash scenario (Table~\ref{tab:failure}).
-(4)~\textit{Oracle observability}: our Oracle has full access to
-all simulator state (loads, failure probabilities); a realistic
-oracle would be limited to observable signals.
+(4)~\textit{Oracle strategy bound}: the Oracle thresholds $p_{\rm drop}$,
+which is included in the agent's 7-dim observation vector, so it
+does not have information the agent lacks.  It is a \emph{strategy}
+upper bound (always migrating all at-risk sessions) rather than an
+information upper bound.  A true information upper bound would require
+future-step failure labels unavailable to any online system.
 (5)~\textit{Single hand-designed ramp}: the crash scenario uses one
 monotonic 10-step degradation ramp; real-world failures may exhibit
 different onset patterns (sudden, oscillating, cascading).
