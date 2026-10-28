@@ -273,8 +273,6 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
             f"Server {TARGET_SERVER}\nfails", color="red", fontsize=9)
     ax.set_xlabel("Simulation Step", fontsize=10)
     ax.set_ylabel(f"Sessions on Server {TARGET_SERVER}", fontsize=10)
-    ax.set_title(f"Fig 4c: Session Drain from Server {TARGET_SERVER} Before Crash\n"
-                 f"(PPO+GNN pre-drains; others do not)", fontsize=10)
     ax.legend(fontsize=9)
     ax.grid(True, alpha=0.3)
     plt.tight_layout()
@@ -284,7 +282,7 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
     print(f"Saved fig4c_session_drain.{{pdf,png}}")
 
 
-FAILURE_SEEDS = [42, 43, 44, 45, 46]
+FAILURE_SEEDS = list(range(42, 62))   # 20 seeds for stable estimates
 
 
 def run_failure_experiment(model_path: str = "results/ablation/best_GNN.pt"):
@@ -346,6 +344,8 @@ def run_failure_experiment(model_path: str = "results/ablation/best_GNN.pt"):
             "policy": name,
             "pre_migration_rate_mean": float(pmr.mean()),
             "pre_migration_rate_std":  float(pmr.std()),
+            "pre_migration_rate_per_seed": pmr.tolist(),   # per-seed values for reproducibility
+            "seeds": FAILURE_SEEDS,
             "p50_mean": float(p50.mean()),
             "p50_std":  float(p50.std()),
             "p95_mean": float(p95.mean()),
@@ -369,13 +369,21 @@ def run_failure_experiment(model_path: str = "results/ablation/best_GNN.pt"):
               f"{marker}")
     print("=" * 80)
 
-    # Save + plot (use seed=42 representative runs for plots)
+    # Save summary + per-step data for the seed=42 representative run
     Path("results").mkdir(exist_ok=True)
     safe_rows = [{k: v for k, v in row.items() if k != "_repr"} for row in summary_rows]
     with open("results/failure_scenario.json", "w") as f:
         json.dump(safe_rows, f, indent=2)
 
+    # Save per-step drain data so the plot can be regenerated without re-running
     repr_results = [row["_repr"] for row in summary_rows]
+    repr_serialisable = [
+        {k: v for k, v in r.items() if k != "latencies"}
+        for r in repr_results
+    ]
+    with open("results/failure_scenario_step_data.json", "w") as f:
+        json.dump(repr_serialisable, f, indent=2)
+
     plot_failure_results(repr_results)
     return summary_rows
 
