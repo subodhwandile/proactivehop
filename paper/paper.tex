@@ -44,13 +44,11 @@ links---that are invisible to per-server threshold heuristics.
 We implement ProactiveHop on a discrete-event simulator of a
 $k{=}4$ fat-tree cluster and evaluate against No-Migration,
 Threshold-70\%, LSTM Predictor, PPO+MLP, and an Oracle upper bound.  Key results:
-(1)~in a controlled server-crash scenario, PPO+GNN pre-migrates
-$\mathbf{24.8\%\!\pm\!7.5\%}$ of affected sessions---the highest among all learned policies---vs.\ only
-$0\%$ for No-Migration and $6.8\!\pm\!6.7\%$ for Threshold-70\%,
-while achieving \textbf{the lowest coefficient of variation (CoV\,=\,0.30)} among
-all learned policies---$2.1\times$ lower CoV than LSTM (CoV\,=\,0.63)
-and $1.4\times$ lower than PPO+MLP (CoV\,=\,0.42)---suggesting that the
-GNN architecture delivers both higher \emph{recall} and greater \emph{reliability} (5-seed evaluation, not significant at $n{=}5$, descriptive);
+(1)~in a controlled server-crash scenario (20 seeds), PPO+GNN pre-migrates
+$\mathbf{23.3\%\!\pm\!11.2\%}$ of affected sessions, comparable to LSTM ($23.5\%\!\pm\!10.2\%$,
+$p{=}0.97$) and trending above PPO+MLP ($18.3\%\!\pm\!10.8\%$, $p{=}0.16$);
+all three exceed No-Migration ($0\%$) and Threshold-70\% ($5.7\%\!\pm\!4.6\%$), though
+no pairwise difference among learned policies reaches significance at $n{=}20$;
 (2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
 \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%, Welch $t$=5.53, $p$=0.0006) than MLP
 under identical PPO training, confirmed by Mann-Whitney ($p{=}0.004$ one-sided);
@@ -152,8 +150,9 @@ and proactively drain sessions from servers about to fail?}
         with Weibull failure injection, delta-compressed session state,
         and correlated load spikes (\S\ref{sec:simulator}).
   \item We run controlled experiments showing PPO+GNN achieves
-        the highest catch rate (24.8\%$\pm$7.5\%) and
-        lowest CoV (0.30) in a crash scenario (5 seeds), scales
+        comparable catch rate to LSTM ($23.3\%$ vs $23.5\%$, $p{=}0.97$) and
+        trends above MLP ($18.3\%$) in a crash scenario (20 seeds, no pairwise
+        difference significant), scales
         near-linearly to $N{=}64$ servers zero-shot (inference $1.1\times$
         vs $4.3\times$ for LSTM), and achieves \textbf{1.8$\times$}
         higher catch rate than MLP (1.64\% vs 0.90\%, $p{=}0.0006$, Welch $t$-test, 5 seeds) in i.i.d.\ evaluation
@@ -596,9 +595,9 @@ decays toward the base ($\ell_0{=}0.55$) where drop probability is low.
 \begin{table}[t]
 \centering
 \caption{Pre-migration results: Server 3 crashes at step 40.
-25 sessions seeded on target (plus organic arrivals). Results are mean$\pm$std over 5 random seeds.
+25 sessions seeded on target (plus organic arrivals). Results are mean$\pm$std over 20 random seeds.
 CoV = std/mean. Pairwise Welch tests between GNN and other learned policies are
-not significant at $n{=}5$ (GNN vs MLP $p{\approx}0.17$; GNN vs LSTM $p{\approx}0.27$);
+not significant at $n{=}20$ (GNN vs LSTM $p{\approx}0.97$; GNN vs MLP $p{\approx}0.16$);
 the CoV ranking is descriptive.
 PPO+MLP uses the same RL framework but a flat MLP encoder (no graph).}
 \label{tab:failure}
@@ -606,12 +605,12 @@ PPO+MLP uses the same RL framework but a flat MLP encoder (no graph).}
 \toprule
 Policy & Pre-mig. (\%) & P50 (ms) & P95 (ms) & CoV \\
 \midrule
-No Migration     & $0.0\pm0.0$    & 405 & 640 & --- \\
-Threshold-70\%   & $6.8\pm6.7$    & 400 & 645 & 0.99 \\
-PPO+MLP          & $17.7\pm7.4$   & 388 & 638 & 0.42 \\
-LSTM Predictor   & $17.6\pm11.0$  & 382 & 639 & 0.63 \\
-\textbf{PPO+GNN} & $\mathbf{24.8\pm7.5}$ & \textbf{374} & \textbf{626} & \textbf{0.30} \\
-Oracle (UB)      & $67.6\pm17.3$  &  25 & 591 & 0.26 \\
+No Migration     & $0.0\pm0.0$     & 404 & 646 & --- \\
+Threshold-70\%   & $5.7\pm4.6$     & 394 & 639 & 0.81 \\
+PPO+MLP          & $18.3\pm10.8$   & 389 & 642 & 0.59 \\
+LSTM Predictor   & $23.5\pm10.2$   & 382 & 636 & 0.44 \\
+\textbf{PPO+GNN} & $\mathbf{23.3\pm11.2}$ & \textbf{382} & \textbf{638} & \textbf{0.48} \\
+Oracle (UB)      & $78.7\pm15.0$   &  15 & 590 & 0.19 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -625,44 +624,39 @@ $\lambda_v$ signal, modelling pre-failure symptoms
 
 \begin{sloppypar}
 All learned policies outperform no migration (0\%) and threshold-only
-(6.8\%).  \textbf{PPO+GNN achieves the highest pre-migration rate
-(24.8\%)} among all learned policies, surpassing both PPO+MLP (17.7\%)
-and LSTM (17.6\%).  Crucially, GNN also achieves the
-\textbf{lowest CoV (0.30)}---$2.1\times$ lower than LSTM (0.63) and
-$1.4\times$ lower than MLP (0.42).
-This combination of highest catch rate \emph{and} lowest variance is a
-practically relevant result, though pairwise Welch tests between GNN and
-other learned policies are not statistically significant at $n{=}5$ seeds
-(GNN vs.\ MLP $p{\approx}0.17$; GNN vs.\ LSTM $p{\approx}0.27$);
-larger-scale evaluation is needed to confirm the mean ranking.
+(5.7\%).  With 20 seeds, \textbf{PPO+GNN (23.3\%)} and
+\textbf{LSTM (23.5\%)} are statistically indistinguishable
+($p{=}0.97$); both trend above PPO+MLP (18.3\%, $p{=}0.16$
+vs GNN, not significant).
+None of the pairwise differences among learned policies reach significance
+at $n{=}20$.  CoV values are descriptive: GNN (0.48), LSTM (0.44),
+MLP (0.59).
 \end{sloppypar}
 
-Under the persistent migration mechanic, LSTM (17.6\%) and MLP (17.7\%) achieve
-similar raw catch rates in the crash scenario while GNN leads (24.8\%).
-The GNN's advantage comes from structural reasoning---correlating the failing
-server's rising $\lambda_v$ with neighbor load patterns during the
-degradation ramp.  In i.i.d.\ evaluation without a ramp (Table~\ref{tab:ablation}),
-LSTM recovers to 1.58\%$\pm$0.19\% (comparable to GNN's 1.64\%, $p{=}0.55$),
-because the LSTM's load-trend window provides useful signal when failures
-are random.  The significant GNN vs.\ MLP gap ($p{=}0.0006$) thus persists
-across both evaluation modes.
+Under the persistent migration mechanic, GNN and LSTM achieve comparable
+catch rates in the crash scenario ($\sim$23\%), while both trend above MLP ($\sim$18\%).
+The LSTM's ramp-response timing (draining during steps 32--38) and the
+GNN's load-balancing pre-drain both contribute to removing sessions from
+the failing server before step 40.
+In i.i.d.\ evaluation without a ramp (Table~\ref{tab:ablation}),
+LSTM achieves 1.58\%$\pm$0.19\% (comparable to GNN's 1.64\%, $p{=}0.55$).
+The significant GNN vs.\ MLP gap ($p{=}0.0006$) persists in i.i.d.\
+evaluation; the crash scenario does not produce significant differences
+among learned policies at $n{=}20$.
 
-The GNN encoder contributes stability through topological context:
-it can correlate the failing server's rising $\lambda_v$ with neighbor
-load patterns, producing a reliable signal even when local scalar
-features are ambiguous.  MLP sees the same scalars without relational
-context, leading to lower catch rate (17.7\% vs 24.8\%) and higher variance (CoV 0.42 vs 0.30).
+The GNN encoder contributes structural context: it can correlate
+the failing server's rising $\lambda_v$ with neighbor load patterns.
+However, with 20 seeds, PPO+GNN (23.3\%) and LSTM (23.5\%) are
+statistically indistinguishable in the crash scenario; both trend above
+MLP (18.3\%) without reaching significance ($p{=}0.16$).
 
-LSTM (17.6\%, CoV\,=\,0.63) matches MLP in raw catch rate in the crash scenario but shows
-higher variance---structural reasoning proves more robust than temporal
-memory when the failure is correlated across the topology.
-Threshold-70\% (6.8\%) acts only on load, missing the rising
+Threshold-70\% (5.7\%) acts only on load, missing the rising
 failure-rate signal.
 
 Figure~\ref{fig:failure} plots the session-drain time-series.
 PPO+GNN and PPO+MLP pre-drain Server 3 before the step-30 ramp
 through load-balancing; LSTM begins draining \emph{during} the ramp
-(steps 32--38), responding to the rising $\lambda_v$ signal.
+(steps 32--38), coinciding with the rising $\lambda_v$ signal.
 No-Migration drains via reactive session drops after the step-40 crash.
 The different drain timings contribute to catch-rate differences in
 Table~\ref{tab:failure}.
@@ -703,7 +697,7 @@ PPO+MLP (no graph) & 0.90\%$\pm$0.21\% & $p{=}0.0006$ \\
 \midrule
 \multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Welch $t$-tests (two-sided). GNN-NoEdge-eval: paired $t{=}4.17$, $p{=}0.014$ (same 5 seeds). Holm step-down: $p{=}0.0006$ and $p{=}0.012$ survive; $p{=}0.55$ fails.} \\
 \multicolumn{3}{p{0.9\columnwidth}}{\footnotesize GNN vs MLP Mann-Whitney: $p{=}0.004$ (one-sided), $p{=}0.0079$ (two-sided).} \\
-\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Crash scenario: GNN leads learned policies (24.8\% vs 17.7\% MLP, CoV 0.30 vs 0.42); Table~\ref{tab:failure}.} \\
+\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Crash scenario (20 seeds): GNN (23.3\%) and LSTM (23.5\%) comparable ($p{=}0.97$); both trend above MLP (18.3\%, $p{=}0.16$); no pairwise difference among learned policies significant; Table~\ref{tab:failure}.} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -730,7 +724,7 @@ Under the persistent migration mechanic, the LSTM's per-server load window
 provides useful trend signal even without a crash ramp, closing the gap with
 GNN in i.i.d.\ evaluation.
 The GNN's advantages over LSTM are therefore primarily in
-(i)~the crash scenario (24.8\% vs 17.6\%, lower CoV 0.30 vs 0.63);
+(i)~the crash scenario (GNN $23.3\%$ vs LSTM $23.5\%$, comparable; both trend above MLP $18.3\%$);
 (ii)~inference scaling ($1.1\times$ vs $4.3\times$ for $4\times$ cluster growth);
 (iii)~zero-shot generalization to different $N$.
 
@@ -997,9 +991,9 @@ cannot be applied to $N{=}64$ without retraining (input dimension
 mismatch), while the GNN transfers directly (Table~\ref{tab:scale});
 (ii)~\textbf{inference scaling}: LSTM inference grows $4.3\times$ for a
 $4\times$ cluster size increase vs.\ $1.1\times$ for the GNN;
-(iii)~\textbf{decision reliability}: GNN's CoV (0.30) is $2.1\times$
-lower than LSTM's (0.63) in the crash scenario, meaning its pre-migration
-rate varies less when topology signals are strong.
+(iii)~\textbf{decision reliability}: CoV values in the crash scenario are
+descriptive (GNN 0.48, LSTM 0.44, MLP 0.59); no pairwise difference is
+significant at $n{=}20$.
 
 \paragraph{False-positive rate.}
 The $\sim$65\% false-positive rate (migrations that were unnecessary because
@@ -1065,8 +1059,8 @@ likely to drop within the next $H$ steps---would widen the opportunity
 window.  Second, a \emph{model-based} rollout (learning a dynamics
 model of server load evolution and planning ahead) could exploit the
 degradation ramp more aggressively, as the Oracle baseline
-(${\approx}68\%$ catch rate in the crash scenario, Table~\ref{tab:failure}) demonstrates the
-theoretical ceiling.
+(${\approx}79\%$ catch rate in the crash scenario, Table~\ref{tab:failure}) demonstrates the
+strong $p_{\rm drop}$-threshold heuristic bound.
 
 \paragraph{Reward sensitivity.}
 The reward function combines two terms: latency saving and bandwidth
@@ -1129,10 +1123,10 @@ topology as a graph and learning a differential-latency reward, the
 system detects rising failure symptoms through 2-hop neighborhood
 aggregation and pre-migrates sessions before disruptions occur.
 
-Empirically, PPO+GNN achieves the highest pre-migration rate (24.8\%$\pm$7.5\%)
-and lowest coefficient of variation (CoV\,=\,0.30) among all learned policies
-in a controlled crash scenario (5 seeds), outperforming both PPO+MLP (17.7\%, CoV\,=\,0.42)
-and LSTM (17.6\%, CoV\,=\,0.63).  In i.i.d.\ evaluation, GNN achieves 1.8$\times$ higher catch rate
+Empirically, in a controlled crash scenario (20 seeds), PPO+GNN ($23.3\%\!\pm\!11.2\%$)
+and LSTM ($23.5\%\!\pm\!10.2\%$) achieve comparable pre-migration rates ($p{=}0.97$);
+both trend above PPO+MLP ($18.3\%\!\pm\!10.8\%$, $p{=}0.16$), with no pairwise
+difference reaching significance at $n{=}20$.  In i.i.d.\ evaluation, GNN achieves 1.8$\times$ higher catch rate
 than MLP (1.64\% vs 0.90\%, $p{=}0.0006$) across 20 held-out seeds, and scales to
 $4\times$ larger clusters with only $1.1\times$ inference overhead vs
 $4.3\times$ for LSTM.
