@@ -611,7 +611,7 @@ denominator is identical across all policies.
 Pre-mig.\ (\%) = fraction of the 25 seeded sessions moved off Server 3
 by policy decision during the degradation ramp (steps 30--39),
 tracked via \texttt{\_migrated\_this\_step}.
-RampMigs = total cluster-wide policy migrations during steps 30--39 (cost).
+RampMigs = total cluster-wide policy migrations during steps 30--39 (mean$\pm$std per seed).
 Results are mean$\pm$population-std over 1 checkpoint $\times$ 20 evaluation seeds;
 PPO agents use greedy (argmax) action selection for deterministic evaluation.
 CoV = std/mean.
@@ -621,9 +621,9 @@ GNN vs MLP $p{=}0.14$; GNN vs $p_{\rm drop}$ $p{=}0.058$;
 no pairwise difference among learned policies (GNN/MLP/LSTM) reaches significance.
 PPO+MLP uses the same RL framework but a flat MLP encoder (no graph).}
 \label{tab:failure}
-\begin{tabular}{lrrrrc}
+\begin{tabular}{lrrrrl}
 \toprule
-Policy & Pre-mig. (\%) & P50 (ms) & P95 (ms) & CoV & RampMigs (mean$\pm$std) \\
+Policy & Pre-mig. (\%) & P50 (ms) & P95 (ms) & CoV & RampMigs \\
 \midrule
 No Migration     & $0.0\pm0.0$     & 399 & 625 & ---  & $0\pm0$ \\
 Threshold-70\%   & $26.6\pm26.3$   & 393 & 629 & 0.99 & $59\pm34$ \\
@@ -1189,24 +1189,21 @@ relationships that could have appeared to influence the work reported in this pa
 The simulator, model code, training scripts, pre-trained checkpoints, and all
 experiment results that support the findings of this study are openly available at
 \url{https://github.com/subodhwandile/proactivehop}.
-Exact commit provenance for each results file:
+Exact commit provenance for each results file (see repository for full paths):
 \begin{itemize}
-  \item Table~\ref{tab:failure} (crash scenario): \texttt{results/failure\_scenario.json} @ \texttt{f80a1b5}.
-  \item Table~\ref{tab:ablation} rows 1--2 (GNN vs MLP, 1.64\% vs 0.90\%):
-        \texttt{results/ablation\_multiseed/ablation\_multiseed\_results.json} @ \texttt{13c3c56}.
-  \item Table~\ref{tab:ablation} rows 3--5 (LSTM and edge ablation):
-        \texttt{results/lstm\_ablation/} and \texttt{results/edge\_ablation/} @ \texttt{1b1033d}.
-  \item Table~\ref{tab:scale} (scale experiment): \texttt{results/scale\_experiment.json} @ \texttt{60f02bb}.
-  \item Table~5 (sensitivity): \texttt{results/sensitivity.json} @ \texttt{13c3c56}.
+  \item Table~\ref{tab:failure}: \texttt{failure\_scenario.json} @ \texttt{f80a1b5}.
+  \item Table~\ref{tab:ablation} rows 1--2: \texttt{ablation\_multiseed\_results.json} @ \texttt{13c3c56}.
+  \item Table~\ref{tab:ablation} rows 3--5: \texttt{lstm\_ablation/} + \texttt{edge\_ablation/} @ \texttt{1b1033d}.
+  \item Table~\ref{tab:scale}: \texttt{scale\_experiment.json} @ \texttt{60f02bb}.
+  \item Table~5: \texttt{sensitivity.json} @ \texttt{13c3c56}.
 \end{itemize}
-Note: commits \texttt{13c3c56}, \texttt{1b1033d}, and \texttt{60f02bb} predate the
-\texttt{\_create\_session} RNG fix (\texttt{8d8d384}) and the \texttt{hash()} fix (\texttt{f80a1b5}),
-so re-running those experiments at those commits will not give bit-identical results.
-To reproduce Tables 3--5 with the current bit-deterministic simulator, re-run
-\texttt{experiments/ablation\_multiseed.py}, \texttt{experiments/lstm\_ablation\_multiseed.py},
-\texttt{experiments/edge\_ablation.py}, \texttt{experiments/scale\_experiment.py}, and
-\texttt{experiments/sensitivity.py} at HEAD; note that resulting values will differ
-from Tables 3--5, which were produced by the earlier simulator.
+\begin{sloppypar}
+Commits \texttt{13c3c56}, \texttt{1b1033d}, \texttt{60f02bb} predate the RNG and
+\texttt{hash()} fixes; re-running at HEAD produces different values.
+To reproduce Tables 3--5 at HEAD, run \texttt{ablation\_multiseed.py},
+\texttt{lstm\_ablation\_multiseed.py}, \texttt{edge\_ablation.py},
+\texttt{scale\_experiment.py}, and \texttt{sensitivity.py}.
+\end{sloppypar}
 The Alibaba 2018 cluster trace used in the trace-fidelity experiment is publicly
 available at \url{https://github.com/alibaba/clusterdata}.
 

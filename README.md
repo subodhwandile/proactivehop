@@ -1,12 +1,12 @@
 # ProactiveHop
 
-**Proactive Session Migration via Graph Neural Networks and Reinforcement Learning**
+**ProactiveHop: Graph-Structured Reinforcement Learning for Proactive Session Migration in Game Server Clusters**
 
 Paper: `paper/paper.pdf`
 
 ## Overview
 
-ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. In a controlled crash scenario, PPO+GNN achieves **86.0% pre-migration rate** (median 100%, 13/20 seeds) vs 26.6% for threshold heuristics (3.2×, Wilcoxon p<0.001, Holm-corrected); PPO+MLP achieves the highest crash-scenario rate (98.0%), though the difference from GNN is not significant (p=0.14). The primary proven GNN advantage is in i.i.d. ablation (1.8× higher catch rate vs MLP, p=0.0006) and near-linear inference scaling.
+ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. In a controlled crash scenario, PPO+GNN achieves 86.0% pre-migration rate (median 100%, 13/20 seeds) vs 26.6% for threshold heuristics (3.2×, Wilcoxon p<0.001, Holm-corrected); PPO+MLP achieves the highest crash-scenario rate (98.0%), though the difference from GNN is not significant (p=0.14). The primary proven GNN advantage is in i.i.d. ablation (1.8× higher catch rate vs MLP, p=0.0006) and near-linear inference scaling.
 
 ## Key Results
 
@@ -22,7 +22,7 @@ ProactiveHop pre-migrates stateful real-time sessions *before* server failures u
 sim/          — Discrete-event cluster simulator (fat-tree, failures, sessions)
 model/        — GNN+PPO agent (ppo_agent.py) and MLP ablation (mlp_agent.py)
 baselines/    — No-Migration, Threshold-70%, p_drop heuristic, Random policies
-experiments/  — train.py, ablation.py, scale_experiment.py, failure_scenario.py
+experiments/  — train.py, ablation_multiseed.py, lstm_ablation_multiseed.py, edge_ablation.py, scale_experiment.py, failure_scenario.py
 results/      — Plots, JSONs, trained checkpoints
 paper/        — LaTeX source + compiled PDF
 ```
