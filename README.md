@@ -45,7 +45,20 @@ python experiments/ablation.py
 python experiments/scale_experiment.py
 ```
 
-## Citation
+## Reproducibility — Commit provenance
+
+Each results file was produced at a specific commit:
+
+| File | Commit | Notes |
+|------|--------|-------|
+| `results/failure_scenario.json` (Table 2) | `8144338` | Fixed 25-session denominator, Wilcoxon+Holm |
+| `results/ablation_multiseed_speculative/ablation_multiseed_results.json` (Table 3) | `2974d8c` | After RNG fix (`8d8d384`) |
+| `results/scale_experiment.json` (Table 4) | `60f02bb` | Before `_create_session` RNG fix |
+| `results/sensitivity.json` (Table 5) | `b840ad9` | Before `_create_session` RNG fix |
+
+To exactly reproduce Tables 4–5, check out the respective commit before running `experiments/scale_experiment.py` or `experiments/sensitivity.py`.
+
+
 
 ```
 @article{wandile2025proactivehop,

@@ -623,14 +623,14 @@ PPO+MLP uses the same RL framework but a flat MLP encoder (no graph).}
 \label{tab:failure}
 \begin{tabular}{lrrrrc}
 \toprule
-Policy & Pre-mig. (\%) & P50 (ms) & P95 (ms) & CoV & RampMigs \\
+Policy & Pre-mig. (\%) & P50 (ms) & P95 (ms) & CoV & RampMigs (mean$\pm$std) \\
 \midrule
-No Migration     & $0.0\pm0.0$     & 399 & 625 & ---  & 0 \\
-Threshold-70\%   & $26.6\pm26.3$   & 393 & 629 & 0.99 & 59 \\
-LSTM Predictor   & $54.8\pm41.4$   & 395 & 632 & 0.76 & 163 \\
-PPO+GNN          & $86.0\pm31.8$   & 162 & 589 & 0.37 & 2172 \\
-$p_{\rm drop}$ heuristic & $99.6\pm1.2$    &  10 & 574 & 0.01 & 2535 \\
-PPO+MLP          & $98.0\pm6.1$    & 351 & 628 & 0.06 & 1432 \\
+No Migration     & $0.0\pm0.0$     & 399 & 625 & ---  & $0\pm0$ \\
+Threshold-70\%   & $26.6\pm26.3$   & 393 & 629 & 0.99 & $59\pm34$ \\
+LSTM Predictor   & $54.8\pm41.4$   & 395 & 632 & 0.76 & $163\pm122$ \\
+PPO+GNN          & $86.0\pm31.8$   & 162 & 589 & 0.37 & $2172\pm1598$ \\
+$p_{\rm drop}$ heuristic & $99.6\pm1.2$    &  10 & 574 & 0.01 & $2535\pm1619$ \\
+PPO+MLP          & $98.0\pm6.1$    & 351 & 628 & 0.06 & $1432\pm1772$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -643,15 +643,22 @@ $\lambda_v$ signal, modelling pre-failure symptoms
 (thermal throttling, disk I/O errors, memory ECC corrections).
 
 \begin{sloppypar}
+\textbf{Metric definition}: Pre-mig.\ (\%) counts any policy-driven move of a seeded session
+off Server 3 during steps 30--39, not whether that move was a correct prediction.
+All learned policies respond to the rising load signal by migrating sessions;
+the metric measures how many of the 25 seeded sessions were evacuated before the crash.
+
 All learned policies significantly outperform No Migration (0\%) and Threshold-only
-(26.6\%).  \textbf{PPO+GNN (86.0\%)} significantly outperforms Threshold
+(26.6\%).  \textbf{PPO+MLP achieves both the highest crash-scenario rate (98.0\%) and
+a lower migration cost (1432±1772 ramp migrations vs GNN's 2172±1598)}: MLP is
+strictly more efficient than GNN in the crash scenario, though the difference in
+catch rate is not significant ($p{=}0.14$, Wilcoxon).
+\textbf{PPO+GNN (86.0\%)} significantly outperforms Threshold
 ($p{<}0.001$, Wilcoxon, Holm-corrected, $3.2\times$).
-\textbf{PPO+MLP achieves the highest crash-scenario rate (98.0\%)}, reflecting
-aggressive cluster-wide migration (1432 ramp migrations vs GNN's 2172 and LSTM's 163);
-GNN is not significantly different from MLP ($p{=}0.14$) or LSTM ($54.8\%$, $p{=}0.023$, n.s.\ after Holm).
+GNN is not significantly different from LSTM ($54.8\%$, $p{=}0.023$, n.s.\ after Holm).
 None of the pairwise differences among learned policies reach significance at $n{=}20$.
 CoV values: GNN (0.37), MLP (0.06), LSTM (0.76), Threshold (0.99).
-MLP shows the most consistent pre-migration rate (low CoV), while LSTM is most variable.
+MLP shows the most consistent pre-migration rate (lowest CoV); LSTM is most variable.
 Seed breakdown: GNN is 100\% in 13/20 seeds and 0\% in 2/20 seeds (bimodal);
 MLP is 100\% in 16/20 seeds with no 0\%-seeds; LSTM is 100\% in 6/20 and 0\% in 4/20.
 \end{sloppypar}
@@ -1182,6 +1189,17 @@ relationships that could have appeared to influence the work reported in this pa
 The simulator, model code, training scripts, pre-trained checkpoints, and all
 experiment results that support the findings of this study are openly available at
 \url{https://github.com/subodhwandile/proactivehop}.
+Exact commit provenance for each results file:
+Table~\ref{tab:failure} (crash scenario, \texttt{results/failure\_scenario.json}):
+commit \texttt{8144338};
+Table~\ref{tab:ablation} (i.i.d.\ ablation, \texttt{results/ablation\_multiseed\_speculative/ablation\_multiseed\_results.json}):
+commit \texttt{2974d8c} (after non-determinism fix in \texttt{8d8d384});
+Table~\ref{tab:scale} (scale experiment, \texttt{results/scale\_experiment.json}):
+commit \texttt{60f02bb};
+Table~5 (sensitivity, \texttt{results/sensitivity.json}):
+commit \texttt{b840ad9}.
+Tables~\ref{tab:scale} and 5 were produced before the \texttt{\_create\_session} RNG fix (\texttt{8d8d384});
+to exactly reproduce them, check out the respective commits.
 The Alibaba 2018 cluster trace used in the trace-fidelity experiment is publicly
 available at \url{https://github.com/alibaba/clusterdata}.
 

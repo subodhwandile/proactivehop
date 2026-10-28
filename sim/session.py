@@ -51,8 +51,9 @@ class SessionState:
         """
         if prev_checkpoint_hash == self.checkpoint_hash:
             return self.state_payload_kb * 0.03
-        change_ratio = abs(hash(self.checkpoint_hash) - hash(prev_checkpoint_hash))
-        change_ratio = (change_ratio % 100) / 100.0
+        h1 = int(hashlib.md5(self.checkpoint_hash.encode(), usedforsecurity=False).hexdigest(), 16)
+        h2 = int(hashlib.md5(prev_checkpoint_hash.encode(), usedforsecurity=False).hexdigest(), 16)
+        change_ratio = abs(h1 - h2) % 100 / 100.0
         return self.state_payload_kb * (0.03 + 0.27 * change_ratio)
 
     def full_size_kb(self) -> float:
