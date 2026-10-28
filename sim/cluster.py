@@ -109,6 +109,9 @@ class ClusterSimulator:
         self.history: list[StepMetrics] = []
         self.current_step = 0
 
+        # Deterministic session ID counter (replaces uuid.uuid4 for reproducibility)
+        self._session_counter = 0
+
         # Persistent migration state:
         # session_id -> old_server_id (populated per-step, cleared at start of each step)
         self._migrated_this_step: dict[str, int] = {}
@@ -205,10 +208,29 @@ class ClusterSimulator:
                 self._create_session(server_id)
 
     def _create_session(self, server_id: int) -> Session:
-        s = Session(home_server=server_id, current_server=server_id,
-                    created_step=self.current_step, last_active_step=self.current_step)
-        s.state.session_id = s.session_id
-        s.state.user_id = s.user_id
+        # Use deterministic counter-based IDs so session_id keys are reproducible
+        # across runs (avoids uuid.uuid4() / os.urandom non-determinism).
+        sid = f"s{self._session_counter:07d}"
+        uid = f"u{self._session_counter:07d}"
+        ck  = f"ck{self._session_counter:07d}"
+        payload_kb = float(self.rng.uniform(10, 500))
+        self._session_counter += 1
+
+        from sim.session import SessionState
+        state = SessionState(
+            session_id=sid, user_id=uid, server_id=server_id,
+            created_at=0.0, last_activity=0.0,
+            state_payload_kb=payload_kb,
+            checkpoint_hash=ck,
+        )
+        s = Session(
+            session_id=sid, user_id=uid,
+            home_server=server_id, current_server=server_id,
+            created_step=self.current_step, last_active_step=self.current_step,
+            state=state,
+        )
+        s.state.session_id = sid
+        s.state.user_id = uid
         s.state.server_id = server_id
         self.sessions[s.session_id] = s
         self.server_sessions[server_id].add(s.session_id)

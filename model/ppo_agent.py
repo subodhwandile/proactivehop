@@ -154,9 +154,10 @@ class PPOAgent:
         self.buf_rewards = []
         self.buf_dones = []
 
-    def select_action(self, obs: dict) -> np.ndarray:
+    def select_action(self, obs: dict, greedy: bool = False) -> np.ndarray:
         """
         Given raw graph observation dict, run GNN + sample action.
+        If greedy=True, use argmax (deterministic) instead of sampling.
         Returns numpy action array (N,).
         """
         node_feat = torch.tensor(obs["node_features"], dtype=torch.float32,
@@ -172,6 +173,11 @@ class PPOAgent:
             edge_attr = torch.tensor(ea, dtype=torch.float32, device=self.device)
 
         with torch.no_grad():
+            if greedy:
+                logits, _ = self.model(node_feat, edge_index, edge_attr)
+                from torch.distributions import Bernoulli as _B
+                action = (_B(logits=logits).probs >= 0.5).long()
+                return action.cpu().numpy()
             action, log_prob, entropy, value = self.model.get_action_and_value(
                 node_feat, edge_index, edge_attr
             )

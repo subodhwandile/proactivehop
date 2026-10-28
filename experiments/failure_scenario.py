@@ -59,9 +59,14 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
     Returns per-step metrics and per-session reconnect latencies for
     sessions that were on the failed server.
     """
-    # Seed both the simulator RNG and the PyTorch policy-sampling RNG so that
-    # results are reproducible given the same seed + checkpoint.
+    # Seed the simulator RNG and numpy so that environment randomness is
+    # reproducible.  PPO agents use greedy (argmax) action selection, making
+    # policy decisions fully deterministic given the checkpoint.
+    # For full reproducibility, run with PYTHONHASHSEED=0 to fix Python
+    # set/dict iteration order (affects sim.server_sessions set ordering).
     import torch as _torch
+    import numpy as _np
+    _np.random.seed(seed)
     _torch.manual_seed(seed)
 
     cfg = SimConfig(
@@ -111,9 +116,9 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
             inject_failure(sim, TARGET_SERVER)
             failed_step = step
 
-        # Get policy decision
+        # Get policy decision (PPO agents use greedy/argmax for deterministic eval)
         if is_ppo and agent is not None:
-            action = agent.select_action(obs)
+            action = agent.select_action(obs, greedy=True)
             decisions = {}
             for sv in range(sim.n):
                 if action[sv] == 0:

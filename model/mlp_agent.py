@@ -99,10 +99,14 @@ class MLPAgent:
         self.buf_rewards = []
         self.buf_dones = []
 
-    def select_action(self, obs: dict) -> np.ndarray:
+    def select_action(self, obs: dict, greedy: bool = False) -> np.ndarray:
         x = torch.tensor(obs["node_features"].flatten(),
                          dtype=torch.float32, device=self.device)
         with torch.no_grad():
+            if greedy:
+                logits, _ = self.model(x)
+                action = (Bernoulli(logits=logits).probs >= 0.5).long()
+                return action.cpu().numpy().astype(np.int32)
             action, log_prob, entropy, value = self.model.get_action_and_value(x)
         self.buf_x.append(x)
         self.buf_actions.append(action)
