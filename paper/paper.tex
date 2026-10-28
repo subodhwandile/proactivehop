@@ -57,10 +57,15 @@ under identical PPO training, confirming that topology awareness
 improves migration recall beyond the crash scenario;
 (3)~inference time grows only \textbf{1.1$\times$} when cluster size
 grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $4.3\times$ for LSTM,
-verifying the sub-linear inference scaling of local neighbourhood aggregation.
+verifying the near-linear inference scaling of local neighbourhood aggregation.
 
 ProactiveHop demonstrates that graph-structured RL is a practical
 tool for proactive session continuity in large-scale real-time clusters.
+Topology-awareness contributes most where it is hardest: in the crash
+scenario where correlated failures produce structured graph signals.
+In i.i.d.\ evaluation, the GNN's shared-weight encoder accounts for
+much of the advantage over MLP; disentangling architecture from
+topology is identified as future work.
 \end{abstract}
 
 \begin{keyword}
@@ -148,8 +153,8 @@ and proactively drain sessions from servers about to fail?}
   \item We run controlled experiments showing PPO+GNN achieves
         the highest catch rate (24.8\%$\pm$7.5\%) and
         lowest CoV (0.30) in a crash scenario (5 seeds), scales
-        sub-linearly to $N{=}64$ servers zero-shot (inference $1.1\times$
-        vs $5.5\times$ for LSTM), and achieves \textbf{1.8$\times$}
+        near-linearly to $N{=}64$ servers zero-shot (inference $1.1\times$
+        vs $4.3\times$ for LSTM), and achieves \textbf{1.8$\times$}
         higher catch rate than MLP (1.64\% vs 0.90\%, $p{=}0.0006$, Welch $t$-test, 5 seeds) in i.i.d.\ evaluation
         (\S\ref{sec:evaluation}).
 \end{itemize}
@@ -452,7 +457,7 @@ degree-bounded topologies.  Fat-tree degree is bounded by $k$ (pod
 size), so inference time is $O(N \cdot k^2)$ for fixed $k$.  Because
 $k$ is a topology constant (4 in our fat-tree) while $N$ grows with
 cluster size, latency grows linearly in $N$ in the worst case but
-empirically sub-linearly as shown in \S\ref{sec:scalability}.
+empirically near-linearly (1.1$\times$ for a 4$\times$ increase in $N$) as shown in \S\ref{sec:scalability}.
 
 \subsection{Actor-Critic Network}
 
@@ -505,7 +510,7 @@ $p_{\rm drop}(v) = \sigma\bigl((\ell_v - 0.72) \times 15\bigr)$.
 
 \textbf{Load dynamics}: loads decay toward a base load $\ell_0 = 0.55$
 with damping 0.05 per step, plus correlated spikes (probability 0.08,
-magnitude 0.35) that persist for 3 steps and spread to neighboring
+magnitude 0.35) that persist for 10 steps and spread to neighboring
 servers.
 
 \subsection{Simulator Fidelity Validation}
@@ -546,7 +551,7 @@ studies~\cite{sigcomm19decima}.
 
 \paragraph{Load spike propagation.}
 Correlated load spikes (probability 0.08 per server per step, magnitude
-0.35, duration 3 steps) model bursty traffic patterns such as
+0.35, duration 10 steps) model bursty traffic patterns such as
 flash crowds or cache invalidation storms.  The spike propagates to
 neighbouring servers with a 50\% probability, reflecting
 intra-cluster load imbalance observed when a hot shard floods the
@@ -698,7 +703,7 @@ PPO+MLP (no graph) & 0.90\%$\pm$0.21\% & $p{=}0.0006$ \\
 To isolate the contribution of topology-aware encoding, we replace the
 GNN with a flat MLP that receives the same node features concatenated
 into a $N \times 7 = 112$-dimensional vector.  The MLP uses three layers
-(widths 256 → 128 → 64) with the same output dimension (64) and identical PPO hyperparameters.
+(widths $256 \to 128 \to 64$) with the same output dimension (64) and identical PPO hyperparameters.
 This controls for the RL framework, reward, and training budget.
 
 Table~\ref{tab:ablation} summarises the multi-seed ablation (5 training seeds $\times$ 20 held-out seeds).
@@ -765,7 +770,7 @@ Oracle & 16--64 & ${\approx}50\%$ & $<$0.5 & --- \\
 
 Table~\ref{tab:scale} shows two results.
 
-\textbf{Sub-linear inference scaling.}
+\textbf{Near-linear inference scaling.}
 LSTM inference grows $4.3\times$ from $N{=}16$ to $N{=}64$: at each
 step it must run a forward pass for every server independently,
 so cost scales roughly linearly with $N$.
@@ -928,7 +933,9 @@ but $13\times$ below PPO+GNN (1.64\%).  The lesson: topology-aware
 heuristics avoid obviously wasteful migrations (sending sessions to
 overloaded neighbours) but cannot learn \emph{when} to proactively drain
 a server before a failure event; that requires credit assignment over
-multi-step episodes, which only RL provides.
+multi-step episodes, which reinforcement learning provides.
+
+\section{Discussion}
 \label{sec:discussion}
 
 \paragraph{Why catch rates are modest and variable.}
@@ -952,10 +959,10 @@ Consider a cluster of $N{=}16$ servers each hosting 10,000 concurrent
 sessions (160,000 total).  GNN's 1.64\% catch rate saves
 $\approx\!2{,}624$ sessions per 100-step episode from a 400\,ms reconnect;
 MLP saves $\approx\!1{,}440$.  The difference of 1,184 sessions $\times$
-$(450 - 5)$\,ms $= 527$\,s of avoided reconnect latency per 100-step episode.
-Scaled to a 3,600-step production hour (36 episodes) this is $\approx\!19{,}000$\,s
-(${\approx}5.3$ hours) of saved latency per cluster-hour---equivalent to preventing roughly
-47,000 player-visible lag spikes per cluster-hour of operation.
+$(400 - 5)$\,ms $= 468$\,s of avoided reconnect latency per 100-step episode.
+Scaled to a 3,600-step production hour (36 episodes) this is $\approx\!16{,}850$\,s
+(${\approx}4.7$ hours) of saved latency per cluster-hour---equivalent to preventing roughly
+$42{,}600$ player-visible lag spikes per cluster-hour of operation.
 
 \paragraph{Why GNN outperforms LSTM in deployable settings.}
 LSTM requires the temporal degradation ramp to be present and smooth to
@@ -1058,6 +1065,35 @@ GNN policy using only its 2-hop neighbourhood---would preserve the
 topology-awareness advantage while eliminating the central dependency.
 The GraphSAGE architecture already computes per-node embeddings from
 local neighbourhoods, making this a natural architectural extension.
+
+\paragraph{Evaluation scope and statistical limitations.}
+Several additional limitations bound the interpretation of our results.
+(1)~\textit{Counterfactual TP vs.\ Proposition 1}: the one-step counterfactual
+TP definition (session would have dropped on the old server in the same step)
+does not perfectly align with the optimality condition in Proposition 1,
+which assumes the agent can distinguish S1 (safe) from S2 (overloaded) states;
+a joint survival condition (drops on old AND survives on target) would be
+more rigorous but requires future-step oracle knowledge.
+(2)~\textit{Weibull without aging}: the per-step i.i.d.\ Weibull failure
+draw has constant hazard within each step, so the shape parameter
+(1.5) confers no aging effect; a time-inhomogeneous Weibull that
+accumulates hazard across steps would better model hardware wear-out.
+(3)~\textit{Topology vs.\ architecture}: the NoEdge-train result
+(1.59\%, $p{=}0.78$ vs GNN in i.i.d.) indicates that topology edges
+are not strictly necessary in the i.i.d.\ setting; the GNN advantage
+over MLP may derive primarily from the shared-weight node encoder
+rather than relational message passing.  Topology's contribution is
+clearest in the crash scenario (Table~\ref{tab:failure}).
+(4)~\textit{Oracle observability}: our Oracle has full access to
+all simulator state (loads, failure probabilities); a realistic
+oracle would be limited to observable signals.
+(5)~\textit{Single hand-designed ramp}: the crash scenario uses one
+monotonic 10-step degradation ramp; real-world failures may exhibit
+different onset patterns (sudden, oscillating, cascading).
+(6)~\textit{Small $n$}: all multi-seed experiments use $n{=}5$ training seeds,
+giving limited statistical power for pairwise comparisons in the crash
+scenario ($p$-values range 0.17--0.27); conclusions about crash-scenario
+rankings should be treated as preliminary.
 
 % -----------------------------------------------------------------------
 \section{Conclusion}
