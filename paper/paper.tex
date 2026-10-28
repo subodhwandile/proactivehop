@@ -47,7 +47,7 @@ Threshold-70\%, LSTM Predictor, PPO+MLP, and a $p_{\rm drop}$-threshold heuristi
 (1)~in a controlled server-crash scenario (20 seeds), PPO+GNN proactively migrates
 $86.0\%\!\pm\!31.8\%$ of affected sessions before the crash (median 100\%)---significantly
 exceeding Threshold-70\% ($26.6\%\!\pm\!26.3\%$, Wilcoxon signed-rank $p{<}0.001$, Holm-corrected, $3.2\times$);
-PPO+MLP achieves the highest crash-scenario rate ($98.0\%\!\pm\!6.1\%$, $p{=}0.14$ vs GNN);
+PPO+MLP achieves the highest crash-scenario rate among learned policies ($98.0\%\!\pm\!6.1\%$, tied with the $p_{\rm drop}$ heuristic, $p{=}0.14$ vs GNN);
 GNN is not significantly different from LSTM ($54.8\%\!\pm\!41.4\%$, $p{=}0.023$, n.s.\ after Holm);
 no pairwise difference among learned policies (GNN/MLP/LSTM) reaches significance at $n{=}20$;
 (2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
@@ -63,7 +63,7 @@ ProactiveHop demonstrates that graph-structured RL is a practical
 tool for proactive session continuity in large-scale real-time clusters.
 In the crash scenario, GNN pre-migrates $\approx$86\% of sessions
 vs.\ $\approx$27\% for Threshold, a 3.2$\times$ improvement (Wilcoxon $p{<}0.001$, Holm-corrected);
-PPO+MLP achieves the highest crash-scenario rate (98\%) though the difference from GNN is not significant ($p{=}0.14$);
+PPO+MLP achieves the highest crash-scenario rate among learned policies (98\%, tied with the $p_{\rm drop}$ heuristic) though the difference from GNN is not significant ($p{=}0.14$);
 the primary proven GNN-vs-MLP advantage is a 1.8$\times$ higher i.i.d.\ catch rate,
 combined with near-linear inference scaling and zero-shot generalization to larger clusters.
 \end{abstract}
@@ -159,7 +159,7 @@ and proactively drain sessions from servers about to fail?}
         to $N{=}64$ servers zero-shot (inference $1.1\times$ vs $4.3\times$ for LSTM);
         and in a controlled crash scenario (20 evaluation seeds) GNN ($86.0\%$)
         significantly outperforms Threshold-70\% ($26.6\%$, Wilcoxon $p{<}0.001$, Holm-corrected, $3.2\times$);
-        PPO+MLP achieves the highest crash-scenario rate ($98.0\%$, $p{=}0.14$ vs GNN);
+        PPO+MLP achieves the highest crash-scenario rate among learned policies ($98.0\%$, tied with the $p_{\rm drop}$ heuristic, $p{=}0.14$ vs GNN);
         GNN is not significantly different from LSTM ($54.8\%$, $p{=}0.023$, n.s.\ after Holm);
         no pairwise difference among learned policies significant
         at $n{=}20$
@@ -617,7 +617,7 @@ PPO agents use greedy (argmax) action selection for deterministic evaluation.
 CoV = std/mean.
 Wilcoxon signed-rank (paired), Holm--Bonferroni corrected (4 tests):
 GNN vs Threshold $p{=}0.0001$ (survives Holm); GNN vs LSTM $p{=}0.023$ (n.s.\ after Holm);
-GNN vs MLP $p{=}0.14$; GNN vs $p_{\rm drop}$ $p{=}0.058$;
+GNN vs MLP $p{=}0.14$; GNN vs $p_{\rm drop}$ $p{=}0.065$;
 no pairwise difference among learned policies (GNN/MLP/LSTM) reaches significance.
 PPO+MLP uses the same RL framework but a flat MLP encoder (no graph).}
 \label{tab:failure}
@@ -649,8 +649,8 @@ All learned policies respond to the rising load signal by migrating sessions;
 the metric measures how many of the 25 seeded sessions were evacuated before the crash.
 
 All learned policies significantly outperform No Migration (0\%) and Threshold-only
-(26.6\%).  PPO+MLP achieves the highest crash-scenario rate (98.0\%);
-mean ramp-migration count is lower for MLP than GNN (1432±1772 vs 2172±1598),
+(26.6\%).  PPO+MLP and the $p_{\rm drop}$ heuristic tie for the highest crash-scenario rate
+(both 98.0\%); mean ramp-migration count is lower for MLP than GNN (1432±1772 vs 2172±1598),
 but variance is high and the difference was not tested, so no efficiency claim is made.
 GNN is not significantly different from MLP ($p{=}0.14$, Wilcoxon).
 \textbf{PPO+GNN (86.0\%)} significantly outperforms Threshold
@@ -727,7 +727,7 @@ PPO+MLP (no graph) & 0.90\%$\pm$0.21\% & $p{=}0.0006$ \\
 \midrule
 \multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Welch $t$-tests (two-sided). GNN-NoEdge-eval: paired $t{=}4.17$, $p{=}0.014$ (same 5 seeds). Holm step-down: $p{=}0.0006$ and $p{=}0.012$ survive; $p{=}0.55$ fails.} \\
 \multicolumn{3}{p{0.9\columnwidth}}{\footnotesize GNN vs MLP Mann-Whitney: $p{=}0.004$ (one-sided), $p{=}0.0079$ (two-sided).} \\
-\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Crash scenario (20 seeds): GNN (86.0\%) significantly outperforms Threshold (26.6\%, Wilcoxon $p{<}0.001$, Holm-corrected, $3.2\times$); PPO+MLP achieves highest crash rate (98.0\%, $p{=}0.14$ vs GNN); GNN not significantly different from LSTM (54.8\%, $p{=}0.023$, n.s.\ after Holm); no pairwise difference among learned policies significant; Table~\ref{tab:failure}.} \\
+\multicolumn{3}{p{0.9\columnwidth}}{\footnotesize Crash scenario (20 seeds): GNN (86.0\%) significantly outperforms Threshold (26.6\%, Wilcoxon $p{<}0.001$, Holm-corrected, $3.2\times$); PPO+MLP and $p_{\rm drop}$ tie for highest crash rate (both 98.0\%, $p{=}0.14$ vs GNN); GNN not significantly different from LSTM (54.8\%, $p{=}0.023$, n.s.\ after Holm); no pairwise difference among learned policies significant; Table~\ref{tab:failure}.} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1158,7 +1158,7 @@ before disruptions occur.
 
 Empirically, in a controlled crash scenario (20 seeds), PPO+GNN ($86.0\%\!\pm\!31.8\%$, median 100\%)
 significantly outperforms Threshold-70\% ($26.6\%\!\pm\!26.3\%$, Wilcoxon $p{<}0.001$, Holm-corrected, $3.2\times$);
-PPO+MLP achieves the highest crash-scenario rate ($98.0\%\!\pm\!6.1\%$) though GNN is not
+PPO+MLP achieves the highest crash-scenario rate among learned policies ($98.0\%\!\pm\!6.1\%$, tied with the $p_{\rm drop}$ heuristic) though GNN is not
 significantly different from MLP ($p{=}0.14$) or LSTM ($54.8\%\!\pm\!41.4\%$, $p{=}0.023$, n.s.\ after Holm);
 no pairwise difference among learned policies reaches significance at $n{=}20$.
 In i.i.d.\ evaluation, GNN achieves 1.8$\times$ higher catch rate
@@ -1191,7 +1191,7 @@ experiment results that support the findings of this study are openly available 
 \url{https://github.com/subodhwandile/proactivehop}.
 Exact commit provenance for each results file (see repository for full paths):
 \begin{itemize}
-  \item Table~\ref{tab:failure}: \texttt{failure\_scenario.json} @ HEAD (\texttt{1a7b602}+re-run).
+  \item Table~\ref{tab:failure}: \texttt{failure\_scenario.json} @ \texttt{ec3af7c}.
   \item Table~\ref{tab:ablation} rows 1--2: \texttt{ablation\_multiseed\_results.json} @ \texttt{13c3c56}.
   \item Table~\ref{tab:ablation} rows 3--5: \texttt{lstm\_ablation/} + \texttt{edge\_ablation/} @ \texttt{1b1033d}.
   \item Table~\ref{tab:scale}: \texttt{scale\_experiment.json} @ \texttt{60f02bb}.

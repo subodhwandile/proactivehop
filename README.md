@@ -6,7 +6,7 @@ Paper: `paper/paper.pdf`
 
 ## Overview
 
-ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. In a controlled crash scenario, PPO+GNN achieves 86.0% pre-migration rate (median 100%, 13/20 seeds) vs 26.6% for threshold heuristics (3.2×, Wilcoxon p<0.001, Holm-corrected); PPO+MLP achieves the highest crash-scenario rate (98.0%), though the difference from GNN is not significant (p=0.14). The primary proven GNN advantage is in i.i.d. ablation (1.8× higher catch rate vs MLP, p=0.0006) and near-linear inference scaling.
+ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. In a controlled crash scenario, PPO+GNN achieves 86.0% pre-migration rate (median 100%, 13/20 seeds) vs 26.6% for threshold heuristics (3.2×, Wilcoxon p<0.001, Holm-corrected); PPO+MLP and the p_drop heuristic tie for the highest crash-scenario rate (both 98.0%), though neither is significantly different from GNN (p=0.14). The primary proven GNN advantage is in i.i.d. ablation (1.8× higher catch rate vs MLP, p=0.0006) and near-linear inference scaling.
 
 ## Key Results
 
@@ -14,7 +14,7 @@ ProactiveHop pre-migrates stateful real-time sessions *before* server failures u
 |---|---|
 | GNN vs flat MLP catch rate (i.i.d. ablation) | **1.8× improvement** (p=0.0006) |
 | Inference scaling (N=16 → N=64) | **1.1× overhead for 4× cluster** |
-| Pre-migration vs Threshold (failure scenario) | 86.0% vs 26.6% (3.2×, Wilcoxon p<0.001, Holm-corrected); PPO+MLP is highest at 98.0% |
+| Pre-migration vs Threshold (failure scenario) | 86.0% vs 26.6% (3.2×, Wilcoxon p<0.001, Holm-corrected); MLP and p_drop tie at 98.0% |
 
 ## Structure
 
@@ -55,7 +55,7 @@ Each results file was produced at a specific commit. Commits `13c3c56`, `1b1033d
 
 | File | Commit | Table | Notes |
 |------|--------|-------|-------|
-| `results/failure_scenario.json` | HEAD | Table 2 | Re-run at HEAD; all key policies identical, p_drop 99.6→98.0% |
+| `results/failure_scenario.json` | `ec3af7c` | Table 2 | Re-run at HEAD; all key policies identical to `8144338`, p_drop 99.6→98.0% |
 | `results/ablation_multiseed/ablation_multiseed_results.json` | `13c3c56` | Table 3 rows 1–2 | Before RNG fix |
 | `results/lstm_ablation/`, `results/edge_ablation/` | `1b1033d` | Table 3 rows 3–5 | Before RNG fix |
 | `results/scale_experiment.json` | `60f02bb` | Table 4 | Before RNG fix |
