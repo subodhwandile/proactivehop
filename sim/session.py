@@ -100,7 +100,9 @@ class Session:
         # Occasionally update state (creates larger deltas)
         if np.random.random() < 0.1:
             self.prev_checkpoint_hash = self.state.checkpoint_hash
-            self.state.checkpoint_hash = f"ck{hash(self.state.checkpoint_hash) & 0xFFFFFF:06x}"
+            self.state.checkpoint_hash = hashlib.md5(
+                self.state.checkpoint_hash.encode(), usedforsecurity=False
+            ).hexdigest()[:8]
 
     def start_speculative_push(self, target_server: int):
         """Policy decided to proactively push state to target."""

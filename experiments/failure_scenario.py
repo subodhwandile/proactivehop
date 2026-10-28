@@ -103,9 +103,11 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
 
     step_metrics = []
     failed_step = None
-    target_sessions_initial = None     # captured at SEED_STEP (=RAMP_START)
-    pre_migrated_actual = set()        # sessions moved off Server 3 by policy during ramp
+    seeded_sids: set = set()            # exactly the N_SESSIONS_ON_TARGET created at SEED_STEP
+    target_sessions_initial: set = set()  # alias for seeded_sids (set after seeding)
+    pre_migrated_actual = set()        # seeded sessions moved off Server 3 by policy during ramp
     reactive_reconnected = set()
+    ramp_migrations_total = 0          # total cluster-wide migrations during ramp window (cost)
 
     for step in range(TOTAL_STEPS):
         # Seed extra sessions on the target server just before the ramp begins.
@@ -119,9 +121,13 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
             target_node.cpu_util = cfg.base_load         # = 0.35
             target_node.mem_util = cfg.base_load * 0.8   # = 0.28
             sim._spike_remaining[TARGET_SERVER] = 0.0    # clear any active spike
+            # Capture ONLY the explicitly seeded IDs so the denominator is identical
+            # across all policies (independent of what each policy left on Server 3
+            # during the warm-up steps 0–29).
             for _ in range(N_SESSIONS_ON_TARGET):
-                sim._create_session(TARGET_SERVER)
-            target_sessions_initial = set(sim.server_sessions[TARGET_SERVER])
+                s = sim._create_session(TARGET_SERVER)
+                seeded_sids.add(s.session_id)
+            target_sessions_initial = seeded_sids
 
         # Pre-failure degradation: ramp target server from RAMP_START onward.
         # At step 30: cpu_util=0.35 (baseline).  At step 39: cpu_util=0.95 (near-max).
@@ -166,22 +172,23 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
         m = info["metrics"]
 
         # Track pre-migrations ONLY during ramp window (steps 30–39).
-        # A session is pre-migrated if it was moved OFF Server 3 by the policy
-        # during the ramp (i.e. it appears in _migrated_this_step with source=TARGET_SERVER).
-        # Using policy-driven moves (not latency threshold) ensures we measure
-        # proactive migration regardless of whether the old server's drop_probability
-        # was above the TP threshold at migration time.
-        if (target_sessions_initial is not None
-                and RAMP_START <= step < FAILURE_STEP):
-            for sid in target_sessions_initial:
-                if sid not in pre_migrated_actual:
-                    if (sid in sim._migrated_this_step
-                            and sim._migrated_this_step[sid] == TARGET_SERVER):
-                        pre_migrated_actual.add(sid)
+        # A seeded session is pre-migrated if it was moved OFF Server 3 by
+        # the policy (appears in _migrated_this_step with source=TARGET_SERVER).
+        # The denominator is exactly the N_SESSIONS_ON_TARGET seeded IDs,
+        # identical for every policy.
+        # Also accumulate ramp_migrations_total as a cost/churn metric.
+        if RAMP_START <= step < FAILURE_STEP:
+            ramp_migrations_total += len(sim._migrated_this_step)
+            if seeded_sids:
+                for sid in seeded_sids:
+                    if sid not in pre_migrated_actual:
+                        if (sid in sim._migrated_this_step
+                                and sim._migrated_this_step[sid] == TARGET_SERVER):
+                            pre_migrated_actual.add(sid)
 
         # Track which target sessions got reactive reconnect after failure
-        if target_sessions_initial is not None and step >= FAILURE_STEP:
-            for sid in target_sessions_initial:
+        if seeded_sids and step >= FAILURE_STEP:
+            for sid in seeded_sids:
                 if sid in sim.sessions:
                     s = sim.sessions[sid]
                     if s.current_server != TARGET_SERVER and sid not in pre_migrated_actual:
@@ -202,12 +209,12 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
     if agent is not None:
         agent._buffer_clear()
 
-    # Collect reconnect latencies for target sessions
+    # Collect reconnect latencies for the 25 seeded target sessions
     all_lats = []
     spec_lats = []
     react_lats = []
-    n_target = len(target_sessions_initial) if target_sessions_initial else 0
-    for sid in (target_sessions_initial or []):
+    n_target = len(seeded_sids)  # always N_SESSIONS_ON_TARGET (25), same for every policy
+    for sid in seeded_sids:
         if sid in sim.sessions:
             s = sim.sessions[sid]
             for lat in s.reconnect_latencies_ms:
@@ -221,7 +228,8 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
         "policy": policy_name,
         "pre_migrated_count": len(pre_migrated_actual),
         "reactive_count": len(reactive_reconnected),
-        "total_target_sessions": n_target,
+        "total_target_sessions": n_target,   # always N_SESSIONS_ON_TARGET
+        "ramp_migrations_total": ramp_migrations_total,  # cost: all policy moves during ramp
         "pre_migration_rate": len(pre_migrated_actual) / max(n_target, 1),
         "all_latencies": all_lats,
         "speculative_latencies": spec_lats,
@@ -368,42 +376,46 @@ def run_failure_experiment(model_path: str = "results/ablation/best_GNN.pt"):
             r = run_failure_scenario(fn, name, is_ppo, agent, seed=seed)
             agg[name].append(r)
             print(f"  seed={seed}: pre_mig={r['pre_migration_rate']:.1%} "
+                  f"ramp_migs={r['ramp_migrations_total']} "
                   f"P50={r['p50_ms']:.0f}ms P95={r['p95_ms']:.0f}ms")
 
     # Aggregate mean±std across seeds
     summary_rows = []
     for name, seed_results in agg.items():
-        pmr = np.array([r["pre_migration_rate"] for r in seed_results])
-        p50 = np.array([r["p50_ms"] for r in seed_results])
-        p95 = np.array([r["p95_ms"] for r in seed_results])
+        pmr  = np.array([r["pre_migration_rate"] for r in seed_results])
+        p50  = np.array([r["p50_ms"] for r in seed_results])
+        p95  = np.array([r["p95_ms"] for r in seed_results])
+        rmig = np.array([r["ramp_migrations_total"] for r in seed_results])
         summary_rows.append({
             "policy": name,
             "pre_migration_rate_mean": float(pmr.mean()),
             "pre_migration_rate_std":  float(pmr.std()),
-            "pre_migration_rate_per_seed": pmr.tolist(),   # per-seed values for reproducibility
+            "pre_migration_rate_per_seed": pmr.tolist(),
+            "ramp_migrations_mean": float(rmig.mean()),
+            "ramp_migrations_std":  float(rmig.std()),
             "seeds": FAILURE_SEEDS,
             "p50_mean": float(p50.mean()),
             "p50_std":  float(p50.std()),
             "p95_mean": float(p95.mean()),
             "p95_std":  float(p95.std()),
-            # keep one representative seed (seed=42) for plotting
             "_repr": seed_results[0],
         })
 
     # Summary table
-    print("\n" + "=" * 80)
+    print("\n" + "=" * 90)
     print(f"FAILURE SCENARIO RESULTS  (mean±std over {len(FAILURE_SEEDS)} seeds)")
-    print("=" * 80)
-    print(f"{'Policy':<22} {'Pre-Migrated (%)':>20} {'P50 (ms)':>14} {'P95 (ms)':>14}")
-    print("-" * 75)
+    print("=" * 90)
+    print(f"{'Policy':<22} {'Pre-Migrated (%)':>20} {'RampMigs':>12} {'P50 (ms)':>14} {'P95 (ms)':>14}")
+    print("-" * 85)
     for row in summary_rows:
-        marker = " ←" if "GNN" in row["policy"] else ("  ★" if "Oracle" in row["policy"] else "")
+        marker = " ←" if "GNN" in row["policy"] else ""
         print(f"{row['policy']:<22} "
               f"{row['pre_migration_rate_mean']*100:>8.1f}±{row['pre_migration_rate_std']*100:.1f}%"
+              f"  {row['ramp_migrations_mean']:>8.0f}±{row['ramp_migrations_std']:.0f}"
               f"  {row['p50_mean']:>10.0f}±{row['p50_std']:.0f}ms"
               f"  {row['p95_mean']:>10.0f}±{row['p95_std']:.0f}ms"
               f"{marker}")
-    print("=" * 80)
+    print("=" * 90)
 
     # Save summary + per-step data for the seed=42 representative run
     Path("results").mkdir(exist_ok=True)
