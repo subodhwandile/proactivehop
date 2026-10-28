@@ -21,7 +21,7 @@ ProactiveHop pre-migrates stateful real-time sessions *before* server failures u
 ```
 sim/          — Discrete-event cluster simulator (fat-tree, failures, sessions)
 model/        — GNN+PPO agent (ppo_agent.py) and MLP ablation (mlp_agent.py)
-baselines/    — No-Migration, Threshold-70%, Oracle, Random policies
+baselines/    — No-Migration, Threshold-70%, p_drop heuristic, Random policies
 experiments/  — train.py, ablation.py, scale_experiment.py, failure_scenario.py
 results/      — Plots, JSONs, trained checkpoints
 paper/        — LaTeX source + compiled PDF

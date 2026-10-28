@@ -59,6 +59,11 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
     Returns per-step metrics and per-session reconnect latencies for
     sessions that were on the failed server.
     """
+    # Seed both the simulator RNG and the PyTorch policy-sampling RNG so that
+    # results are reproducible given the same seed + checkpoint.
+    import torch as _torch
+    _torch.manual_seed(seed)
+
     cfg = SimConfig(
         topology="fat_tree",
         n_servers=16,
@@ -200,12 +205,12 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
     Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     COLORS = {
-        "No Migration":    "#d62728",
-        "Threshold 70%":   "#ff7f0e",
-        "LSTM Predict":    "#9467bd",
-        "PPO+MLP":         "#8c564b",
-        "Oracle (UB)":     "#2ca02c",
-        "PPO+GNN (ours)":  "#1f77b4",
+        "No Migration":       "#d62728",
+        "Threshold 70%":      "#ff7f0e",
+        "LSTM Predict":       "#9467bd",
+        "PPO+MLP":            "#8c564b",
+        "p_drop heuristic":   "#2ca02c",
+        "PPO+GNN (ours)":     "#1f77b4",
     }
 
     # --- Fig A: Pre-migration rate bar chart ---
@@ -315,12 +320,12 @@ def run_failure_experiment(model_path: str = "results/ablation/best_GNN.pt"):
     lstm   = LSTMPolicy(model_path="results/lstm_predictor.pt")
 
     experiments = [
-        ("No Migration",   no_mig.select_action, False, None),
-        ("Threshold 70%",  thresh.select_action,  False, None),
-        ("LSTM Predict",   lstm.select_action,    False, None),
-        ("PPO+MLP",        None,                   True,  mlp),
-        ("Oracle (UB)",    oracle.select_action,   False, None),
-        ("PPO+GNN (ours)", None,                   True,  ppo),
+        ("No Migration",      no_mig.select_action, False, None),
+        ("Threshold 70%",     thresh.select_action,  False, None),
+        ("LSTM Predict",      lstm.select_action,    False, None),
+        ("PPO+MLP",           None,                   True,  mlp),
+        ("p_drop heuristic",  oracle.select_action,   False, None),
+        ("PPO+GNN (ours)",    None,                   True,  ppo),
     ]
 
     # Collect per-seed results for each policy
