@@ -44,6 +44,8 @@ FAILURE_STEP = 40      # server fails at step 40
 TOTAL_STEPS = 120      # total simulation length
 TARGET_SERVER = 3      # which server fails
 N_SESSIONS_ON_TARGET = 25  # seed extra sessions on target server
+RAMP_START = 30        # degradation ramp begins (= seeding step)
+SEED_STEP = RAMP_START # seed sessions at ramp start so denominator is ramp-window specific
 
 
 def inject_failure(sim, server_id: int):
@@ -56,14 +58,25 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
                          agent=None, seed: int = 42):
     """
     Run one failure scenario experiment.
+
+    Sessions are seeded on Server TARGET_SERVER at the start of the degradation
+    ramp (step RAMP_START).  Server 3's cpu_util and mem_util are reset to
+    base_load before seeding so warm-up spikes do not pre-drain sessions.
+    The pre-migration denominator is the set of sessions on Server TARGET_SERVER
+    at seeding time (target_sessions_initial).
+    Pre-migration count = sessions from that set that were moved OFF Server 3
+    by the policy during the ramp window (steps RAMP_START .. FAILURE_STEP),
+    tracked via sim._migrated_this_step.
+    This measures ramp-driven proactive migration, not warm-up or reactive behaviour.
+
     Returns per-step metrics and per-session reconnect latencies for
     sessions that were on the failed server.
     """
     # Seed the simulator RNG and numpy so that environment randomness is
     # reproducible.  PPO agents use greedy (argmax) action selection, making
     # policy decisions fully deterministic given the checkpoint.
-    # For full reproducibility, run with PYTHONHASHSEED=0 to fix Python
-    # set/dict iteration order (affects sim.server_sessions set ordering).
+    # set/dict iteration over server_sessions uses sorted() throughout, so
+    # PYTHONHASHSEED is not required for reproducibility.
     import torch as _torch
     import numpy as _np
     _np.random.seed(seed)
@@ -88,26 +101,34 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
     for _ in range(10):
         obs, _, _, _ = sim.step({})
 
-    # Seed extra sessions on the target server
-    for _ in range(N_SESSIONS_ON_TARGET):
-        sim._create_session(TARGET_SERVER)
-
-    # Track sessions that start on target server
-    target_sessions_initial = set(sim.server_sessions[TARGET_SERVER])
-
     step_metrics = []
     failed_step = None
-    pre_migrated_actual = set()   # sessions that ACTUALLY completed a speculative move
+    target_sessions_initial = None     # captured at SEED_STEP (=RAMP_START)
+    pre_migrated_actual = set()        # sessions moved off Server 3 by policy during ramp
     reactive_reconnected = set()
 
     for step in range(TOTAL_STEPS):
-        # Pre-failure degradation: ramp target server from step 30 onward
-        # Directly set cpu_util so load = max(cpu_util, ...) gives a clear signal.
+        # Seed extra sessions on the target server just before the ramp begins.
+        # Capturing the denominator here ensures we measure ramp-driven pre-migration,
+        # not early-step load-spike behaviour.
+        if step == SEED_STEP:
+            # Reset Server 3 to base load so warm-up spikes don't cause policies
+            # to immediately drain the seeded sessions before the ramp signal appears.
+            # load = max(cpu_util, mem_util, sessions/max) so both must be reset.
+            target_node = sim.topo.get_node(TARGET_SERVER)
+            target_node.cpu_util = cfg.base_load         # = 0.35
+            target_node.mem_util = cfg.base_load * 0.8   # = 0.28
+            sim._spike_remaining[TARGET_SERVER] = 0.0    # clear any active spike
+            for _ in range(N_SESSIONS_ON_TARGET):
+                sim._create_session(TARGET_SERVER)
+            target_sessions_initial = set(sim.server_sessions[TARGET_SERVER])
+
+        # Pre-failure degradation: ramp target server from RAMP_START onward.
         # At step 30: cpu_util=0.35 (baseline).  At step 39: cpu_util=0.95 (near-max).
         # GNN observes rising load + failure_rate → should speculatively push sessions.
-        if step >= 30 and step < FAILURE_STEP:
+        if step >= RAMP_START and step < FAILURE_STEP:
             target_node = sim.topo.get_node(TARGET_SERVER)
-            ramp_frac = (step - 30) / max(FAILURE_STEP - 30, 1)
+            ramp_frac = (step - RAMP_START) / max(FAILURE_STEP - RAMP_START, 1)
             target_node.cpu_util = 0.35 + ramp_frac * 0.60
             target_node.failure_rate = 0.002 + ramp_frac * 0.098  # 0.1 at crash
 
@@ -133,29 +154,33 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
                 if not live:
                     continue
                 target = min(live, key=lambda nb: sim.topo.get_node(nb).load)
-                for sid in list(sim.server_sessions[sv])[:20]:
+                for sid in sorted(sim.server_sessions[sv]):
                     if sid in sim.sessions and sim.sessions[sid].status == SessionStatus.ACTIVE:
                         decisions[sid] = target
         else:
             decisions = policy_fn(obs, sim)
 
-        # Track pre-migrations of target sessions (before failure)
-        # MUST happen AFTER sim.step() so we can check actual current_server
+        # Execute simulation step.  All tracking happens AFTER this call so we
+        # observe the post-step server assignments.
         obs, reward, done, info = sim.step(decisions)
         m = info["metrics"]
 
-        if step < FAILURE_STEP:
+        # Track pre-migrations ONLY during ramp window (steps 30–39).
+        # A session is pre-migrated if it was moved OFF Server 3 by the policy
+        # during the ramp (i.e. it appears in _migrated_this_step with source=TARGET_SERVER).
+        # Using policy-driven moves (not latency threshold) ensures we measure
+        # proactive migration regardless of whether the old server's drop_probability
+        # was above the TP threshold at migration time.
+        if (target_sessions_initial is not None
+                and RAMP_START <= step < FAILURE_STEP):
             for sid in target_sessions_initial:
-                if sid in sim.sessions and sid not in pre_migrated_actual:
-                    s = sim.sessions[sid]
-                    # Speculative move: session left target server AND last latency < 50ms
-                    if (s.current_server != TARGET_SERVER and
-                            len(s.reconnect_latencies_ms) > 0 and
-                            s.reconnect_latencies_ms[-1] < 50):
+                if sid not in pre_migrated_actual:
+                    if (sid in sim._migrated_this_step
+                            and sim._migrated_this_step[sid] == TARGET_SERVER):
                         pre_migrated_actual.add(sid)
 
         # Track which target sessions got reactive reconnect after failure
-        if step >= FAILURE_STEP:
+        if target_sessions_initial is not None and step >= FAILURE_STEP:
             for sid in target_sessions_initial:
                 if sid in sim.sessions:
                     s = sim.sessions[sid]
@@ -181,7 +206,8 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
     all_lats = []
     spec_lats = []
     react_lats = []
-    for sid in target_sessions_initial:
+    n_target = len(target_sessions_initial) if target_sessions_initial else 0
+    for sid in (target_sessions_initial or []):
         if sid in sim.sessions:
             s = sim.sessions[sid]
             for lat in s.reconnect_latencies_ms:
@@ -195,8 +221,8 @@ def run_failure_scenario(policy_fn, policy_name: str, is_ppo: bool,
         "policy": policy_name,
         "pre_migrated_count": len(pre_migrated_actual),
         "reactive_count": len(reactive_reconnected),
-        "total_target_sessions": len(target_sessions_initial),
-        "pre_migration_rate": len(pre_migrated_actual) / max(len(target_sessions_initial), 1),
+        "total_target_sessions": n_target,
+        "pre_migration_rate": len(pre_migrated_actual) / max(n_target, 1),
         "all_latencies": all_lats,
         "speculative_latencies": spec_lats,
         "reactive_latencies": react_lats,
@@ -215,7 +241,7 @@ def plot_failure_results(results: list[dict], out_dir: str = "results/plots"):
         "LSTM Predict":       "#9467bd",
         "PPO+MLP":            "#8c564b",
         "p_drop heuristic":   "#2ca02c",
-        "PPO+GNN (ours)":     "#1f77b4",
+        "PPO+GNN":            "#1f77b4",
     }
 
     # --- Fig A: Pre-migration rate bar chart ---
@@ -330,7 +356,7 @@ def run_failure_experiment(model_path: str = "results/ablation/best_GNN.pt"):
         ("LSTM Predict",      lstm.select_action,    False, None),
         ("PPO+MLP",           None,                   True,  mlp),
         ("p_drop heuristic",  oracle.select_action,   False, None),
-        ("PPO+GNN (ours)",    None,                   True,  ppo),
+        ("PPO+GNN",           None,                   True,  ppo),
     ]
 
     # Collect per-seed results for each policy

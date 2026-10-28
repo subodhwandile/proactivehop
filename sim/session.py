@@ -13,7 +13,6 @@ This models the speculative pre-push mechanism from the paper:
 """
 
 import time
-import uuid
 import hashlib
 import numpy as np
 from dataclasses import dataclass, field
@@ -62,8 +61,8 @@ class SessionState:
 
 @dataclass
 class Session:
-    session_id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
-    user_id: str = field(default_factory=lambda: str(uuid.uuid4())[:6])
+    session_id: str = field(default_factory=lambda: "s0000000")
+    user_id: str = field(default_factory=lambda: "u0000000")
     home_server: int = 0
     current_server: int = 0
     status: SessionStatus = SessionStatus.ACTIVE
@@ -88,8 +87,8 @@ class Session:
     state: SessionState = field(default_factory=lambda: SessionState(
         session_id="", user_id="", server_id=0,
         created_at=time.time(), last_activity=time.time(),
-        state_payload_kb=float(np.random.uniform(10, 500)),
-        checkpoint_hash=str(uuid.uuid4()),
+        state_payload_kb=100.0,
+        checkpoint_hash="ck0000000",
     ))
     prev_checkpoint_hash: str = ""
 
@@ -101,7 +100,7 @@ class Session:
         # Occasionally update state (creates larger deltas)
         if np.random.random() < 0.1:
             self.prev_checkpoint_hash = self.state.checkpoint_hash
-            self.state.checkpoint_hash = str(uuid.uuid4())[:8]
+            self.state.checkpoint_hash = f"ck{hash(self.state.checkpoint_hash) & 0xFFFFFF:06x}"
 
     def start_speculative_push(self, target_server: int):
         """Policy decided to proactively push state to target."""

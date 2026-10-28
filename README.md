@@ -6,13 +6,13 @@ Paper: `paper/paper.pdf`
 
 ## Overview
 
-ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. The GNN detects rising failure signals across the 2-hop neighborhood and drains sessions proactively, achieving **27.5% pre-migration rate** vs 11.6% for threshold heuristics in a controlled crash scenario.
+ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. The GNN detects rising load signals across the 2-hop neighborhood and drains sessions proactively, achieving **82.8% pre-migration rate** vs 25.9% for threshold heuristics in a controlled crash scenario (3.2×).
 
 ## Key Results
 
 | Experiment | Result |
 |---|---|
-| Pre-migration vs Threshold (failure scenario) | **27.5% vs 11.6% (2.4×)** |
+| Pre-migration vs Threshold (failure scenario) | **82.8% vs 25.9% (3.2×)** |
 | GNN vs flat MLP catch rate | **1.8× improvement** |
 | Inference scaling (N=16 → N=64) | **1.1× overhead for 4× cluster** |
 

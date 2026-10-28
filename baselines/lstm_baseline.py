@@ -254,7 +254,7 @@ class LSTMPolicy:
             if not live:
                 continue
             target = min(live, key=lambda nb: sim.topo.get_node(nb).load)
-            for sid in list(sim.server_sessions[sv])[:SESSIONS_PER_SERVER]:
+            for sid in sorted(sim.server_sessions[sv])[:SESSIONS_PER_SERVER]:
                 if sid in sim.sessions and sim.sessions[sid].status == SessionStatus.ACTIVE:
                     decisions[sid] = target
 

@@ -1,0 +1,2072 @@
+{
+  "fat_tree/low": {
+    "No Migration": [
+      {
+        "total_drops": 6820202,
+        "speculative_caught": 0,
+        "unhandled_drops": 6820202,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0672367532575,
+        "p95_reconnect_ms": 646.7658061882368,
+        "p99_reconnect_ms": 749.1117192030916
+      },
+      {
+        "total_drops": 6721021,
+        "speculative_caught": 0,
+        "unhandled_drops": 6721021,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.96463558471254,
+        "p95_reconnect_ms": 646.9265683003533,
+        "p99_reconnect_ms": 748.9411057306678
+      },
+      {
+        "total_drops": 6641609,
+        "speculative_caught": 0,
+        "unhandled_drops": 6641609,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.00718279435176,
+        "p95_reconnect_ms": 646.7394185933592,
+        "p99_reconnect_ms": 749.0680084576463
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 6763648,
+        "speculative_caught": 123,
+        "unhandled_drops": 6763525,
+        "false_positives": 18,
+        "catch_rate": 1.8185452584167598e-05,
+        "false_positive_rate": 0.1276595744680851,
+        "total_migration_bw_mb": 6.1238132327741255,
+        "p50_reconnect_ms": 400.0094568455509,
+        "p95_reconnect_ms": 646.6446067170829,
+        "p99_reconnect_ms": 748.9897666478115
+      },
+      {
+        "total_drops": 6778540,
+        "speculative_caught": 106,
+        "unhandled_drops": 6778434,
+        "false_positives": 20,
+        "catch_rate": 1.5637585674791328e-05,
+        "false_positive_rate": 0.15873015873015872,
+        "total_migration_bw_mb": 7.612246227332532,
+        "p50_reconnect_ms": 399.98204085763274,
+        "p95_reconnect_ms": 646.8931459433927,
+        "p99_reconnect_ms": 748.9354948795791
+      },
+      {
+        "total_drops": 6918212,
+        "speculative_caught": 232,
+        "unhandled_drops": 6917980,
+        "false_positives": 48,
+        "catch_rate": 3.3534676300755166e-05,
+        "false_positive_rate": 0.17142857142857143,
+        "total_migration_bw_mb": 13.343833116361823,
+        "p50_reconnect_ms": 400.0012348312373,
+        "p95_reconnect_ms": 646.7697234889846,
+        "p99_reconnect_ms": 748.9899273101039
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 6713557,
+        "speculative_caught": 769,
+        "unhandled_drops": 6712788,
+        "false_positives": 458,
+        "catch_rate": 0.00011454434661089494,
+        "false_positive_rate": 0.3732681336593317,
+        "total_migration_bw_mb": 58.722545623243015,
+        "p50_reconnect_ms": 400.08250157302984,
+        "p95_reconnect_ms": 646.7705322532322,
+        "p99_reconnect_ms": 749.2276846405398
+      },
+      {
+        "total_drops": 6763413,
+        "speculative_caught": 850,
+        "unhandled_drops": 6762563,
+        "false_positives": 471,
+        "catch_rate": 0.00012567619336568682,
+        "false_positive_rate": 0.35654806964420893,
+        "total_migration_bw_mb": 67.26665502065097,
+        "p50_reconnect_ms": 399.90530413229595,
+        "p95_reconnect_ms": 646.7710312211283,
+        "p99_reconnect_ms": 748.9741362816505
+      },
+      {
+        "total_drops": 6928052,
+        "speculative_caught": 794,
+        "unhandled_drops": 6927258,
+        "false_positives": 512,
+        "catch_rate": 0.00011460653008955475,
+        "false_positive_rate": 0.39203675344563554,
+        "total_migration_bw_mb": 68.03934811337409,
+        "p50_reconnect_ms": 400.0464243224443,
+        "p95_reconnect_ms": 646.7723227624343,
+        "p99_reconnect_ms": 749.0442870522432
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 6741872,
+        "speculative_caught": 1347,
+        "unhandled_drops": 6740525,
+        "false_positives": 551,
+        "catch_rate": 0.00019979613970719112,
+        "false_positive_rate": 0.2903055848261328,
+        "total_migration_bw_mb": 72.36543416040512,
+        "p50_reconnect_ms": 399.9401321540337,
+        "p95_reconnect_ms": 646.6933002508154,
+        "p99_reconnect_ms": 749.138587169612
+      },
+      {
+        "total_drops": 6602577,
+        "speculative_caught": 1225,
+        "unhandled_drops": 6601352,
+        "false_positives": 606,
+        "catch_rate": 0.0001855336181615148,
+        "false_positive_rate": 0.3309666848716548,
+        "total_migration_bw_mb": 72.74625852682183,
+        "p50_reconnect_ms": 399.8703959350376,
+        "p95_reconnect_ms": 646.7591150848948,
+        "p99_reconnect_ms": 748.7605892593217
+      },
+      {
+        "total_drops": 6818024,
+        "speculative_caught": 1321,
+        "unhandled_drops": 6816703,
+        "false_positives": 551,
+        "catch_rate": 0.00019375115135998348,
+        "false_positive_rate": 0.29433760683760685,
+        "total_migration_bw_mb": 76.73378484534258,
+        "p50_reconnect_ms": 400.00259654305773,
+        "p95_reconnect_ms": 646.7986691166388,
+        "p99_reconnect_ms": 749.1381288891307
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 5846300,
+        "speculative_caught": 5831471,
+        "unhandled_drops": 14829,
+        "false_positives": 2574267,
+        "catch_rate": 0.9974635239382174,
+        "false_positive_rate": 0.3062511584348691,
+        "total_migration_bw_mb": 344368.80957797955,
+        "p50_reconnect_ms": 5.0058765316918095,
+        "p95_reconnect_ms": 8.33664865309945,
+        "p99_reconnect_ms": 9.867534272973534
+      },
+      {
+        "total_drops": 6014617,
+        "speculative_caught": 5998609,
+        "unhandled_drops": 16008,
+        "false_positives": 2443182,
+        "catch_rate": 0.9973384838968133,
+        "false_positive_rate": 0.28941512529746355,
+        "total_migration_bw_mb": 345766.978107297,
+        "p50_reconnect_ms": 5.008161180447488,
+        "p95_reconnect_ms": 8.341367638276447,
+        "p99_reconnect_ms": 9.879971612122247
+      },
+      {
+        "total_drops": 5822490,
+        "speculative_caught": 5806855,
+        "unhandled_drops": 15635,
+        "false_positives": 2523899,
+        "catch_rate": 0.997314722738897,
+        "false_positive_rate": 0.3029616526907408,
+        "total_migration_bw_mb": 338780.0302190045,
+        "p50_reconnect_ms": 5.006113542652572,
+        "p95_reconnect_ms": 8.341129233084475,
+        "p99_reconnect_ms": 9.882075479163593
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 6869361,
+        "speculative_caught": 970,
+        "unhandled_drops": 6868391,
+        "false_positives": 2803,
+        "catch_rate": 0.00014120672941777263,
+        "false_positive_rate": 0.7429101510734164,
+        "total_migration_bw_mb": 161.87675854318277,
+        "p50_reconnect_ms": 400.0795300185622,
+        "p95_reconnect_ms": 646.7724270855557,
+        "p99_reconnect_ms": 749.0282277891125
+      },
+      {
+        "total_drops": 6755821,
+        "speculative_caught": 1310,
+        "unhandled_drops": 6754511,
+        "false_positives": 4048,
+        "catch_rate": 0.00019390685454810007,
+        "false_positive_rate": 0.7555057857409481,
+        "total_migration_bw_mb": 229.16449564087887,
+        "p50_reconnect_ms": 399.9775588231594,
+        "p95_reconnect_ms": 646.8589084898705,
+        "p99_reconnect_ms": 748.7353449011318
+      },
+      {
+        "total_drops": 6737446,
+        "speculative_caught": 1521,
+        "unhandled_drops": 6735925,
+        "false_positives": 3991,
+        "catch_rate": 0.00022575320084198077,
+        "false_positive_rate": 0.7240566037735849,
+        "total_migration_bw_mb": 208.75922694643572,
+        "p50_reconnect_ms": 399.98312274653097,
+        "p95_reconnect_ms": 646.5760577328305,
+        "p99_reconnect_ms": 748.7362016281459
+      }
+    ]
+  },
+  "fat_tree/medium": {
+    "No Migration": [
+      {
+        "total_drops": 7330934,
+        "speculative_caught": 0,
+        "unhandled_drops": 7330934,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.01350701142076,
+        "p95_reconnect_ms": 646.7869794621961,
+        "p99_reconnect_ms": 749.1671910206187
+      },
+      {
+        "total_drops": 7323031,
+        "speculative_caught": 0,
+        "unhandled_drops": 7323031,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.94282858433934,
+        "p95_reconnect_ms": 646.8973629307366,
+        "p99_reconnect_ms": 748.984223964426
+      },
+      {
+        "total_drops": 7395162,
+        "speculative_caught": 0,
+        "unhandled_drops": 7395162,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.01792964365836,
+        "p95_reconnect_ms": 646.6824782557219,
+        "p99_reconnect_ms": 749.0475818721555
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 7384738,
+        "speculative_caught": 40,
+        "unhandled_drops": 7384698,
+        "false_positives": 5,
+        "catch_rate": 5.416576728923897e-06,
+        "false_positive_rate": 0.1111111111111111,
+        "total_migration_bw_mb": 2.3540070663657646,
+        "p50_reconnect_ms": 400.0878981055955,
+        "p95_reconnect_ms": 646.7324650546029,
+        "p99_reconnect_ms": 749.0118098270511
+      },
+      {
+        "total_drops": 7386207,
+        "speculative_caught": 44,
+        "unhandled_drops": 7386163,
+        "false_positives": 9,
+        "catch_rate": 5.957049403029187e-06,
+        "false_positive_rate": 0.16981132075471697,
+        "total_migration_bw_mb": 2.1741004936532873,
+        "p50_reconnect_ms": 399.89292404080015,
+        "p95_reconnect_ms": 646.9063522136945,
+        "p99_reconnect_ms": 748.9820885321702
+      },
+      {
+        "total_drops": 7203989,
+        "speculative_caught": 63,
+        "unhandled_drops": 7203926,
+        "false_positives": 7,
+        "catch_rate": 8.745154941241581e-06,
+        "false_positive_rate": 0.1,
+        "total_migration_bw_mb": 3.269327135134972,
+        "p50_reconnect_ms": 400.03645481378476,
+        "p95_reconnect_ms": 646.6907734277893,
+        "p99_reconnect_ms": 749.0269527925836
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 7188213,
+        "speculative_caught": 324,
+        "unhandled_drops": 7187889,
+        "false_positives": 196,
+        "catch_rate": 4.5073789549641894e-05,
+        "false_positive_rate": 0.3769230769230769,
+        "total_migration_bw_mb": 23.915453804590673,
+        "p50_reconnect_ms": 399.95945493770677,
+        "p95_reconnect_ms": 646.7723789127192,
+        "p99_reconnect_ms": 748.9506106599844
+      },
+      {
+        "total_drops": 7149074,
+        "speculative_caught": 455,
+        "unhandled_drops": 7148619,
+        "false_positives": 181,
+        "catch_rate": 6.364460628047773e-05,
+        "false_positive_rate": 0.28459119496855345,
+        "total_migration_bw_mb": 30.102949907797342,
+        "p50_reconnect_ms": 399.9457604342166,
+        "p95_reconnect_ms": 646.8229023030892,
+        "p99_reconnect_ms": 748.6526625444473
+      },
+      {
+        "total_drops": 7391440,
+        "speculative_caught": 270,
+        "unhandled_drops": 7391170,
+        "false_positives": 171,
+        "catch_rate": 3.652874135486455e-05,
+        "false_positive_rate": 0.3877551020408163,
+        "total_migration_bw_mb": 20.884059090968197,
+        "p50_reconnect_ms": 400.07751915489536,
+        "p95_reconnect_ms": 646.6363546087864,
+        "p99_reconnect_ms": 748.8993960544192
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 7363929,
+        "speculative_caught": 1503,
+        "unhandled_drops": 7362426,
+        "false_positives": 139,
+        "catch_rate": 0.0002041029999067074,
+        "false_positive_rate": 0.08465286236297198,
+        "total_migration_bw_mb": 67.22076266994108,
+        "p50_reconnect_ms": 400.0126912581388,
+        "p95_reconnect_ms": 646.7077991184365,
+        "p99_reconnect_ms": 749.2114402596582
+      },
+      {
+        "total_drops": 7318598,
+        "speculative_caught": 1420,
+        "unhandled_drops": 7317178,
+        "false_positives": 164,
+        "catch_rate": 0.00019402623289323993,
+        "false_positive_rate": 0.10353535353535354,
+        "total_migration_bw_mb": 74.45102776629766,
+        "p50_reconnect_ms": 399.956389355633,
+        "p95_reconnect_ms": 646.9151337718556,
+        "p99_reconnect_ms": 748.9968472995221
+      },
+      {
+        "total_drops": 7385521,
+        "speculative_caught": 1499,
+        "unhandled_drops": 7384022,
+        "false_positives": 129,
+        "catch_rate": 0.00020296469267367867,
+        "false_positive_rate": 0.07923832923832924,
+        "total_migration_bw_mb": 62.69131535614135,
+        "p50_reconnect_ms": 400.0647094511888,
+        "p95_reconnect_ms": 646.8305656833204,
+        "p99_reconnect_ms": 749.2267252446499
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 7416794,
+        "speculative_caught": 7395159,
+        "unhandled_drops": 21635,
+        "false_positives": 972324,
+        "catch_rate": 0.9970829714294344,
+        "false_positive_rate": 0.1162026860407126,
+        "total_migration_bw_mb": 337875.3267543755,
+        "p50_reconnect_ms": 5.00762865019671,
+        "p95_reconnect_ms": 8.345775917796763,
+        "p99_reconnect_ms": 9.90632585397403
+      },
+      {
+        "total_drops": 7364882,
+        "speculative_caught": 7343315,
+        "unhandled_drops": 21567,
+        "false_positives": 947079,
+        "catch_rate": 0.997071643510378,
+        "false_positive_rate": 0.1142381170303848,
+        "total_migration_bw_mb": 335429.84927446704,
+        "p50_reconnect_ms": 5.006215139929999,
+        "p95_reconnect_ms": 8.345402775416355,
+        "p99_reconnect_ms": 9.905968329319798
+      },
+      {
+        "total_drops": 7376200,
+        "speculative_caught": 7354187,
+        "unhandled_drops": 22013,
+        "false_positives": 1079100,
+        "catch_rate": 0.9970156720262465,
+        "false_positive_rate": 0.12795722474522686,
+        "total_migration_bw_mb": 339904.18556468695,
+        "p50_reconnect_ms": 5.008446310460568,
+        "p95_reconnect_ms": 8.34672337054578,
+        "p99_reconnect_ms": 9.915383482160832
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 7192480,
+        "speculative_caught": 315,
+        "unhandled_drops": 7192165,
+        "false_positives": 500,
+        "catch_rate": 4.3795742219651635e-05,
+        "false_positive_rate": 0.6134969325153374,
+        "total_migration_bw_mb": 30.281412665019655,
+        "p50_reconnect_ms": 399.9941418303483,
+        "p95_reconnect_ms": 646.8212471980859,
+        "p99_reconnect_ms": 749.1817223194322
+      },
+      {
+        "total_drops": 7226444,
+        "speculative_caught": 297,
+        "unhandled_drops": 7226147,
+        "false_positives": 446,
+        "catch_rate": 4.1099052313973514e-05,
+        "false_positive_rate": 0.6002691790040376,
+        "total_migration_bw_mb": 34.44478388154701,
+        "p50_reconnect_ms": 399.89391809379134,
+        "p95_reconnect_ms": 646.9066423485941,
+        "p99_reconnect_ms": 748.8465248264878
+      },
+      {
+        "total_drops": 7192998,
+        "speculative_caught": 643,
+        "unhandled_drops": 7192355,
+        "false_positives": 1333,
+        "catch_rate": 8.939248975183922e-05,
+        "false_positive_rate": 0.6745951417004049,
+        "total_migration_bw_mb": 86.503783136392,
+        "p50_reconnect_ms": 400.0409466066656,
+        "p95_reconnect_ms": 646.757847227308,
+        "p99_reconnect_ms": 749.1928816956671
+      }
+    ]
+  },
+  "fat_tree/high": {
+    "No Migration": [
+      {
+        "total_drops": 6886253,
+        "speculative_caught": 0,
+        "unhandled_drops": 6886253,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0834069874384,
+        "p95_reconnect_ms": 646.7843780221172,
+        "p99_reconnect_ms": 749.2469541985021
+      },
+      {
+        "total_drops": 6923822,
+        "speculative_caught": 0,
+        "unhandled_drops": 6923822,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.9549800777329,
+        "p95_reconnect_ms": 646.7843843600092,
+        "p99_reconnect_ms": 748.7454031913359
+      },
+      {
+        "total_drops": 7033810,
+        "speculative_caught": 0,
+        "unhandled_drops": 7033810,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0952371349336,
+        "p95_reconnect_ms": 646.7209466718468,
+        "p99_reconnect_ms": 748.8574233993014
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 6966495,
+        "speculative_caught": 7,
+        "unhandled_drops": 6966488,
+        "false_positives": 1,
+        "catch_rate": 1.0048094486538784e-06,
+        "false_positive_rate": 0.125,
+        "total_migration_bw_mb": 0.34845699805992447,
+        "p50_reconnect_ms": 400.0254409576172,
+        "p95_reconnect_ms": 646.6647441738297,
+        "p99_reconnect_ms": 748.9921170962709
+      },
+      {
+        "total_drops": 6964420,
+        "speculative_caught": 42,
+        "unhandled_drops": 6964378,
+        "false_positives": 7,
+        "catch_rate": 6.030652947409835e-06,
+        "false_positive_rate": 0.14285714285714285,
+        "total_migration_bw_mb": 1.856323360585353,
+        "p50_reconnect_ms": 399.9455493157441,
+        "p95_reconnect_ms": 646.9029992982444,
+        "p99_reconnect_ms": 749.1509430127786
+      },
+      {
+        "total_drops": 7149064,
+        "speculative_caught": 33,
+        "unhandled_drops": 7149031,
+        "false_positives": 5,
+        "catch_rate": 4.6159888902938904e-06,
+        "false_positive_rate": 0.13157894736842105,
+        "total_migration_bw_mb": 1.4286280112823884,
+        "p50_reconnect_ms": 400.0452386309913,
+        "p95_reconnect_ms": 646.7987474219595,
+        "p99_reconnect_ms": 748.9356278468559
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 6997418,
+        "speculative_caught": 266,
+        "unhandled_drops": 6997152,
+        "false_positives": 106,
+        "catch_rate": 3.8014021743448797e-05,
+        "false_positive_rate": 0.2849462365591398,
+        "total_migration_bw_mb": 17.313577495272416,
+        "p50_reconnect_ms": 400.01543885112767,
+        "p95_reconnect_ms": 646.7093665119668,
+        "p99_reconnect_ms": 749.2647333898343
+      },
+      {
+        "total_drops": 7001103,
+        "speculative_caught": 179,
+        "unhandled_drops": 7000924,
+        "false_positives": 69,
+        "catch_rate": 2.556739987970467e-05,
+        "false_positive_rate": 0.2782258064516129,
+        "total_migration_bw_mb": 12.65006083522741,
+        "p50_reconnect_ms": 399.96947416822144,
+        "p95_reconnect_ms": 646.7673225688998,
+        "p99_reconnect_ms": 748.8345405772416
+      },
+      {
+        "total_drops": 6955268,
+        "speculative_caught": 198,
+        "unhandled_drops": 6955070,
+        "false_positives": 85,
+        "catch_rate": 2.846763057872105e-05,
+        "false_positive_rate": 0.3003533568904594,
+        "total_migration_bw_mb": 12.041031478236334,
+        "p50_reconnect_ms": 400.1247280136889,
+        "p95_reconnect_ms": 646.8736115018801,
+        "p99_reconnect_ms": 748.9361027791095
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 7017316,
+        "speculative_caught": 1415,
+        "unhandled_drops": 7015901,
+        "false_positives": 71,
+        "catch_rate": 0.0002016440473822185,
+        "false_positive_rate": 0.0477792732166891,
+        "total_migration_bw_mb": 61.4708063596667,
+        "p50_reconnect_ms": 400.0305185820074,
+        "p95_reconnect_ms": 646.8085060064747,
+        "p99_reconnect_ms": 749.2776938634163
+      },
+      {
+        "total_drops": 6966860,
+        "speculative_caught": 1450,
+        "unhandled_drops": 6965410,
+        "false_positives": 54,
+        "catch_rate": 0.00020812819548548413,
+        "false_positive_rate": 0.03590425531914894,
+        "total_migration_bw_mb": 65.24799791076107,
+        "p50_reconnect_ms": 399.8390215496479,
+        "p95_reconnect_ms": 646.7985046668375,
+        "p99_reconnect_ms": 749.055486334021
+      },
+      {
+        "total_drops": 7034535,
+        "speculative_caught": 1428,
+        "unhandled_drops": 7033107,
+        "false_positives": 50,
+        "catch_rate": 0.00020299849243766646,
+        "false_positive_rate": 0.03382949932341001,
+        "total_migration_bw_mb": 55.416170556502415,
+        "p50_reconnect_ms": 400.0211398181533,
+        "p95_reconnect_ms": 646.8198774607023,
+        "p99_reconnect_ms": 749.1531379171794
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 7853266,
+        "speculative_caught": 7831650,
+        "unhandled_drops": 21616,
+        "false_positives": 224492,
+        "catch_rate": 0.9972475146009316,
+        "false_positive_rate": 0.027865943773086422,
+        "total_migration_bw_mb": 327492.3641893845,
+        "p50_reconnect_ms": 5.006394165110526,
+        "p95_reconnect_ms": 8.343129299775562,
+        "p99_reconnect_ms": 9.891168321418064
+      },
+      {
+        "total_drops": 7960999,
+        "speculative_caught": 7938534,
+        "unhandled_drops": 22465,
+        "false_positives": 236418,
+        "catch_rate": 0.9971781179723801,
+        "false_positive_rate": 0.02891980283186984,
+        "total_migration_bw_mb": 337507.97695434303,
+        "p50_reconnect_ms": 5.006764898821105,
+        "p95_reconnect_ms": 8.344816585844239,
+        "p99_reconnect_ms": 9.892991244902946
+      },
+      {
+        "total_drops": 8291098,
+        "speculative_caught": 8268268,
+        "unhandled_drops": 22830,
+        "false_positives": 247173,
+        "catch_rate": 0.9972464443189551,
+        "false_positive_rate": 0.02902644736778753,
+        "total_migration_bw_mb": 347695.98175833194,
+        "p50_reconnect_ms": 5.0087710980524776,
+        "p95_reconnect_ms": 8.341909863874001,
+        "p99_reconnect_ms": 9.891768844584258
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 6956572,
+        "speculative_caught": 153,
+        "unhandled_drops": 6956419,
+        "false_positives": 95,
+        "catch_rate": 2.199359109630433e-05,
+        "false_positive_rate": 0.38306451612903225,
+        "total_migration_bw_mb": 11.419958348548297,
+        "p50_reconnect_ms": 400.0235883716625,
+        "p95_reconnect_ms": 646.7317654439117,
+        "p99_reconnect_ms": 749.0934286520744
+      },
+      {
+        "total_drops": 6923068,
+        "speculative_caught": 115,
+        "unhandled_drops": 6922953,
+        "false_positives": 91,
+        "catch_rate": 1.661113252101525e-05,
+        "false_positive_rate": 0.441747572815534,
+        "total_migration_bw_mb": 7.511457105687705,
+        "p50_reconnect_ms": 399.8436486412519,
+        "p95_reconnect_ms": 646.7941163885545,
+        "p99_reconnect_ms": 748.8128930022363
+      },
+      {
+        "total_drops": 7057145,
+        "speculative_caught": 121,
+        "unhandled_drops": 7057024,
+        "false_positives": 128,
+        "catch_rate": 1.7145743781656747e-05,
+        "false_positive_rate": 0.5140562248995983,
+        "total_migration_bw_mb": 10.748799650910517,
+        "p50_reconnect_ms": 400.0321982754433,
+        "p95_reconnect_ms": 646.6816249945919,
+        "p99_reconnect_ms": 748.9400988972217
+      }
+    ]
+  },
+  "random_geo/low": {
+    "No Migration": [
+      {
+        "total_drops": 6820202,
+        "speculative_caught": 0,
+        "unhandled_drops": 6820202,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0672367532575,
+        "p95_reconnect_ms": 646.7658061882368,
+        "p99_reconnect_ms": 749.1117192030916
+      },
+      {
+        "total_drops": 6721021,
+        "speculative_caught": 0,
+        "unhandled_drops": 6721021,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.96463558471254,
+        "p95_reconnect_ms": 646.9265683003533,
+        "p99_reconnect_ms": 748.9411057306678
+      },
+      {
+        "total_drops": 6641609,
+        "speculative_caught": 0,
+        "unhandled_drops": 6641609,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.00718279435176,
+        "p95_reconnect_ms": 646.7394185933592,
+        "p99_reconnect_ms": 749.0680084576463
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 6619819,
+        "speculative_caught": 147,
+        "unhandled_drops": 6619672,
+        "false_positives": 27,
+        "catch_rate": 2.2206045210601678e-05,
+        "false_positive_rate": 0.15517241379310345,
+        "total_migration_bw_mb": 7.141317151691495,
+        "p50_reconnect_ms": 400.1479585821862,
+        "p95_reconnect_ms": 646.8329847535151,
+        "p99_reconnect_ms": 749.1671990297466
+      },
+      {
+        "total_drops": 6736784,
+        "speculative_caught": 278,
+        "unhandled_drops": 6736506,
+        "false_positives": 45,
+        "catch_rate": 4.1265980919085425e-05,
+        "false_positive_rate": 0.1393188854489164,
+        "total_migration_bw_mb": 15.093638728621073,
+        "p50_reconnect_ms": 399.9532949721821,
+        "p95_reconnect_ms": 646.8813714288332,
+        "p99_reconnect_ms": 748.9250408710462
+      },
+      {
+        "total_drops": 6842405,
+        "speculative_caught": 168,
+        "unhandled_drops": 6842237,
+        "false_positives": 24,
+        "catch_rate": 2.455277055362844e-05,
+        "false_positive_rate": 0.125,
+        "total_migration_bw_mb": 9.466720654207663,
+        "p50_reconnect_ms": 400.0344201840147,
+        "p95_reconnect_ms": 646.701798500019,
+        "p99_reconnect_ms": 749.1771806228384
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 6851154,
+        "speculative_caught": 837,
+        "unhandled_drops": 6850317,
+        "false_positives": 440,
+        "catch_rate": 0.00012216919952463484,
+        "false_positive_rate": 0.3445575567736883,
+        "total_migration_bw_mb": 65.98279983624079,
+        "p50_reconnect_ms": 400.02166357032183,
+        "p95_reconnect_ms": 646.7002316959032,
+        "p99_reconnect_ms": 749.303298660215
+      },
+      {
+        "total_drops": 6679726,
+        "speculative_caught": 722,
+        "unhandled_drops": 6679004,
+        "false_positives": 542,
+        "catch_rate": 0.00010808826589593645,
+        "false_positive_rate": 0.4287974683544304,
+        "total_migration_bw_mb": 64.50509968187336,
+        "p50_reconnect_ms": 399.95533629791964,
+        "p95_reconnect_ms": 646.893121551579,
+        "p99_reconnect_ms": 748.9452979873138
+      },
+      {
+        "total_drops": 6747176,
+        "speculative_caught": 755,
+        "unhandled_drops": 6746421,
+        "false_positives": 426,
+        "catch_rate": 0.0001118986669385829,
+        "false_positive_rate": 0.3607112616426757,
+        "total_migration_bw_mb": 61.408102393488896,
+        "p50_reconnect_ms": 399.9984398438451,
+        "p95_reconnect_ms": 646.6554218564837,
+        "p99_reconnect_ms": 748.7924022581647
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 6884704,
+        "speculative_caught": 1454,
+        "unhandled_drops": 6883250,
+        "false_positives": 492,
+        "catch_rate": 0.00021119281235620297,
+        "false_positive_rate": 0.2528263103802672,
+        "total_migration_bw_mb": 69.09262123925672,
+        "p50_reconnect_ms": 400.02905072111537,
+        "p95_reconnect_ms": 646.7610063206151,
+        "p99_reconnect_ms": 748.8896256834095
+      },
+      {
+        "total_drops": 6701359,
+        "speculative_caught": 1263,
+        "unhandled_drops": 6700096,
+        "false_positives": 604,
+        "catch_rate": 0.00018846923437469923,
+        "false_positive_rate": 0.323513658275308,
+        "total_migration_bw_mb": 74.77736584920294,
+        "p50_reconnect_ms": 399.9447571836017,
+        "p95_reconnect_ms": 646.7617747023418,
+        "p99_reconnect_ms": 748.7257048851527
+      },
+      {
+        "total_drops": 6898407,
+        "speculative_caught": 1321,
+        "unhandled_drops": 6897086,
+        "false_positives": 550,
+        "catch_rate": 0.00019149348538003048,
+        "false_positive_rate": 0.29396044895777657,
+        "total_migration_bw_mb": 74.90116597706404,
+        "p50_reconnect_ms": 400.0386486571393,
+        "p95_reconnect_ms": 646.8202788949404,
+        "p99_reconnect_ms": 748.9929351786847
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 5853525,
+        "speculative_caught": 5837975,
+        "unhandled_drops": 15550,
+        "false_positives": 2375986,
+        "catch_rate": 0.9973434810648285,
+        "false_positive_rate": 0.289261904214057,
+        "total_migration_bw_mb": 329969.25008076726,
+        "p50_reconnect_ms": 5.006713807505936,
+        "p95_reconnect_ms": 8.342246119310568,
+        "p99_reconnect_ms": 9.88343489528576
+      },
+      {
+        "total_drops": 5949359,
+        "speculative_caught": 5934106,
+        "unhandled_drops": 15253,
+        "false_positives": 2609693,
+        "catch_rate": 0.9974361943866558,
+        "false_positive_rate": 0.30544878221034927,
+        "total_migration_bw_mb": 346282.98990314815,
+        "p50_reconnect_ms": 5.005421368177496,
+        "p95_reconnect_ms": 8.339000331859678,
+        "p99_reconnect_ms": 9.871977406512439
+      },
+      {
+        "total_drops": 5780696,
+        "speculative_caught": 5765630,
+        "unhandled_drops": 15066,
+        "false_positives": 2597721,
+        "catch_rate": 0.997393739438988,
+        "false_positive_rate": 0.3106076738857427,
+        "total_migration_bw_mb": 341635.53656573786,
+        "p50_reconnect_ms": 5.005538159495186,
+        "p95_reconnect_ms": 8.339843710168685,
+        "p99_reconnect_ms": 9.87323366287403
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 6706059,
+        "speculative_caught": 1314,
+        "unhandled_drops": 6704745,
+        "false_positives": 2689,
+        "catch_rate": 0.0001959422068908132,
+        "false_positive_rate": 0.671746190357232,
+        "total_migration_bw_mb": 167.09208696399136,
+        "p50_reconnect_ms": 400.0524465035766,
+        "p95_reconnect_ms": 646.7636604661692,
+        "p99_reconnect_ms": 749.1257075412711
+      },
+      {
+        "total_drops": 6838541,
+        "speculative_caught": 1368,
+        "unhandled_drops": 6837173,
+        "false_positives": 3481,
+        "catch_rate": 0.00020004266992038213,
+        "false_positive_rate": 0.7178799752526294,
+        "total_migration_bw_mb": 199.16699378311733,
+        "p50_reconnect_ms": 399.8977937554405,
+        "p95_reconnect_ms": 646.709217376262,
+        "p99_reconnect_ms": 748.8055698479194
+      },
+      {
+        "total_drops": 6881332,
+        "speculative_caught": 1305,
+        "unhandled_drops": 6880027,
+        "false_positives": 3296,
+        "catch_rate": 0.00018964351669124524,
+        "false_positive_rate": 0.7163660073896979,
+        "total_migration_bw_mb": 197.1534386049286,
+        "p50_reconnect_ms": 399.9476012218181,
+        "p95_reconnect_ms": 646.7389580831924,
+        "p99_reconnect_ms": 749.0701472153625
+      }
+    ]
+  },
+  "random_geo/medium": {
+    "No Migration": [
+      {
+        "total_drops": 7330934,
+        "speculative_caught": 0,
+        "unhandled_drops": 7330934,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.01350701142076,
+        "p95_reconnect_ms": 646.7869794621961,
+        "p99_reconnect_ms": 749.1671910206187
+      },
+      {
+        "total_drops": 7323031,
+        "speculative_caught": 0,
+        "unhandled_drops": 7323031,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.94282858433934,
+        "p95_reconnect_ms": 646.8973629307366,
+        "p99_reconnect_ms": 748.984223964426
+      },
+      {
+        "total_drops": 4644528,
+        "speculative_caught": 0,
+        "unhandled_drops": 4644528,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.28377021410836,
+        "p95_reconnect_ms": 646.2141125566453,
+        "p99_reconnect_ms": 748.1369218570741
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 7303997,
+        "speculative_caught": 111,
+        "unhandled_drops": 7303886,
+        "false_positives": 19,
+        "catch_rate": 1.5197158487332347e-05,
+        "false_positive_rate": 0.14615384615384616,
+        "total_migration_bw_mb": 6.214621772965769,
+        "p50_reconnect_ms": 400.0819674164805,
+        "p95_reconnect_ms": 646.7256690103701,
+        "p99_reconnect_ms": 749.0883571012274
+      },
+      {
+        "total_drops": 7295983,
+        "speculative_caught": 15,
+        "unhandled_drops": 7295968,
+        "false_positives": 6,
+        "catch_rate": 2.0559258430289655e-06,
+        "false_positive_rate": 0.2857142857142857,
+        "total_migration_bw_mb": 0.8036990848599247,
+        "p50_reconnect_ms": 399.94587083763537,
+        "p95_reconnect_ms": 646.8963127032893,
+        "p99_reconnect_ms": 748.9494034432096
+      },
+      {
+        "total_drops": 7311659,
+        "speculative_caught": 114,
+        "unhandled_drops": 7311545,
+        "false_positives": 15,
+        "catch_rate": 1.5591536749730806e-05,
+        "false_positive_rate": 0.11627906976744186,
+        "total_migration_bw_mb": 7.179792433069617,
+        "p50_reconnect_ms": 400.03367551639343,
+        "p95_reconnect_ms": 646.7695093508706,
+        "p99_reconnect_ms": 748.8951378990831
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 7239252,
+        "speculative_caught": 531,
+        "unhandled_drops": 7238721,
+        "false_positives": 283,
+        "catch_rate": 7.335011959799162e-05,
+        "false_positive_rate": 0.3476658476658477,
+        "total_migration_bw_mb": 38.07171090918716,
+        "p50_reconnect_ms": 400.0529905762369,
+        "p95_reconnect_ms": 646.7661359002753,
+        "p99_reconnect_ms": 749.2944505349345
+      },
+      {
+        "total_drops": 7241462,
+        "speculative_caught": 480,
+        "unhandled_drops": 7240982,
+        "false_positives": 213,
+        "catch_rate": 6.62849573746296e-05,
+        "false_positive_rate": 0.30735930735930733,
+        "total_migration_bw_mb": 34.67123543299861,
+        "p50_reconnect_ms": 399.9799996058779,
+        "p95_reconnect_ms": 646.9042838757968,
+        "p99_reconnect_ms": 749.0986838012011
+      },
+      {
+        "total_drops": 7228226,
+        "speculative_caught": 361,
+        "unhandled_drops": 7227865,
+        "false_positives": 200,
+        "catch_rate": 4.9943098071366335e-05,
+        "false_positive_rate": 0.35650623885918004,
+        "total_migration_bw_mb": 29.16969488316667,
+        "p50_reconnect_ms": 400.0962612370091,
+        "p95_reconnect_ms": 646.7619841025696,
+        "p99_reconnect_ms": 749.2091134456762
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 7172506,
+        "speculative_caught": 1460,
+        "unhandled_drops": 7171046,
+        "false_positives": 139,
+        "catch_rate": 0.00020355507545061655,
+        "false_positive_rate": 0.08692933083176986,
+        "total_migration_bw_mb": 54.35318089372397,
+        "p50_reconnect_ms": 399.9787815039231,
+        "p95_reconnect_ms": 646.8228991705406,
+        "p99_reconnect_ms": 749.0917162996082
+      },
+      {
+        "total_drops": 7131672,
+        "speculative_caught": 1453,
+        "unhandled_drops": 7130219,
+        "false_positives": 155,
+        "catch_rate": 0.00020373903903600726,
+        "false_positive_rate": 0.09639303482587065,
+        "total_migration_bw_mb": 68.5179178540299,
+        "p50_reconnect_ms": 399.894581084072,
+        "p95_reconnect_ms": 646.8679736564274,
+        "p99_reconnect_ms": 749.1249015981177
+      },
+      {
+        "total_drops": 7303205,
+        "speculative_caught": 1363,
+        "unhandled_drops": 7301842,
+        "false_positives": 124,
+        "catch_rate": 0.00018663039035601492,
+        "false_positive_rate": 0.08338937457969066,
+        "total_migration_bw_mb": 67.05492064320266,
+        "p50_reconnect_ms": 400.07501902847457,
+        "p95_reconnect_ms": 646.640170035815,
+        "p99_reconnect_ms": 748.9193064813385
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 7270915,
+        "speculative_caught": 7249137,
+        "unhandled_drops": 21778,
+        "false_positives": 907950,
+        "catch_rate": 0.9970047786282744,
+        "false_positive_rate": 0.11130811771408101,
+        "total_migration_bw_mb": 331188.05563376297,
+        "p50_reconnect_ms": 5.007517895761945,
+        "p95_reconnect_ms": 8.346601822493376,
+        "p99_reconnect_ms": 9.910167716544265
+      },
+      {
+        "total_drops": 7503377,
+        "speculative_caught": 7480963,
+        "unhandled_drops": 22414,
+        "false_positives": 912622,
+        "catch_rate": 0.9970128116979862,
+        "false_positive_rate": 0.10872851111890808,
+        "total_migration_bw_mb": 344266.9100070197,
+        "p50_reconnect_ms": 5.00777546618972,
+        "p95_reconnect_ms": 8.346702580434705,
+        "p99_reconnect_ms": 9.90877323958387
+      },
+      {
+        "total_drops": 7291166,
+        "speculative_caught": 7269914,
+        "unhandled_drops": 21252,
+        "false_positives": 1020322,
+        "catch_rate": 0.9970852398642412,
+        "false_positive_rate": 0.12307514526727587,
+        "total_migration_bw_mb": 339803.11855925404,
+        "p50_reconnect_ms": 5.009620980794039,
+        "p95_reconnect_ms": 8.344630474992316,
+        "p99_reconnect_ms": 9.903034930613863
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 7211375,
+        "speculative_caught": 508,
+        "unhandled_drops": 7210867,
+        "false_positives": 782,
+        "catch_rate": 7.044426340330381e-05,
+        "false_positive_rate": 0.6062015503875969,
+        "total_migration_bw_mb": 51.42390258184841,
+        "p50_reconnect_ms": 399.998166767141,
+        "p95_reconnect_ms": 646.7213718094383,
+        "p99_reconnect_ms": 749.2600918623651
+      },
+      {
+        "total_drops": 7217997,
+        "speculative_caught": 536,
+        "unhandled_drops": 7217461,
+        "false_positives": 800,
+        "catch_rate": 7.425882831483582e-05,
+        "false_positive_rate": 0.5988023952095808,
+        "total_migration_bw_mb": 58.39069149574642,
+        "p50_reconnect_ms": 399.92934150186454,
+        "p95_reconnect_ms": 646.8694492262244,
+        "p99_reconnect_ms": 748.9324059189744
+      },
+      {
+        "total_drops": 7489856,
+        "speculative_caught": 361,
+        "unhandled_drops": 7489495,
+        "false_positives": 719,
+        "catch_rate": 4.819852344290731e-05,
+        "false_positive_rate": 0.6657407407407407,
+        "total_migration_bw_mb": 46.36552064552191,
+        "p50_reconnect_ms": 400.06700117507614,
+        "p95_reconnect_ms": 646.8649372970984,
+        "p99_reconnect_ms": 749.049833224547
+      }
+    ]
+  },
+  "random_geo/high": {
+    "No Migration": [
+      {
+        "total_drops": 6871849,
+        "speculative_caught": 0,
+        "unhandled_drops": 6871849,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.1462681999231,
+        "p95_reconnect_ms": 646.7277980168303,
+        "p99_reconnect_ms": 749.1712239830746
+      },
+      {
+        "total_drops": 6923822,
+        "speculative_caught": 0,
+        "unhandled_drops": 6923822,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.9549800777329,
+        "p95_reconnect_ms": 646.7843843600092,
+        "p99_reconnect_ms": 748.7454031913359
+      },
+      {
+        "total_drops": 7033810,
+        "speculative_caught": 0,
+        "unhandled_drops": 7033810,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0952371349336,
+        "p95_reconnect_ms": 646.7209466718468,
+        "p99_reconnect_ms": 748.8574233993014
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 6992229,
+        "speculative_caught": 20,
+        "unhandled_drops": 6992209,
+        "false_positives": 3,
+        "catch_rate": 2.8603182189828163e-06,
+        "false_positive_rate": 0.13043478260869565,
+        "total_migration_bw_mb": 0.93512594692578,
+        "p50_reconnect_ms": 400.09687697820715,
+        "p95_reconnect_ms": 646.819463702078,
+        "p99_reconnect_ms": 749.4174404214792
+      },
+      {
+        "total_drops": 7022630,
+        "speculative_caught": 33,
+        "unhandled_drops": 7022597,
+        "false_positives": 2,
+        "catch_rate": 4.6990942139910545e-06,
+        "false_positive_rate": 0.05714285714285714,
+        "total_migration_bw_mb": 1.2875359873684589,
+        "p50_reconnect_ms": 400.00285076154984,
+        "p95_reconnect_ms": 646.9117505707402,
+        "p99_reconnect_ms": 748.9601373963637
+      },
+      {
+        "total_drops": 6994556,
+        "speculative_caught": 40,
+        "unhandled_drops": 6994516,
+        "false_positives": 4,
+        "catch_rate": 5.718733254834188e-06,
+        "false_positive_rate": 0.09090909090909091,
+        "total_migration_bw_mb": 1.819096757192748,
+        "p50_reconnect_ms": 400.0810416088678,
+        "p95_reconnect_ms": 646.7730812376833,
+        "p99_reconnect_ms": 748.9707187317683
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 6888942,
+        "speculative_caught": 320,
+        "unhandled_drops": 6888622,
+        "false_positives": 118,
+        "catch_rate": 4.645125477903574e-05,
+        "false_positive_rate": 0.2694063926940639,
+        "total_migration_bw_mb": 22.473576351347052,
+        "p50_reconnect_ms": 400.12723436009594,
+        "p95_reconnect_ms": 646.6796895960726,
+        "p99_reconnect_ms": 749.2150909313058
+      },
+      {
+        "total_drops": 6896495,
+        "speculative_caught": 262,
+        "unhandled_drops": 6896233,
+        "false_positives": 88,
+        "catch_rate": 3.7990312470320066e-05,
+        "false_positive_rate": 0.25142857142857145,
+        "total_migration_bw_mb": 16.02630734924023,
+        "p50_reconnect_ms": 399.89813829419546,
+        "p95_reconnect_ms": 646.8489367413033,
+        "p99_reconnect_ms": 749.1243283091704
+      },
+      {
+        "total_drops": 7005410,
+        "speculative_caught": 266,
+        "unhandled_drops": 7005144,
+        "false_positives": 106,
+        "catch_rate": 3.7970654108753094e-05,
+        "false_positive_rate": 0.2849462365591398,
+        "total_migration_bw_mb": 17.97535472567242,
+        "p50_reconnect_ms": 400.11520816243524,
+        "p95_reconnect_ms": 646.742271267068,
+        "p99_reconnect_ms": 748.882047524038
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 6914881,
+        "speculative_caught": 1417,
+        "unhandled_drops": 6913464,
+        "false_positives": 65,
+        "catch_rate": 0.00020492037390086685,
+        "false_positive_rate": 0.043859649122807015,
+        "total_migration_bw_mb": 51.14800545936113,
+        "p50_reconnect_ms": 400.00246293642493,
+        "p95_reconnect_ms": 646.6399151001935,
+        "p99_reconnect_ms": 749.2556666136226
+      },
+      {
+        "total_drops": 6895059,
+        "speculative_caught": 1297,
+        "unhandled_drops": 6893762,
+        "false_positives": 88,
+        "catch_rate": 0.00018810571454138392,
+        "false_positive_rate": 0.06353790613718412,
+        "total_migration_bw_mb": 55.33761361136257,
+        "p50_reconnect_ms": 399.9740765295347,
+        "p95_reconnect_ms": 646.8631184786072,
+        "p99_reconnect_ms": 749.1272600226482
+      },
+      {
+        "total_drops": 6922555,
+        "speculative_caught": 1450,
+        "unhandled_drops": 6921105,
+        "false_positives": 65,
+        "catch_rate": 0.00020946023541885907,
+        "false_positive_rate": 0.0429042904290429,
+        "total_migration_bw_mb": 59.554344231232285,
+        "p50_reconnect_ms": 400.0103668578851,
+        "p95_reconnect_ms": 646.621575071193,
+        "p99_reconnect_ms": 748.8087595167935
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 7913119,
+        "speculative_caught": 7891376,
+        "unhandled_drops": 21743,
+        "false_positives": 219566,
+        "catch_rate": 0.9972522844658345,
+        "false_positive_rate": 0.027070345220074316,
+        "total_migration_bw_mb": 328438.54390579177,
+        "p50_reconnect_ms": 5.006933502974923,
+        "p95_reconnect_ms": 8.342559366010208,
+        "p99_reconnect_ms": 9.8912290903329
+      },
+      {
+        "total_drops": 7861232,
+        "speculative_caught": 7839225,
+        "unhandled_drops": 22007,
+        "false_positives": 207786,
+        "catch_rate": 0.9972005660181509,
+        "false_positive_rate": 0.025821513105922185,
+        "total_migration_bw_mb": 330555.5926693572,
+        "p50_reconnect_ms": 5.00809352050306,
+        "p95_reconnect_ms": 8.345256760150262,
+        "p99_reconnect_ms": 9.891542690936191
+      },
+      {
+        "total_drops": 8304152,
+        "speculative_caught": 8281181,
+        "unhandled_drops": 22971,
+        "false_positives": 197773,
+        "catch_rate": 0.9972337934084058,
+        "false_positive_rate": 0.02332516487293126,
+        "total_migration_bw_mb": 346364.4560138444,
+        "p50_reconnect_ms": 5.007938775624979,
+        "p95_reconnect_ms": 8.34148230253545,
+        "p99_reconnect_ms": 9.887311636513127
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 7034476,
+        "speculative_caught": 114,
+        "unhandled_drops": 7034362,
+        "false_positives": 74,
+        "catch_rate": 1.620589792331369e-05,
+        "false_positive_rate": 0.39361702127659576,
+        "total_migration_bw_mb": 8.711273918624062,
+        "p50_reconnect_ms": 400.1556408428478,
+        "p95_reconnect_ms": 646.7201477864534,
+        "p99_reconnect_ms": 749.095641909121
+      },
+      {
+        "total_drops": 6972222,
+        "speculative_caught": 96,
+        "unhandled_drops": 6972126,
+        "false_positives": 77,
+        "catch_rate": 1.3768924741639035e-05,
+        "false_positive_rate": 0.44508670520231214,
+        "total_migration_bw_mb": 7.9372178791746135,
+        "p50_reconnect_ms": 399.94324839545845,
+        "p95_reconnect_ms": 646.7806119917407,
+        "p99_reconnect_ms": 749.0065827453465
+      },
+      {
+        "total_drops": 7098501,
+        "speculative_caught": 157,
+        "unhandled_drops": 7098344,
+        "false_positives": 184,
+        "catch_rate": 2.2117345619871012e-05,
+        "false_positive_rate": 0.5395894428152492,
+        "total_migration_bw_mb": 15.210575349613462,
+        "p50_reconnect_ms": 400.04677042142896,
+        "p95_reconnect_ms": 646.6902891647452,
+        "p99_reconnect_ms": 748.875153430705
+      }
+    ]
+  },
+  "scale_free/low": {
+    "No Migration": [
+      {
+        "total_drops": 6820202,
+        "speculative_caught": 0,
+        "unhandled_drops": 6820202,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0672367532575,
+        "p95_reconnect_ms": 646.7658061882368,
+        "p99_reconnect_ms": 749.1117192030916
+      },
+      {
+        "total_drops": 6721021,
+        "speculative_caught": 0,
+        "unhandled_drops": 6721021,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.96463558471254,
+        "p95_reconnect_ms": 646.9265683003533,
+        "p99_reconnect_ms": 748.9411057306678
+      },
+      {
+        "total_drops": 6641609,
+        "speculative_caught": 0,
+        "unhandled_drops": 6641609,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.00718279435176,
+        "p95_reconnect_ms": 646.7394185933592,
+        "p99_reconnect_ms": 749.0680084576463
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 6718773,
+        "speculative_caught": 155,
+        "unhandled_drops": 6718618,
+        "false_positives": 28,
+        "catch_rate": 2.306968846841529e-05,
+        "false_positive_rate": 0.15300546448087432,
+        "total_migration_bw_mb": 9.510114913691535,
+        "p50_reconnect_ms": 400.0283695854819,
+        "p95_reconnect_ms": 646.8206891317764,
+        "p99_reconnect_ms": 749.2339685747655
+      },
+      {
+        "total_drops": 6742423,
+        "speculative_caught": 130,
+        "unhandled_drops": 6742293,
+        "false_positives": 18,
+        "catch_rate": 1.9280902429289887e-05,
+        "false_positive_rate": 0.12162162162162163,
+        "total_migration_bw_mb": 6.388836561949412,
+        "p50_reconnect_ms": 399.97213675766875,
+        "p95_reconnect_ms": 646.9659406597052,
+        "p99_reconnect_ms": 748.9584302804051
+      },
+      {
+        "total_drops": 6851430,
+        "speculative_caught": 227,
+        "unhandled_drops": 6851203,
+        "false_positives": 41,
+        "catch_rate": 3.31317695721915e-05,
+        "false_positive_rate": 0.15298507462686567,
+        "total_migration_bw_mb": 13.097283186483828,
+        "p50_reconnect_ms": 400.00225764743135,
+        "p95_reconnect_ms": 646.8542263402587,
+        "p99_reconnect_ms": 749.351617294685
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 6567075,
+        "speculative_caught": 864,
+        "unhandled_drops": 6566211,
+        "false_positives": 556,
+        "catch_rate": 0.00013156542296227771,
+        "false_positive_rate": 0.39154929577464787,
+        "total_migration_bw_mb": 71.30970624794776,
+        "p50_reconnect_ms": 400.0470690936045,
+        "p95_reconnect_ms": 646.7972042899437,
+        "p99_reconnect_ms": 749.2897724415789
+      },
+      {
+        "total_drops": 6618706,
+        "speculative_caught": 797,
+        "unhandled_drops": 6617909,
+        "false_positives": 450,
+        "catch_rate": 0.00012041628680893213,
+        "false_positive_rate": 0.3608660785886127,
+        "total_migration_bw_mb": 61.92241864497038,
+        "p50_reconnect_ms": 399.8981306499163,
+        "p95_reconnect_ms": 646.8350068112502,
+        "p99_reconnect_ms": 748.918991801363
+      },
+      {
+        "total_drops": 6529405,
+        "speculative_caught": 1065,
+        "unhandled_drops": 6528340,
+        "false_positives": 680,
+        "catch_rate": 0.00016310827709416095,
+        "false_positive_rate": 0.38968481375358166,
+        "total_migration_bw_mb": 90.57278979353919,
+        "p50_reconnect_ms": 399.9484002177991,
+        "p95_reconnect_ms": 646.7378578815399,
+        "p99_reconnect_ms": 749.0499429282985
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 6690608,
+        "speculative_caught": 1329,
+        "unhandled_drops": 6689279,
+        "false_positives": 576,
+        "catch_rate": 0.00019863665604082618,
+        "false_positive_rate": 0.30236220472440944,
+        "total_migration_bw_mb": 62.83232686345794,
+        "p50_reconnect_ms": 400.05589094801417,
+        "p95_reconnect_ms": 646.7984325893792,
+        "p99_reconnect_ms": 749.0208853584719
+      },
+      {
+        "total_drops": 6754966,
+        "speculative_caught": 1254,
+        "unhandled_drops": 6753712,
+        "false_positives": 560,
+        "catch_rate": 0.00018564120085874598,
+        "false_positive_rate": 0.308710033076075,
+        "total_migration_bw_mb": 72.98785444993099,
+        "p50_reconnect_ms": 399.9109576109225,
+        "p95_reconnect_ms": 646.8935182774712,
+        "p99_reconnect_ms": 748.8837303651202
+      },
+      {
+        "total_drops": 6766259,
+        "speculative_caught": 1298,
+        "unhandled_drops": 6764961,
+        "false_positives": 510,
+        "catch_rate": 0.00019183421740137348,
+        "false_positive_rate": 0.28207964601769914,
+        "total_migration_bw_mb": 66.77741320975325,
+        "p50_reconnect_ms": 399.9724970560878,
+        "p95_reconnect_ms": 646.708447969323,
+        "p99_reconnect_ms": 749.0069971633411
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 5773893,
+        "speculative_caught": 5758724,
+        "unhandled_drops": 15169,
+        "false_positives": 2507327,
+        "catch_rate": 0.9973728297355008,
+        "false_positive_rate": 0.30332827610185326,
+        "total_migration_bw_mb": 338492.2764351192,
+        "p50_reconnect_ms": 5.007118307756195,
+        "p95_reconnect_ms": 8.340136546706825,
+        "p99_reconnect_ms": 9.876881548280613
+      },
+      {
+        "total_drops": 5810701,
+        "speculative_caught": 5796150,
+        "unhandled_drops": 14551,
+        "false_positives": 2621551,
+        "catch_rate": 0.9974958270955604,
+        "false_positive_rate": 0.31143313358362334,
+        "total_migration_bw_mb": 341215.6370514875,
+        "p50_reconnect_ms": 5.007207708026699,
+        "p95_reconnect_ms": 8.339635908942014,
+        "p99_reconnect_ms": 9.866665331515277
+      },
+      {
+        "total_drops": 5742541,
+        "speculative_caught": 5727868,
+        "unhandled_drops": 14673,
+        "false_positives": 2814863,
+        "catch_rate": 0.9974448593401423,
+        "false_positive_rate": 0.32950387879473203,
+        "total_migration_bw_mb": 351766.31449823454,
+        "p50_reconnect_ms": 5.004985036081816,
+        "p95_reconnect_ms": 8.3376715070594,
+        "p99_reconnect_ms": 9.869184320108962
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 6762864,
+        "speculative_caught": 1161,
+        "unhandled_drops": 6761703,
+        "false_positives": 3295,
+        "catch_rate": 0.00017167282973604083,
+        "false_positive_rate": 0.7394524236983842,
+        "total_migration_bw_mb": 175.81753826066654,
+        "p50_reconnect_ms": 400.02721911444155,
+        "p95_reconnect_ms": 646.7190823082341,
+        "p99_reconnect_ms": 749.0368479985129
+      },
+      {
+        "total_drops": 6885083,
+        "speculative_caught": 1221,
+        "unhandled_drops": 6883862,
+        "false_positives": 3525,
+        "catch_rate": 0.00017733991006353881,
+        "false_positive_rate": 0.7427307206068268,
+        "total_migration_bw_mb": 203.03823892550625,
+        "p50_reconnect_ms": 399.9597424231872,
+        "p95_reconnect_ms": 646.857441678802,
+        "p99_reconnect_ms": 749.0076887230629
+      },
+      {
+        "total_drops": 6931322,
+        "speculative_caught": 1185,
+        "unhandled_drops": 6930137,
+        "false_positives": 3081,
+        "catch_rate": 0.00017096305726382356,
+        "false_positive_rate": 0.7222222222222222,
+        "total_migration_bw_mb": 157.7130597155781,
+        "p50_reconnect_ms": 399.92569694235715,
+        "p95_reconnect_ms": 646.7400812272199,
+        "p99_reconnect_ms": 749.2386545219497
+      }
+    ]
+  },
+  "scale_free/medium": {
+    "No Migration": [
+      {
+        "total_drops": 7330934,
+        "speculative_caught": 0,
+        "unhandled_drops": 7330934,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.01350701142076,
+        "p95_reconnect_ms": 646.7869794621961,
+        "p99_reconnect_ms": 749.1671910206187
+      },
+      {
+        "total_drops": 7323031,
+        "speculative_caught": 0,
+        "unhandled_drops": 7323031,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.94282858433934,
+        "p95_reconnect_ms": 646.8973629307366,
+        "p99_reconnect_ms": 748.984223964426
+      },
+      {
+        "total_drops": 7395162,
+        "speculative_caught": 0,
+        "unhandled_drops": 7395162,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.01792964365836,
+        "p95_reconnect_ms": 646.6824782557219,
+        "p99_reconnect_ms": 749.0475818721555
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 7122382,
+        "speculative_caught": 44,
+        "unhandled_drops": 7122338,
+        "false_positives": 8,
+        "catch_rate": 6.177708525041201e-06,
+        "false_positive_rate": 0.15384615384615385,
+        "total_migration_bw_mb": 1.6771882791271517,
+        "p50_reconnect_ms": 400.06737291332706,
+        "p95_reconnect_ms": 646.6651243280542,
+        "p99_reconnect_ms": 748.9121192829016
+      },
+      {
+        "total_drops": 7390780,
+        "speculative_caught": 60,
+        "unhandled_drops": 7390720,
+        "false_positives": 11,
+        "catch_rate": 8.118222975112235e-06,
+        "false_positive_rate": 0.15492957746478872,
+        "total_migration_bw_mb": 2.2636494648289394,
+        "p50_reconnect_ms": 399.9178462068641,
+        "p95_reconnect_ms": 646.9693388322004,
+        "p99_reconnect_ms": 748.864009045931
+      },
+      {
+        "total_drops": 7267769,
+        "speculative_caught": 113,
+        "unhandled_drops": 7267656,
+        "false_positives": 15,
+        "catch_rate": 1.5548100111602335e-05,
+        "false_positive_rate": 0.1171875,
+        "total_migration_bw_mb": 6.081783784912191,
+        "p50_reconnect_ms": 400.07173420792327,
+        "p95_reconnect_ms": 646.7837119534528,
+        "p99_reconnect_ms": 749.0505050419239
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 7295050,
+        "speculative_caught": 449,
+        "unhandled_drops": 7294601,
+        "false_positives": 243,
+        "catch_rate": 6.154858431402115e-05,
+        "false_positive_rate": 0.3511560693641618,
+        "total_migration_bw_mb": 33.06351579492008,
+        "p50_reconnect_ms": 400.03786669775104,
+        "p95_reconnect_ms": 646.7247048626311,
+        "p99_reconnect_ms": 749.0955601822932
+      },
+      {
+        "total_drops": 7404697,
+        "speculative_caught": 382,
+        "unhandled_drops": 7404315,
+        "false_positives": 198,
+        "catch_rate": 5.158887662790253e-05,
+        "false_positive_rate": 0.3413793103448276,
+        "total_migration_bw_mb": 25.290135900982616,
+        "p50_reconnect_ms": 399.97474635846015,
+        "p95_reconnect_ms": 646.9702165643023,
+        "p99_reconnect_ms": 749.1471515643498
+      },
+      {
+        "total_drops": 7361023,
+        "speculative_caught": 283,
+        "unhandled_drops": 7360740,
+        "false_positives": 186,
+        "catch_rate": 3.84457432071602e-05,
+        "false_positive_rate": 0.39658848614072495,
+        "total_migration_bw_mb": 22.00566230656636,
+        "p50_reconnect_ms": 400.05416947533774,
+        "p95_reconnect_ms": 646.720013279385,
+        "p99_reconnect_ms": 748.9785830820073
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 7247212,
+        "speculative_caught": 1479,
+        "unhandled_drops": 7245733,
+        "false_positives": 160,
+        "catch_rate": 0.0002040784787308554,
+        "false_positive_rate": 0.09762050030506407,
+        "total_migration_bw_mb": 79.99039577375846,
+        "p50_reconnect_ms": 399.9685440965535,
+        "p95_reconnect_ms": 646.7975030463236,
+        "p99_reconnect_ms": 749.1038643361965
+      },
+      {
+        "total_drops": 7343721,
+        "speculative_caught": 1474,
+        "unhandled_drops": 7342247,
+        "false_positives": 142,
+        "catch_rate": 0.00020071568623045456,
+        "false_positive_rate": 0.08787128712871287,
+        "total_migration_bw_mb": 60.55828622602305,
+        "p50_reconnect_ms": 399.84893217244036,
+        "p95_reconnect_ms": 646.8590183962876,
+        "p99_reconnect_ms": 749.2376980282743
+      },
+      {
+        "total_drops": 7415139,
+        "speculative_caught": 1373,
+        "unhandled_drops": 7413766,
+        "false_positives": 128,
+        "catch_rate": 0.0001851617346620205,
+        "false_positive_rate": 0.08527648234510327,
+        "total_migration_bw_mb": 78.75588366256731,
+        "p50_reconnect_ms": 400.0533974015478,
+        "p95_reconnect_ms": 646.7543487373861,
+        "p99_reconnect_ms": 748.8800914489926
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 7333637,
+        "speculative_caught": 7312129,
+        "unhandled_drops": 21508,
+        "false_positives": 889997,
+        "catch_rate": 0.9970672123531612,
+        "false_positive_rate": 0.10850808680578669,
+        "total_migration_bw_mb": 330886.73500334506,
+        "p50_reconnect_ms": 5.007642321315648,
+        "p95_reconnect_ms": 8.344873923479518,
+        "p99_reconnect_ms": 9.90465698072118
+      },
+      {
+        "total_drops": 7385534,
+        "speculative_caught": 7363537,
+        "unhandled_drops": 21997,
+        "false_positives": 957673,
+        "catch_rate": 0.9970216100826291,
+        "false_positive_rate": 0.11508819029924734,
+        "total_migration_bw_mb": 340208.8334031836,
+        "p50_reconnect_ms": 5.0068488363210255,
+        "p95_reconnect_ms": 8.348196279639295,
+        "p99_reconnect_ms": 9.911079562165568
+      },
+      {
+        "total_drops": 7333773,
+        "speculative_caught": 7311904,
+        "unhandled_drops": 21869,
+        "false_positives": 1081562,
+        "catch_rate": 0.997018042418275,
+        "false_positive_rate": 0.12885761376766167,
+        "total_migration_bw_mb": 344352.4050102595,
+        "p50_reconnect_ms": 5.006625487799218,
+        "p95_reconnect_ms": 8.344106236170592,
+        "p99_reconnect_ms": 9.910281634775417
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 7267170,
+        "speculative_caught": 340,
+        "unhandled_drops": 7266830,
+        "false_positives": 498,
+        "catch_rate": 4.6785750161342035e-05,
+        "false_positive_rate": 0.594272076372315,
+        "total_migration_bw_mb": 36.665973144748726,
+        "p50_reconnect_ms": 400.03645117279984,
+        "p95_reconnect_ms": 646.7974915475424,
+        "p99_reconnect_ms": 749.1704835591012
+      },
+      {
+        "total_drops": 7333535,
+        "speculative_caught": 327,
+        "unhandled_drops": 7333208,
+        "false_positives": 435,
+        "catch_rate": 4.458968287463004e-05,
+        "false_positive_rate": 0.5708661417322834,
+        "total_migration_bw_mb": 29.23489051005212,
+        "p50_reconnect_ms": 399.9684704272958,
+        "p95_reconnect_ms": 646.8505686863493,
+        "p99_reconnect_ms": 749.0402258630158
+      },
+      {
+        "total_drops": 7363150,
+        "speculative_caught": 345,
+        "unhandled_drops": 7362805,
+        "false_positives": 671,
+        "catch_rate": 4.685494659215146e-05,
+        "false_positive_rate": 0.6604330708661418,
+        "total_migration_bw_mb": 38.85590359080045,
+        "p50_reconnect_ms": 399.9749009537069,
+        "p95_reconnect_ms": 646.6433312224715,
+        "p99_reconnect_ms": 748.9973294408032
+      }
+    ]
+  },
+  "scale_free/high": {
+    "No Migration": [
+      {
+        "total_drops": 6886253,
+        "speculative_caught": 0,
+        "unhandled_drops": 6886253,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0834069874384,
+        "p95_reconnect_ms": 646.7843780221172,
+        "p99_reconnect_ms": 749.2469541985021
+      },
+      {
+        "total_drops": 6923822,
+        "speculative_caught": 0,
+        "unhandled_drops": 6923822,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 399.9549800777329,
+        "p95_reconnect_ms": 646.7843843600092,
+        "p99_reconnect_ms": 748.7454031913359
+      },
+      {
+        "total_drops": 7033810,
+        "speculative_caught": 0,
+        "unhandled_drops": 7033810,
+        "false_positives": 0,
+        "catch_rate": 0.0,
+        "false_positive_rate": 0.0,
+        "total_migration_bw_mb": 0.0,
+        "p50_reconnect_ms": 400.0952371349336,
+        "p95_reconnect_ms": 646.7209466718468,
+        "p99_reconnect_ms": 748.8574233993014
+      }
+    ],
+    "Threshold (80%)": [
+      {
+        "total_drops": 6931337,
+        "speculative_caught": 20,
+        "unhandled_drops": 6931317,
+        "false_positives": 3,
+        "catch_rate": 2.8854461989079452e-06,
+        "false_positive_rate": 0.13043478260869565,
+        "total_migration_bw_mb": 0.7991239384736973,
+        "p50_reconnect_ms": 400.0336518043362,
+        "p95_reconnect_ms": 646.8399221274647,
+        "p99_reconnect_ms": 749.2944784593078
+      },
+      {
+        "total_drops": 6990912,
+        "speculative_caught": 36,
+        "unhandled_drops": 6990876,
+        "false_positives": 4,
+        "catch_rate": 5.14954272060641e-06,
+        "false_positive_rate": 0.1,
+        "total_migration_bw_mb": 1.5256930714629757,
+        "p50_reconnect_ms": 399.9514224012049,
+        "p95_reconnect_ms": 647.0021773950355,
+        "p99_reconnect_ms": 749.0678888356836
+      },
+      {
+        "total_drops": 7106089,
+        "speculative_caught": 25,
+        "unhandled_drops": 7106064,
+        "false_positives": 5,
+        "catch_rate": 3.5181096099415587e-06,
+        "false_positive_rate": 0.16666666666666666,
+        "total_migration_bw_mb": 1.3025440888536155,
+        "p50_reconnect_ms": 399.9982732592692,
+        "p95_reconnect_ms": 646.6675103221461,
+        "p99_reconnect_ms": 749.1905838304731
+      }
+    ],
+    "Threshold (70%)": [
+      {
+        "total_drops": 6901870,
+        "speculative_caught": 256,
+        "unhandled_drops": 6901614,
+        "false_positives": 107,
+        "catch_rate": 3.709139696922718e-05,
+        "false_positive_rate": 0.29476584022038566,
+        "total_migration_bw_mb": 17.65289010130547,
+        "p50_reconnect_ms": 400.0663981117166,
+        "p95_reconnect_ms": 646.7807701432974,
+        "p99_reconnect_ms": 749.3779753714302
+      },
+      {
+        "total_drops": 6984353,
+        "speculative_caught": 316,
+        "unhandled_drops": 6984037,
+        "false_positives": 135,
+        "catch_rate": 4.524399038822923e-05,
+        "false_positive_rate": 0.29933481152993346,
+        "total_migration_bw_mb": 23.525857914317587,
+        "p50_reconnect_ms": 399.91436844539174,
+        "p95_reconnect_ms": 646.7172089842054,
+        "p99_reconnect_ms": 748.8054559519774
+      },
+      {
+        "total_drops": 7014984,
+        "speculative_caught": 205,
+        "unhandled_drops": 7014779,
+        "false_positives": 94,
+        "catch_rate": 2.922316002431367e-05,
+        "false_positive_rate": 0.31438127090301005,
+        "total_migration_bw_mb": 12.492925579909606,
+        "p50_reconnect_ms": 400.08081481272427,
+        "p95_reconnect_ms": 646.8419553202717,
+        "p99_reconnect_ms": 749.100143903687
+      }
+    ],
+    "Random": [
+      {
+        "total_drops": 6891802,
+        "speculative_caught": 1420,
+        "unhandled_drops": 6890382,
+        "false_positives": 56,
+        "catch_rate": 0.00020604190311909715,
+        "false_positive_rate": 0.037940379403794036,
+        "total_migration_bw_mb": 59.281155546117645,
+        "p50_reconnect_ms": 400.0348357816639,
+        "p95_reconnect_ms": 646.6491963684016,
+        "p99_reconnect_ms": 748.9561005343556
+      },
+      {
+        "total_drops": 6915946,
+        "speculative_caught": 1419,
+        "unhandled_drops": 6914527,
+        "false_positives": 74,
+        "catch_rate": 0.00020517800457088589,
+        "false_positive_rate": 0.04956463496316142,
+        "total_migration_bw_mb": 63.51351382631739,
+        "p50_reconnect_ms": 399.9204083852077,
+        "p95_reconnect_ms": 646.9036997476936,
+        "p99_reconnect_ms": 749.1423745796718
+      },
+      {
+        "total_drops": 7034648,
+        "speculative_caught": 1451,
+        "unhandled_drops": 7033197,
+        "false_positives": 72,
+        "catch_rate": 0.0002062647626434187,
+        "false_positive_rate": 0.04727511490479317,
+        "total_migration_bw_mb": 49.309050955968225,
+        "p50_reconnect_ms": 400.05333513554524,
+        "p95_reconnect_ms": 646.6537991234312,
+        "p99_reconnect_ms": 748.9125585738061
+      }
+    ],
+    "Oracle": [
+      {
+        "total_drops": 8010225,
+        "speculative_caught": 7986514,
+        "unhandled_drops": 23711,
+        "false_positives": 243693,
+        "catch_rate": 0.9970399083671183,
+        "false_positive_rate": 0.029609583331257645,
+        "total_migration_bw_mb": 337096.83696196886,
+        "p50_reconnect_ms": 5.007309986191822,
+        "p95_reconnect_ms": 8.344227335088444,
+        "p99_reconnect_ms": 9.904756454039036
+      },
+      {
+        "total_drops": 8061918,
+        "speculative_caught": 8038961,
+        "unhandled_drops": 22957,
+        "false_positives": 243451,
+        "catch_rate": 0.9971524145991065,
+        "false_positive_rate": 0.029393732164012126,
+        "total_migration_bw_mb": 337288.37541596836,
+        "p50_reconnect_ms": 5.007115768109211,
+        "p95_reconnect_ms": 8.344798442204473,
+        "p99_reconnect_ms": 9.896895521656797
+      },
+      {
+        "total_drops": 8148062,
+        "speculative_caught": 8124989,
+        "unhandled_drops": 23073,
+        "false_positives": 259532,
+        "catch_rate": 0.9971682836973994,
+        "false_positive_rate": 0.030953706240344558,
+        "total_migration_bw_mb": 342932.1454366891,
+        "p50_reconnect_ms": 5.00708195665935,
+        "p95_reconnect_ms": 8.344563732807556,
+        "p99_reconnect_ms": 9.90016463271222
+      }
+    ],
+    "PPO+GNN (ours)": [
+      {
+        "total_drops": 6959357,
+        "speculative_caught": 100,
+        "unhandled_drops": 6959257,
+        "false_positives": 87,
+        "catch_rate": 1.4369143586110039e-05,
+        "false_positive_rate": 0.46524064171123,
+        "total_migration_bw_mb": 7.928849372927258,
+        "p50_reconnect_ms": 400.10812161503196,
+        "p95_reconnect_ms": 646.731507565257,
+        "p99_reconnect_ms": 749.1514176835361
+      },
+      {
+        "total_drops": 6936145,
+        "speculative_caught": 116,
+        "unhandled_drops": 6936029,
+        "false_positives": 83,
+        "catch_rate": 1.672398717154846e-05,
+        "false_positive_rate": 0.41708542713567837,
+        "total_migration_bw_mb": 8.556765445612923,
+        "p50_reconnect_ms": 400.01484389356136,
+        "p95_reconnect_ms": 646.9887997656865,
+        "p99_reconnect_ms": 748.9978943316041
+      },
+      {
+        "total_drops": 7143647,
+        "speculative_caught": 104,
+        "unhandled_drops": 7143543,
+        "false_positives": 120,
+        "catch_rate": 1.4558390133219069e-05,
+        "false_positive_rate": 0.5357142857142857,
+        "total_migration_bw_mb": 8.76912442192582,
+        "p50_reconnect_ms": 400.0159075550907,
+        "p95_reconnect_ms": 646.6698736035557,
+        "p99_reconnect_ms": 748.9906435751925
+      }
+    ]
+  }
+}
