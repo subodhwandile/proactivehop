@@ -603,7 +603,9 @@ decays toward the base ($\ell_0{=}0.55$) where drop probability is low.
 \begin{table}[t]
 \centering
 \caption{Pre-migration results: Server 3 crashes at step 40.
-25 sessions seeded on target plus organic arrivals (\textasciitilde76 at start).
+25 sessions seeded on target plus organic arrivals (\textasciitilde61 sessions at experiment start, tracked as \texttt{target\_sessions\_initial}).
+Pre-mig.\ (\%) = fraction of \texttt{target\_sessions\_initial} that left Server 3 via a
+speculative ($<\!50$\,ms) migration before step 40.
 Results are mean$\pm$population-std over 1 checkpoint $\times$ 20 evaluation seeds;
 PPO agents use greedy (argmax) action selection for deterministic evaluation.
 CoV = std/mean. Paired $t$-tests: GNN vs LSTM $p{=}0.39$; GNN vs MLP $p{=}0.22$;
@@ -1117,6 +1119,12 @@ different onset patterns (sudden, oscillating, cascading).
 giving limited statistical power for pairwise comparisons in the crash
 scenario ($p$-values range 0.17--0.27); conclusions about crash-scenario
 rankings should be treated as preliminary.
+(7)~\textit{Implementation sensitivity}: fixing a non-determinism bug
+(session IDs changed from \texttt{uuid4()} to a deterministic counter)
+shifted the GNN pre-migration mean by $\approx$7\,pp (20.5\%\,$\to$\,27.5\%),
+confirming that individual metric values are sensitive to implementation details;
+the directional result (GNN $>$ MLP, all learned $>$ Threshold) is stable across
+implementations.
 
 % -----------------------------------------------------------------------
 \section{Conclusion}
