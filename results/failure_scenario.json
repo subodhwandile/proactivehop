@@ -221,16 +221,14 @@
   },
   {
     "policy": "p_drop heuristic",
-    "pre_migration_rate_mean": 0.9960000000000001,
-    "pre_migration_rate_std": 0.012000000000000009,
+    "pre_migration_rate_mean": 0.9800000000000001,
+    "pre_migration_rate_std": 0.08717797887081348,
     "pre_migration_rate_per_seed": [
       1.0,
       1.0,
       1.0,
       1.0,
       1.0,
-      0.96,
-      0.96,
       1.0,
       1.0,
       1.0,
@@ -243,10 +241,12 @@
       1.0,
       1.0,
       1.0,
-      1.0
+      1.0,
+      1.0,
+      0.6
     ],
-    "ramp_migrations_mean": 2534.95,
-    "ramp_migrations_std": 1618.927530033386,
+    "ramp_migrations_mean": 2189.65,
+    "ramp_migrations_std": 978.2370507704153,
     "seeds": [
       42,
       43,
@@ -269,10 +269,10 @@
       60,
       61
     ],
-    "p50_mean": 10.3003942857131,
-    "p50_std": 9.125237689302873,
-    "p95_mean": 573.6185087710376,
-    "p95_std": 27.885438290457373
+    "p50_mean": 12.550320473648908,
+    "p50_std": 13.598041111196201,
+    "p95_mean": 588.4989913185284,
+    "p95_std": 23.103193909751866
   },
   {
     "policy": "PPO+GNN",

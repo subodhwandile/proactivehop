@@ -629,7 +629,7 @@ No Migration     & $0.0\pm0.0$     & 399 & 625 & ---  & $0\pm0$ \\
 Threshold-70\%   & $26.6\pm26.3$   & 393 & 629 & 0.99 & $59\pm34$ \\
 LSTM Predictor   & $54.8\pm41.4$   & 395 & 632 & 0.76 & $163\pm122$ \\
 PPO+GNN          & $86.0\pm31.8$   & 162 & 589 & 0.37 & $2172\pm1598$ \\
-$p_{\rm drop}$ heuristic & $99.6\pm1.2$    &  10 & 574 & 0.01 & $2535\pm1619$ \\
+$p_{\rm drop}$ heuristic & $98.0\pm8.7$    &  13 & 588 & 0.09 & $2190\pm978$ \\
 PPO+MLP          & $98.0\pm6.1$    & 351 & 628 & 0.06 & $1432\pm1772$ \\
 \bottomrule
 \end{tabular}
@@ -1191,7 +1191,7 @@ experiment results that support the findings of this study are openly available 
 \url{https://github.com/subodhwandile/proactivehop}.
 Exact commit provenance for each results file (see repository for full paths):
 \begin{itemize}
-  \item Table~\ref{tab:failure}: \texttt{failure\_scenario.json} @ \texttt{f80a1b5}.
+  \item Table~\ref{tab:failure}: \texttt{failure\_scenario.json} @ HEAD (\texttt{1a7b602}+re-run).
   \item Table~\ref{tab:ablation} rows 1--2: \texttt{ablation\_multiseed\_results.json} @ \texttt{13c3c56}.
   \item Table~\ref{tab:ablation} rows 3--5: \texttt{lstm\_ablation/} + \texttt{edge\_ablation/} @ \texttt{1b1033d}.
   \item Table~\ref{tab:scale}: \texttt{scale\_experiment.json} @ \texttt{60f02bb}.
@@ -1200,7 +1200,7 @@ Exact commit provenance for each results file (see repository for full paths):
 \begin{sloppypar}
 Commits \texttt{13c3c56}, \texttt{1b1033d}, \texttt{60f02bb} predate the RNG and
 \texttt{hash()} fixes; re-running at HEAD produces different values.
-To reproduce Tables 3--5 at HEAD, run \texttt{ablation\_multiseed.py},
+To regenerate Tables 3--5 at HEAD (values will differ), run \texttt{ablation\_multiseed.py},
 \texttt{lstm\_ablation\_multiseed.py}, \texttt{edge\_ablation.py},
 \texttt{scale\_experiment.py}, and \texttt{sensitivity.py}.
 \end{sloppypar}

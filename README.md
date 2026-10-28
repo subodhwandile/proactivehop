@@ -55,7 +55,7 @@ Each results file was produced at a specific commit. Commits `13c3c56`, `1b1033d
 
 | File | Commit | Table | Notes |
 |------|--------|-------|-------|
-| `results/failure_scenario.json` | `f80a1b5` | Table 2 | Fixed 25-session denominator, Wilcoxon+Holm |
+| `results/failure_scenario.json` | HEAD | Table 2 | Re-run at HEAD; all key policies identical, p_drop 99.6→98.0% |
 | `results/ablation_multiseed/ablation_multiseed_results.json` | `13c3c56` | Table 3 rows 1–2 | Before RNG fix |
 | `results/lstm_ablation/`, `results/edge_ablation/` | `1b1033d` | Table 3 rows 3–5 | Before RNG fix |
 | `results/scale_experiment.json` | `60f02bb` | Table 4 | Before RNG fix |
