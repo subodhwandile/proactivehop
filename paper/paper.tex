@@ -692,15 +692,14 @@ Figure~\ref{fig:failure} plots the session-drain time-series (seed 42).
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{../results/plots/fig4c_session_drain.png}
-  \caption{Sessions remaining on Server 3 over time (seed 42, representative run).
-  Server 3 is seeded with 25 sessions at step 30 (reset to base load; denominator identical across policies).
+  \caption{All sessions on Server 3 over time (seed 42, representative run).
+  Server 3 is seeded with 25 sessions at step 30 (reset to base load); total count includes organic sessions and varies per policy based on warm-up behavior (GNN: 28, LSTM/p\_drop: 25, No Migration: 63, MLP: 87, Threshold: 128).
+  Y-axis counts all sessions on Server 3, not just the 25 seeded ones; pre-migration rate (Table~\ref{tab:failure}) uses only the seeded denominator.
   Degradation ramp starts at step 30; crash at step 40 (red dashed line).
-  All learned policies (GNN, MLP, LSTM) begin migrating sessions as load rises
-  above the 0.40 action threshold, achieving $>$54\% pre-migration before the crash.
-  Threshold-70\% acts only after load exceeds 0.70 ($\approx$step 36), achieving 26.6\%.
-  No Migration stays fully populated until failure, experiencing the full reactive
-  reconnect storm.
-  The $p_{\rm drop}$ heuristic migrates most aggressively throughout the ramp.}
+  GNN and $p_{\rm drop}$ drain to near-zero immediately at step 31; LSTM drains at steps 33--34.
+  MLP oscillates (87$\to$3$\to$38$\to$22$\to$4$\to$61$\to$3$\to$0) due to high migration churn (87 ramp migrations in seed 42).
+  Threshold-70\% begins draining when load exceeds 0.70 at step 36, reaching 0 by step 38.
+  No Migration loses sessions to organic load-induced drops (not policy migrations) from step 32 onward; Server 3 reaches 0 by step 39, before the crash fires at step 40.}
   \label{fig:failure}
 \end{figure}
 
@@ -1190,16 +1189,21 @@ The simulator, model code, training scripts, pre-trained checkpoints, and all
 experiment results that support the findings of this study are openly available at
 \url{https://github.com/subodhwandile/proactivehop}.
 Exact commit provenance for each results file:
-Table~\ref{tab:failure} (crash scenario, \texttt{results/failure\_scenario.json}):
-commit \texttt{8144338};
-Table~\ref{tab:ablation} (i.i.d.\ ablation, \texttt{results/ablation\_multiseed\_speculative/ablation\_multiseed\_results.json}):
-commit \texttt{2974d8c} (after non-determinism fix in \texttt{8d8d384});
-Table~\ref{tab:scale} (scale experiment, \texttt{results/scale\_experiment.json}):
-commit \texttt{60f02bb};
-Table~5 (sensitivity, \texttt{results/sensitivity.json}):
-commit \texttt{b840ad9}.
-Tables~\ref{tab:scale} and 5 were produced before the \texttt{\_create\_session} RNG fix (\texttt{8d8d384});
-to exactly reproduce them, check out the respective commits.
+\begin{itemize}
+  \item Table~\ref{tab:failure} (crash scenario): \texttt{results/failure\_scenario.json} @ \texttt{f80a1b5}.
+  \item Table~\ref{tab:ablation} rows 1--2 (GNN vs MLP, 1.64\% vs 0.90\%):
+        \texttt{results/ablation\_multiseed/ablation\_multiseed\_results.json} @ \texttt{13c3c56}.
+  \item Table~\ref{tab:ablation} rows 3--5 (LSTM and edge ablation):
+        \texttt{results/lstm\_ablation/} and \texttt{results/edge\_ablation/} @ \texttt{1b1033d}.
+  \item Table~\ref{tab:scale} (scale experiment): \texttt{results/scale\_experiment.json} @ \texttt{60f02bb}.
+  \item Table~5 (sensitivity): \texttt{results/sensitivity.json} @ \texttt{13c3c56}.
+\end{itemize}
+Note: commits \texttt{13c3c56}, \texttt{1b1033d}, and \texttt{60f02bb} predate the
+\texttt{\_create\_session} RNG fix (\texttt{8d8d384}) and the \texttt{hash()} fix (\texttt{f80a1b5}),
+so re-running those experiments at those commits will not give bit-identical results.
+To reproduce Tables 3--5 with the current bit-deterministic simulator, re-run
+\texttt{experiments/ablation.py}, \texttt{experiments/scale\_experiment.py}, and
+\texttt{experiments/sensitivity.py} at HEAD.
 The Alibaba 2018 cluster trace used in the trace-fidelity experiment is publicly
 available at \url{https://github.com/alibaba/clusterdata}.
 

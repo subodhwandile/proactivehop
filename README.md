@@ -47,16 +47,15 @@ python experiments/scale_experiment.py
 
 ## Reproducibility — Commit provenance
 
-Each results file was produced at a specific commit:
+Each results file was produced at a specific commit. Commits `13c3c56`, `1b1033d`, and `60f02bb` predate the `_create_session` RNG fix (`8d8d384`) and the `hash()` fix (`f80a1b5`), so re-running at those commits will not give bit-identical results. To reproduce Tables 3–5 with the current bit-deterministic simulator, run the corresponding experiment scripts at HEAD.
 
-| File | Commit | Notes |
-|------|--------|-------|
-| `results/failure_scenario.json` (Table 2) | `8144338` | Fixed 25-session denominator, Wilcoxon+Holm |
-| `results/ablation_multiseed_speculative/ablation_multiseed_results.json` (Table 3) | `2974d8c` | After RNG fix (`8d8d384`) |
-| `results/scale_experiment.json` (Table 4) | `60f02bb` | Before `_create_session` RNG fix |
-| `results/sensitivity.json` (Table 5) | `b840ad9` | Before `_create_session` RNG fix |
-
-To exactly reproduce Tables 4–5, check out the respective commit before running `experiments/scale_experiment.py` or `experiments/sensitivity.py`.
+| File | Commit | Table | Notes |
+|------|--------|-------|-------|
+| `results/failure_scenario.json` | `f80a1b5` | Table 2 | Fixed 25-session denominator, Wilcoxon+Holm |
+| `results/ablation_multiseed/ablation_multiseed_results.json` | `13c3c56` | Table 3 rows 1–2 | Before RNG fix |
+| `results/lstm_ablation/`, `results/edge_ablation/` | `1b1033d` | Table 3 rows 3–5 | Before RNG fix |
+| `results/scale_experiment.json` | `60f02bb` | Table 4 | Before RNG fix |
+| `results/sensitivity.json` | `13c3c56` | Table 5 | Before RNG fix |
 
 
 
