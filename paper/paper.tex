@@ -45,7 +45,7 @@ We implement ProactiveHop on a discrete-event simulator of a
 $k{=}4$ fat-tree cluster and evaluate against No-Migration,
 Threshold-70\%, LSTM Predictor, PPO+MLP, and a $p_{\rm drop}$-threshold heuristic.  Key results:
 (1)~in a controlled server-crash scenario (20 seeds), PPO+GNN proactively migrates
-$\mathbf{86.0\%\!\pm\!31.8\%}$ of affected sessions before the crash (median 100\%)---significantly
+$86.0\%\!\pm\!31.8\%$ of affected sessions before the crash (median 100\%)---significantly
 exceeding Threshold-70\% ($26.6\%\!\pm\!26.3\%$, Wilcoxon signed-rank $p{<}0.001$, Holm-corrected, $3.2\times$);
 PPO+MLP achieves the highest crash-scenario rate ($98.0\%\!\pm\!6.1\%$, $p{=}0.14$ vs GNN);
 GNN is not significantly different from LSTM ($54.8\%\!\pm\!41.4\%$, $p{=}0.023$, n.s.\ after Holm);
@@ -649,10 +649,10 @@ All learned policies respond to the rising load signal by migrating sessions;
 the metric measures how many of the 25 seeded sessions were evacuated before the crash.
 
 All learned policies significantly outperform No Migration (0\%) and Threshold-only
-(26.6\%).  \textbf{PPO+MLP achieves both the highest crash-scenario rate (98.0\%) and
-a lower migration cost (1432±1772 ramp migrations vs GNN's 2172±1598)}: MLP is
-strictly more efficient than GNN in the crash scenario, though the difference in
-catch rate is not significant ($p{=}0.14$, Wilcoxon).
+(26.6\%).  PPO+MLP achieves the highest crash-scenario rate (98.0\%);
+mean ramp-migration count is lower for MLP than GNN (1432±1772 vs 2172±1598),
+but variance is high and the difference was not tested, so no efficiency claim is made.
+GNN is not significantly different from MLP ($p{=}0.14$, Wilcoxon).
 \textbf{PPO+GNN (86.0\%)} significantly outperforms Threshold
 ($p{<}0.001$, Wilcoxon, Holm-corrected, $3.2\times$).
 GNN is not significantly different from LSTM ($54.8\%$, $p{=}0.023$, n.s.\ after Holm).
@@ -696,9 +696,10 @@ Figure~\ref{fig:failure} plots the session-drain time-series (seed 42).
   Server 3 is seeded with 25 sessions at step 30 (reset to base load); total count includes organic sessions and varies per policy based on warm-up behavior (GNN: 28, LSTM/p\_drop: 25, No Migration: 63, MLP: 87, Threshold: 128).
   Y-axis counts all sessions on Server 3, not just the 25 seeded ones; pre-migration rate (Table~\ref{tab:failure}) uses only the seeded denominator.
   Degradation ramp starts at step 30; crash at step 40 (red dashed line).
-  GNN and $p_{\rm drop}$ drain to near-zero immediately at step 31; LSTM drains at steps 33--34.
-  MLP oscillates (87$\to$3$\to$38$\to$22$\to$4$\to$61$\to$3$\to$0) due to high migration churn (87 ramp migrations in seed 42).
-  Threshold-70\% begins draining when load exceeds 0.70 at step 36, reaching 0 by step 38.
+  GNN drains to near-zero at step 31; LSTM drains at steps 33--34.
+  $p_{\rm drop}$ drops to near-zero at step 31 then oscillates as new sessions arrive, empty by step 39.
+  MLP oscillates (87$\to$3$\to$38$\to$22$\to$4$\to$61$\to$3$\to$0) due to high migration churn (6141 ramp migrations in seed 42).
+  Threshold-70\% drains during steps 35--38 as load approaches 0.70, reaching 0 by step 38.
   No Migration loses sessions to organic load-induced drops (not policy migrations) from step 32 onward; Server 3 reaches 0 by step 39, before the crash fires at step 40.}
   \label{fig:failure}
 \end{figure}
@@ -1143,7 +1144,7 @@ across policies that drain sessions differently during warm-up.
 These design choices materially affect absolute percentages (e.g.\ old design yielded $\approx$20\%
 for GNN; the fixed denominator design yields 86\%),
 though the qualitative result (GNN significantly exceeds Threshold; no pairwise difference
-among learned policies at $n{=}20$) is robust.
+among learned policies at $n{=}20$) is consistent across these designs.
 
 % -----------------------------------------------------------------------
 \section{Conclusion}
@@ -1202,7 +1203,8 @@ Note: commits \texttt{13c3c56}, \texttt{1b1033d}, and \texttt{60f02bb} predate t
 \texttt{\_create\_session} RNG fix (\texttt{8d8d384}) and the \texttt{hash()} fix (\texttt{f80a1b5}),
 so re-running those experiments at those commits will not give bit-identical results.
 To reproduce Tables 3--5 with the current bit-deterministic simulator, re-run
-\texttt{experiments/ablation.py}, \texttt{experiments/scale\_experiment.py}, and
+\texttt{experiments/ablation\_multiseed.py}, \texttt{experiments/lstm\_ablation\_multiseed.py},
+\texttt{experiments/edge\_ablation.py}, \texttt{experiments/scale\_experiment.py}, and
 \texttt{experiments/sensitivity.py} at HEAD.
 The Alibaba 2018 cluster trace used in the trace-fidelity experiment is publicly
 available at \url{https://github.com/alibaba/clusterdata}.

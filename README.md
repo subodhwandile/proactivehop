@@ -6,7 +6,7 @@ Paper: `paper/paper.pdf`
 
 ## Overview
 
-ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. The GNN detects rising load signals across the 2-hop neighborhood and drains sessions proactively, achieving **86.0% pre-migration rate** (median 100%, 13/20 seeds) vs 26.6% for threshold heuristics in a controlled crash scenario (3.2×, Wilcoxon p<0.001, Holm-corrected). PPO+MLP achieves the highest crash-scenario rate (98.0%), though the difference from GNN is not significant (p=0.14). The primary proven GNN advantage is in i.i.d. ablation (1.8× higher catch rate vs MLP, p=0.0006) and near-linear inference scaling.
+ProactiveHop pre-migrates stateful real-time sessions *before* server failures using a PPO agent whose observation is a GNN encoding of the live cluster topology. In a controlled crash scenario, PPO+GNN achieves **86.0% pre-migration rate** (median 100%, 13/20 seeds) vs 26.6% for threshold heuristics (3.2×, Wilcoxon p<0.001, Holm-corrected); PPO+MLP achieves the highest crash-scenario rate (98.0%), though the difference from GNN is not significant (p=0.14). The primary proven GNN advantage is in i.i.d. ablation (1.8× higher catch rate vs MLP, p=0.0006) and near-linear inference scaling.
 
 ## Key Results
 
