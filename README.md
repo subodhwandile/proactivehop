@@ -12,9 +12,9 @@ ProactiveHop pre-migrates stateful real-time sessions *before* server failures u
 
 | Experiment | Result |
 |---|---|
-| Pre-migration vs Threshold (failure scenario) | **86.0% vs 26.6% (3.2×, Wilcoxon p<0.001, Holm-corrected)** |
-| GNN vs flat MLP catch rate | **1.8× improvement** |
+| GNN vs flat MLP catch rate (i.i.d. ablation) | **1.8× improvement** (p=0.0006) |
 | Inference scaling (N=16 → N=64) | **1.1× overhead for 4× cluster** |
+| Pre-migration vs Threshold (failure scenario) | 86.0% vs 26.6% (3.2×, Wilcoxon p<0.001, Holm-corrected); PPO+MLP is highest at 98.0% |
 
 ## Structure
 
@@ -38,8 +38,12 @@ python experiments/train.py
 # Failure scenario (smoking-gun experiment)
 python experiments/failure_scenario.py
 
-# Ablation: GNN vs MLP
-python experiments/ablation.py
+# Ablation: GNN vs MLP (multi-seed)
+python experiments/ablation_multiseed.py
+
+# Ablation: LSTM and edge-removal
+python experiments/lstm_ablation_multiseed.py
+python experiments/edge_ablation.py
 
 # Scale experiment: N=16/32/64
 python experiments/scale_experiment.py
@@ -58,6 +62,8 @@ Each results file was produced at a specific commit. Commits `13c3c56`, `1b1033d
 | `results/sensitivity.json` | `13c3c56` | Table 5 | Before RNG fix |
 
 
+
+## Citation
 
 ```
 @article{wandile2025proactivehop,
