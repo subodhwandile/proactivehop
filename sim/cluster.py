@@ -43,6 +43,20 @@ class SimConfig:
     server_mttr: float = 60.0             # mean time to recover (seconds)
     enable_failures: bool = True
 
+    # Topology-correlated (common-cause / cascade) failures.
+    # When a server fails, physically coupled neighbours (same rack, power
+    # domain or network dependency — modelled as graph edges) carry elevated
+    # risk for a while.  The extra hazard is a *hidden* common-cause component:
+    # it is applied to the true failure probability but NOT written into the
+    # per-node hazard_rate feature, because it is not directly measurable on
+    # the node itself — it can only be inferred from the pattern of recent
+    # failures across the graph.
+    cascade_failures: bool = False
+    cascade_boost: float = 0.03           # added per-step failure prob at hop-1
+    cascade_duration: int = 15          # steps the boost persists per event
+    cascade_hops: int = 1               # max graph distance affected
+    cascade_hop_decay: float = 0.5      # boost multiplier per extra hop
+
     # Migration
     speculative_push_latency_ms: float = 5.0   # state push time (network)
     reactive_reconnect_latency_ms_mean: float = 400.0
@@ -104,6 +118,9 @@ class ClusterSimulator:
 
         # Failure state
         self._recovery_remaining: dict[int, float] = defaultdict(float)
+
+        # Active hidden cascade boosts: node_id -> list of (expiry_step, magnitude)
+        self._cascade_boosts: dict[int, list] = defaultdict(list)
 
         # Metrics history
         self.history: list[StepMetrics] = []
@@ -289,6 +306,7 @@ class ClusterSimulator:
     def _apply_failures(self, metrics: StepMetrics):
         dt = self.cfg.timestep_sec
         mtbf = self.cfg.server_mtbf
+        newly_failed: list[int] = []
         for i in range(self.n):
             node = self.topo.get_node(i)
             if not node.is_alive:
@@ -299,13 +317,47 @@ class ClusterSimulator:
                 # Load-coupled Weibull hazard: overloaded servers fail more often
                 p_fail_base = 1.0 - np.exp(-(dt / mtbf) ** 1.5)
                 p_fail = p_fail_base + 0.005 * max(0.0, node.load - 0.70)
+                # node feature exposes only the intrinsic (measurable) hazard;
+                # the hidden common-cause boost is applied to p_fail below but
+                # deliberately NOT to hazard_rate.
+                node.hazard_rate = min(p_fail, 0.05) * 20.0
+                if self.cfg.cascade_failures:
+                    expiry = self.current_step
+                    active = [b for exp, b in self._cascade_boosts.get(i, [])
+                              if exp > expiry]
+                    self._cascade_boosts[i] = [
+                        (exp, b) for exp, b in self._cascade_boosts.get(i, [])
+                        if exp > expiry]
+                    p_fail += sum(active)
                 p_fail = min(p_fail, 0.05)   # cap at 5% per step
-                node.hazard_rate = p_fail * 20.0  # scale to [0,1] range for GNN feature
                 if self.rng.random() < p_fail:
                     self.topo.apply_failure(i)
+                    newly_failed.append(i)
                     self._recovery_remaining[i] = float(
                         self.rng.exponential(self.cfg.server_mttr)
                     )
+
+        # Common-cause propagation: each new failure raises the hidden hazard
+        # of graph neighbours within cascade_hops (decaying per hop).
+        if self.cfg.cascade_failures and newly_failed:
+            from collections import deque
+            for f in newly_failed:
+                frontier = deque([(f, 0)])
+                seen = {f}
+                while frontier:
+                    cur, dist = frontier.popleft()
+                    if dist == self.cfg.cascade_hops:
+                        continue
+                    for nb in self.topo.neighbors(cur):
+                        if nb in seen or not self.topo.get_node(nb).is_alive:
+                            continue
+                        seen.add(nb)
+                        boost = (self.cfg.cascade_boost
+                                 * self.cfg.cascade_hop_decay ** dist)
+                        self._cascade_boosts[nb].append(
+                            (self.current_step + self.cfg.cascade_duration,
+                             boost))
+                        frontier.append((nb, dist + 1))
 
     # ------------------------------------------------------------------
     # Migration execution

@@ -1,0 +1,8 @@
+/home/ubuntu/.local/lib/python3.10/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+  [GNN/init0] ep 100/500 best_cr=0.0296
+  [GNN/init0] ep 200/500 best_cr=0.0399
+  [GNN/init0] ep 300/500 best_cr=0.0399
+  [GNN/init0] ep 400/500 best_cr=0.0399
+  [GNN/init0] ep 500/500 best_cr=0.0403
+DONE GNN init0: catch=0.0146±0.0084

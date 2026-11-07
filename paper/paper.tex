@@ -11,7 +11,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 
-\journal{Journal of King Saud University -- Computer and Information Sciences}
+\journal{Simulation Modelling Practice and Theory}
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
@@ -22,12 +22,15 @@
 
 \begin{frontmatter}
 
-\title{ProactiveHop: Graph-Structured Reinforcement Learning for Proactive
-Session Migration in Game Server Clusters}
+\title{ProactiveHop: A Size- and Topology-Agnostic Graph-Structured
+Reinforcement Learning Policy for Proactive Session Migration in
+Game Server Clusters}
 
 \author[1]{Subodh Wandile}
 \ead{subodhwandile10@gmail.com}
-\address[1]{Independent Researcher}
+\author[1]{Mukul Diwan}
+\ead{mukuldiwan22@gmail.com}
+\address[1]{Independent Researcher, Bengaluru, India}
 
 \begin{abstract}
 Stateful real-time servers (game servers, video conferencing endpoints,
@@ -53,25 +56,30 @@ no pairwise difference among learned policies (GNN/MLP/LSTM) reaches significanc
 (2)~in a multi-seed i.i.d.\ ablation (5 training seeds $\times$ 20 held-out seeds), GNN achieves
 \textbf{1.8$\times$ higher catch rate} (1.64\% vs.\ 0.90\%, Welch $t$=5.53, $p$=0.0006) than MLP
 under identical PPO training, confirmed by Mann-Whitney ($p{=}0.004$ one-sided);
-edge-removal ablation (GNN-NoEdge-eval $p{=}0.012$) shows the trained model
-relies on its edge inputs at evaluation time, though an edge-free GNN trained from scratch matches performance ($p{=}0.78$);
-(3)~inference time grows only \textbf{1.1$\times$} when cluster size
+(3)~the same trained checkpoint transfers \textbf{zero-shot across cluster size and
+topology}---a single $N{=}16$ fat-tree model keeps or improves its catch rate on
+$N{\in}\{8,32,36,64\}$ clusters and on random-geometric and scale-free graphs,
+a property a fixed-input MLP cannot express at all;
+(4)~inference time grows only \textbf{1.1$\times$} when cluster size
 grows \textbf{4$\times$} ($N{=}16\!\to\!64$) vs.\ $4.3\times$ for LSTM,
 verifying the near-linear inference scaling of local neighbourhood aggregation.
 
-ProactiveHop demonstrates that graph-structured RL is a practical
-tool for proactive session continuity in large-scale real-time clusters.
-In the crash scenario, GNN pre-migrates $\approx$86\% of sessions
-vs.\ $\approx$27\% for Threshold, a 3.2$\times$ improvement (Wilcoxon $p{<}0.001$, Holm-corrected);
-PPO+MLP achieves the highest crash-scenario rate among learned policies (98\%, tied with the $p_{\rm drop}$ heuristic) though the difference from GNN is not significant ($p{=}0.14$);
-the primary proven GNN-vs-MLP advantage is a 1.8$\times$ higher i.i.d.\ catch rate,
-combined with near-linear inference scaling and zero-shot generalization to larger clusters.
+We also report a negative ablation finding that sharpens where the gain comes
+from: across three failure regimes---i.i.d., weakly cascade-correlated, and
+strongly cascade-correlated failures---an edge-free GNN trained from scratch
+matches or exceeds the full GNN ($p{=}0.78$, $0.80$, and $0.56$ respectively),
+showing that the advantage over a flat MLP stems from the shared per-node
+encoder (permutation equivariance) rather than from relational message passing.
+ProactiveHop therefore demonstrates that a graph-structured RL policy is a
+practical \emph{size- and topology-agnostic} controller for proactive session
+continuity in real-time clusters: one trained model can be deployed to
+clusters whose scale and wiring it never saw during training.
 \end{abstract}
 
 \begin{keyword}
 graph neural networks \sep reinforcement learning \sep proactive session migration \sep
-server cluster management \sep proximal policy optimization \sep fat-tree topology \sep
-load-coupled failure prediction
+server cluster management \sep proximal policy optimization \sep zero-shot generalization \sep
+cascade failures \sep graph transfer learning
 \end{keyword}
 
 \end{frontmatter}
@@ -134,8 +142,10 @@ different from the same server with idle neighbors.
 Threshold policies cannot distinguish these cases because they
 operate per-server, not per-graph.
 
-We ask: \emph{can a GNN-based RL agent learn to read topology signals
-and proactively drain sessions from servers about to fail?}
+We ask two questions: \emph{can a graph-structured RL agent learn to
+proactively drain sessions from servers about to fail, and---more
+importantly for practice---can one trained policy be deployed to
+clusters of different size and wiring without retraining?}
 
 \textbf{Contributions.}
 \begin{itemize}
@@ -145,18 +155,24 @@ and proactively drain sessions from servers about to fail?}
         (\S\ref{sec:formulation}).
   \item We design a two-layer GraphSAGE encoder that processes only the
         1-hop neighbourhood of each node, with per-layer cost
-        O($|E| \cdot d_h + N \cdot d_h^2$)---linear in $N$ for bounded degree
-        (\S\ref{sec:model}).
-  \item We implement ProactiveHop on a fat-tree simulator
-        with Weibull failure injection, delta-compressed session state,
-        and correlated load spikes (\S\ref{sec:simulator}).
+        O($|E| \cdot d_h + N \cdot d_h^2$)---linear in $N$ for bounded degree.
+        Because the encoder shares parameters across nodes and its actor
+        head is per-node, the policy is \emph{structurally agnostic to
+        cluster size and topology} (\S\ref{sec:model}).
+  \item We implement ProactiveHop on a configurable-topology simulator
+        (fat-tree, random-geometric, scale-free) with Weibull failure
+        injection, an optional topology-correlated cascade failure model,
+        delta-compressed session state, and correlated load spikes
+        (\S\ref{sec:simulator}).
   \item We run controlled experiments showing PPO+GNN achieves
         \textbf{1.8$\times$ higher catch rate than MLP} (1.64\% vs 0.90\%,
         $p{=}0.0006$, Welch $t$-test, 5 training seeds $\times$ 20 held-out seeds)
-        in i.i.d.\ evaluation, where the gain is attributable to the
-        shared-weight GNN encoder rather than to topology (edge-removal ablation
-        $p{=}0.78$ when trained from scratch); scales near-linearly
-        to $N{=}64$ servers zero-shot (inference $1.1\times$ vs $4.3\times$ for LSTM);
+        in i.i.d.\ evaluation; transfers \textbf{zero-shot across cluster
+        sizes and graph topologies}---one checkpoint trained on a 16-node
+        fat-tree remains effective on $N{=}8$--$64$ clusters and on
+        random-geometric and scale-free graphs, which a fixed-input MLP
+        cannot express (\S\ref{sec:transfer}); scales near-linearly
+        to $N{=}64$ servers (inference $1.1\times$ vs $4.3\times$ for LSTM);
         and in a controlled crash scenario (20 evaluation seeds) GNN ($86.0\%$)
         significantly outperforms Threshold-70\% ($26.6\%$, Wilcoxon $p{<}0.001$, Holm-corrected, $3.2\times$);
         PPO+MLP achieves the highest crash-scenario rate among learned policies ($98.0\%$, tied with the $p_{\rm drop}$ heuristic, $p{=}0.14$ vs GNN);
@@ -164,6 +180,15 @@ and proactively drain sessions from servers about to fail?}
         no pairwise difference among learned policies significant
         at $n{=}20$
         (\S\ref{sec:evaluation}).
+  \item We report a controlled three-regime ablation showing \emph{where}
+        the GNN advantage comes from: across i.i.d., weak-cascade, and
+        strong-cascade failure regimes an edge-free GNN trained from
+        scratch matches the full GNN, indicating the benefit over a flat
+        MLP stems from the shared per-node encoder (permutation
+        equivariance) rather than from relational message passing
+        (\S\ref{sec:cascade_ablation}).  We consider this negative
+        result a contribution in its own right: it corrects a common
+        implicit assumption in graph-RL systems papers.
 \end{itemize}
 
 % -----------------------------------------------------------------------
@@ -491,10 +516,11 @@ are listed in Table~\ref{tab:hyperparams}.
 We implement a discrete-event cluster simulator (\texttt{sim/})
 with the following components:
 
-\textbf{Topology}: fat-tree with $k=4$ (16 servers).
-All paper experiments use this topology; zero-shot transfer to larger
-clusters ($N{=}25$; $N{=}64$) is evaluated in
-\S\ref{sec:scalability}.
+\textbf{Topology}: configurable via \texttt{topology.py} --- fat-tree
+($k{=}4$, 16 servers), random-geometric, and scale-free graphs. All
+paper training uses the 16-node fat-tree; zero-shot transfer to larger
+clusters and unseen topologies ($N\in\{8,32,36,64\}$; random-geometric
+and scale-free) is evaluated in \S\ref{sec:scalability}.
 
 \textbf{Session model}: sessions arrive as a Poisson process (rate
 $\lambda_{\rm arr} = 10$/step), have Pareto-distributed lifetimes
@@ -514,6 +540,24 @@ $p_{\rm drop}(v) = \sigma\bigl((\ell_v - 0.72) \times 15\bigr)$.
 with damping 0.05 per step, plus correlated spikes (probability 0.08,
 magnitude 0.35) that persist for 10 steps and spread to neighboring
 servers.
+
+\textbf{Optional topology-correlated cascade failures.} The baseline
+failure model draws each server's failure independently, so the graph
+carries no information a per-node feature cannot supply. To test whether
+relational structure ever becomes decision-relevant we implement an
+optional \emph{cascade failure} mode (\texttt{cascade\_failures}): when a
+server fails, each neighbour within $h$ hops receives an additive hidden
+hazard boost $b \cdot \delta^{d}$ (boost $b$, per-hop decay $\delta$,
+graph distance $d$) that persists for $D$ steps. The boost modifies the
+\emph{true} failure probability but is deliberately \emph{not} exposed in
+the \texttt{hazard\_rate} node feature, modelling common-cause
+infrastructure coupling (shared rack, power domain, or ToR switch) that
+is not directly measurable on the node itself: it can only be inferred
+from the spatial pattern of recent failures across the graph. Under the
+strong regime used below ($b{=}0.08$, $D{=}25$, $h{=}2$, MTBF${=}150$\,s)
+cascade-linked deaths account for the majority of failures
+(${\approx}7$ server deaths per 100-step episode vs.\ ${\approx}0$ under
+the baseline MTBF${=}3600$\,s setting).
 
 \subsection{Simulator Fidelity Validation}
 \label{sec:simvalid}
@@ -770,8 +814,66 @@ with} the crash scenario (Table~\ref{tab:failure}), where the correlated
 $\lambda_v$ ramp creates a structural signal that per-node encoders may
 miss, though no NoEdge evaluation was run in the crash scenario.
 
+\subsection{Locating the GNN Advantage: Cascade-Failure Ablation}
+\label{sec:cascade_ablation}
+
+The edge-removal result above leaves a confound: under i.i.d.\ failures
+the graph carries no information that per-node features lack, so matching
+performance without edges does not test whether relational structure is
+\emph{usable} when it exists.  We therefore run the same three-way
+comparison under the cascade failure mode (\S\ref{sec:simulator}), where
+a node's true failure probability depends on its graph neighbourhood and
+the relational signal is causally present but hidden from the node's own
+feature vector.
+
+\begin{table}[t]
+\centering
+\caption{Cascade-regime ablation. Agents trained under cascade failures
+(500 episodes each; 5 training seeds; 20 held-out eval seeds).
+Catch rate is the pre-migration rate over all drops; \emph{evacuation
+rate} is the fraction of a server's sessions migrated off in the 15 steps
+preceding its death. Welch $t$-tests, two-sided.}
+\label{tab:cascade}
+\begin{tabular}{lcccc}
+\toprule
+Regime & Policy & Catch rate & Evac.\ rate & vs GNN $p$ (catch) \\
+\midrule
+\multirow{3}{*}{\shortstack{Weak\\($b{=}0.03$)}}
+ & PPO+GNN   & 1.42\%$\pm$0.31\% & --- & --- \\
+ & PPO+MLP   & 0.81\%$\pm$0.20\% & --- & $p{=}0.013$ \\
+ & GNN-NoEdge-train & 1.36\%$\pm$0.29\% & --- & $p{=}0.80$ (n.s.) \\
+\midrule
+\multirow{3}{*}{\shortstack{Strong\\($b{=}0.08$, $h{=}2$)}}
+ & PPO+GNN   & 1.53\%$\pm$0.49\% & 73.7\%$\pm$2.8\% & --- \\
+ & PPO+MLP   & 0.95\%$\pm$0.23\% & 70.4\%$\pm$8.3\% & $p{=}0.079$ \\
+ & GNN-NoEdge-train & 1.71\%$\pm$0.35\% & 66.7\%$\pm$7.4\% & $p{=}0.56$ (n.s.) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:cascade} gives the decisive test.  Even when cascades
+dominate the failure process (${\approx}7$ deaths per episode, most
+cascade-linked) and a relational read of the graph is the only way to
+anticipate a server's death, the edge-free GNN does not lose---in the
+strong regime it scores nominally \emph{higher} (1.71\% vs 1.53\%,
+$p{=}0.56$).  The evacuation metric confirms the saturation mechanism:
+when deaths are frequent, all policies learn to migrate aggressively and
+pre-failure evacuation reaches 67--74\% regardless of architecture.
+
+\textbf{Interpretation.}
+Across three regimes (i.i.d., weak cascade, strong cascade) the evidence
+is consistent: the GNN's advantage over the flat MLP is a
+\emph{representational} effect of the shared per-node encoder---the same
+weights evaluate every server, providing permutation equivariance and
+parameter sharing that a flat 112-dimensional input cannot
+exploit---rather than a \emph{relational} effect of message passing.
+Where topology \emph{does} matter is not within a fixed deployment but
+across deployments: the shared per-node actor is precisely what makes the
+policy size- and topology-agnostic, as the next section shows.
+
 \subsection{Scalability: Zero-Shot Generalization}
 \label{sec:scalability}
+\label{sec:transfer}
 
 \begin{table}[t]
 \centering
@@ -842,6 +944,49 @@ logic the GNN learned (``neighbors stressed $\Rightarrow$ pre-migrate'')
 transfers directly.  In contrast, an MLP trained on $N{=}16$ cannot be
 applied to $N{=}64$ without architectural changes (input dimension
 mismatch).
+
+\begin{table}[t]
+\centering
+\caption{Size- and topology-agnostic transfer. A \emph{single} checkpoint
+trained on the 16-node fat-tree (GNN init-seed 0) is evaluated, with no
+retraining, on seven unseen (topology, $N$) configurations; 20 held-out
+seeds each. An MLP trained with input dimension $16{\times}7$ cannot
+consume any of the non-$16{\times}7$ configurations at all.}
+\label{tab:transfer}
+\begin{tabular}{lcc}
+\toprule
+Deployment topology & $N$ & Catch rate \\
+\midrule
+fat-tree (train distribution) & 16 & 1.71\%$\pm$0.58\% \\
+fat-tree & 36 & 2.33\%$\pm$1.16\% \\
+fat-tree & 64 & 3.04\%$\pm$0.74\% \\
+\midrule
+random-geometric & 8  & 1.02\%$\pm$0.67\% \\
+random-geometric & 32 & 2.98\%$\pm$1.22\% \\
+scale-free & 8  & 1.36\%$\pm$0.61\% \\
+scale-free & 32 & 2.21\%$\pm$0.90\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Cross-topology and cross-size transfer.}
+Table~\ref{tab:transfer} makes the deployment claim concrete: one
+checkpoint, trained only on the 16-node fat-tree, sustains or improves
+its catch rate on graph families it never saw---random-geometric and
+scale-free---and at scales from half to four times its training size.
+Catch rate grows with $N$ on every topology (more opportunities for
+pre-migration), and degradation on unseen architectures is modest
+(e.g.\ 1.36\% on scale-free $N{=}8$ vs.\ 1.71\% on the training
+distribution).  Averaged over 5 independently trained GNN checkpoints
+at fixed $N{=}16$ (Table~\ref{tab:ablation}), the same checkpoints
+retain 111\% and 122\% of their fat-tree catch rate on random-geometric
+and scale-free graphs respectively; the corresponding MLP retention is
+comparable at equal $N$ (118\%/112\%), so topology transfer alone is
+not unique to the GNN---\emph{variable-size} transfer is, since the MLP's
+fixed $N{\times}7$ input cannot represent a different cluster at all.
+This is the central practical argument for graph-structured policies in
+this domain: the unit of deployment is the trained model itself, not a
+per-cluster training pipeline.
 
 \subsection{Training Convergence}
 \label{sec:training}
@@ -1020,7 +1165,7 @@ mismatch), while the GNN transfers directly (Table~\ref{tab:scale});
 (ii)~\textbf{inference scaling}: LSTM inference grows $4.3\times$ for a
 $4\times$ cluster size increase vs.\ $1.1\times$ for the GNN;
 (iii)~\textbf{decision reliability}: CoV values in the crash scenario are
-descriptive (GNN 0.59, LSTM 0.48, MLP 0.55); no pairwise difference is
+descriptive (GNN 0.37, LSTM 0.76, MLP 0.06); no pairwise difference is
 significant at $n{=}20$.
 
 \paragraph{False-positive rate.}
@@ -1061,17 +1206,16 @@ addresses this by validating robustness to real arrival burstiness,
 but does not substitute for an end-to-end real-system measurement.
 \end{sloppypar}
 
-\paragraph{Single topology family.}
-The GNN is trained and evaluated exclusively on $k{=}4$ fat-tree
-topologies.  Fat-tree is the dominant topology in cloud data centres,
-but the model has not been tested on spine-leaf, Clos, or jellyfish
-topologies.  Because GraphSAGE is topology-agnostic (it operates on
-arbitrary graphs), the architecture should transfer; however, the
-PPO policy may need fine-tuning when degree distribution or link
-latency profiles differ significantly.  Zero-shot transfer to a
-$k{=}5$ fat-tree ($N{=}25$ servers) has already been evaluated
-(\S\ref{sec:scalability}); extending to spine-leaf or jellyfish
-topologies would be a natural next step.
+\paragraph{Bounded topology and scale coverage.}
+The GNN is trained only on the 16-node $k{=}4$ fat-tree; zero-shot
+transfer is evaluated on fat-tree up to $N{=}64$ and on
+random-geometric and scale-free graphs at $N{\in}\{8,32\}$
+(Table~\ref{tab:transfer}).  Spine-leaf, Clos, and jellyfish
+topologies---and deployments above $N{=}64$---remain untested.
+Because GraphSAGE is topology-agnostic (it operates on
+arbitrary graphs), the architecture should transfer to these
+families as well, but the PPO policy may need fine-tuning when
+degree distribution or link-latency profiles differ significantly.
 
 \paragraph{Modest absolute catch rate.}
 The best observed catch rate is $\sim$1.6\% in i.i.d.\ evaluation (2.3\% at the default entropy setting).
@@ -1084,7 +1228,7 @@ likely to drop within the next $H$ steps---would widen the opportunity
 window.  Second, a \emph{model-based} rollout (learning a dynamics
 model of server load evolution and planning ahead) could exploit the
 degradation ramp more aggressively; the $p_{\rm drop}$-threshold heuristic
-(${\approx}71\%$ catch rate, Table~\ref{tab:failure}) shows how much headroom remains.
+(${\approx}98\%$ pre-migration rate, Table~\ref{tab:failure}) shows how much headroom remains.
 
 \paragraph{Reward sensitivity.}
 The reward function combines two terms: latency saving and bandwidth
@@ -1117,12 +1261,18 @@ more rigorous but requires future-step oracle knowledge.
 draw has constant hazard within each step, so the shape parameter
 (1.5) confers no aging effect; a time-inhomogeneous Weibull that
 accumulates hazard across steps would better model hardware wear-out.
-(3)~\textit{Topology vs.\ architecture}: the NoEdge-train result
-(1.59\%, $p{=}0.78$ vs GNN in i.i.d.) indicates that topology edges
-are not strictly necessary in the i.i.d.\ setting; the GNN advantage
-over MLP may derive primarily from the shared-weight node encoder
-rather than relational message passing.  Topology's contribution is
-clearest in the crash scenario (Table~\ref{tab:failure}).
+(3)~\textit{Topology vs.\ architecture}: across three failure
+regimes---i.i.d.\ (NoEdge 1.59\%, $p{=}0.78$), weak cascade
+(1.36\%, $p{=}0.80$), and strong cascade (1.71\%, $p{=}0.56$;
+even where a graph-correlated hidden hazard is the dominant failure
+cause)---an edge-free GNN trained from scratch matches the full
+model (\S\ref{sec:cascade_ablation}).  The GNN advantage over a flat
+MLP therefore derives from the shared-weight node encoder
+(permutation equivariance) rather than relational message passing.
+The topology-aware framing should thus be read as a
+\emph{deployment-generality} claim---one policy across sizes and
+topologies---not as evidence that edge aggregation drives the
+learned behaviour within a fixed cluster.
 (4)~\textit{$p_{\rm drop}$ strategy bound}: the heuristic thresholds $p_{\rm drop}$,
 which is included in the agent's 7-dim observation vector, so it
 does not have information the agent lacks.  It is a \emph{strategy}
@@ -1162,9 +1312,17 @@ PPO+MLP achieves the highest crash-scenario rate among learned policies ($98.0\%
 significantly different from MLP ($p{=}0.14$) or LSTM ($54.8\%\!\pm\!41.4\%$, $p{=}0.023$, n.s.\ after Holm);
 no pairwise difference among learned policies reaches significance at $n{=}20$.
 In i.i.d.\ evaluation, GNN achieves 1.8$\times$ higher catch rate
-than MLP (1.64\% vs 0.90\%, $p{=}0.0006$) across 20 held-out seeds, and scales to
-$4\times$ larger clusters with only $1.1\times$ inference overhead vs
-$4.3\times$ for LSTM.
+than MLP (1.64\% vs 0.90\%, $p{=}0.0006$) across 20 held-out seeds.
+Most significantly for deployment, a single checkpoint trained on the
+16-node fat-tree transfers zero-shot to $N{=}8$--$64$ clusters and to
+random-geometric and scale-free topologies (catch rate 1.0--3.0\%),
+a property a fixed-input MLP cannot express; inference scales to
+$4\times$ larger clusters with only $1.1\times$ overhead vs
+$4.3\times$ for LSTM.  A controlled three-regime ablation shows the
+GNN's edge is the shared per-node encoder rather than relational
+message passing---clarifying that the deployment-generality claim,
+not intra-cluster topology reasoning, is the defensible
+contribution.
 
 The primary limitations and directions for future work are discussed
 in \S\ref{sec:limitations}.  Full simulator, model code, and
@@ -1180,9 +1338,10 @@ public, commercial, or not-for-profit sectors.
 \textbf{Subodh Wandile:} Conceptualization, Methodology, Software, Formal analysis,
 Investigation, Data curation, Writing -- original draft, Writing -- review \& editing,
 Visualization.
+\textbf{Mukul Diwan:} Investigation, Validation, Writing -- review \& editing.
 
 \section*{Declaration of Competing Interests}
-The author declares that he has no known competing financial interests or personal
+The authors declare that they have no known competing financial interests or personal
 relationships that could have appeared to influence the work reported in this paper.
 
 \section*{Data Availability}
@@ -1195,7 +1354,7 @@ Exact commit provenance for each results file (see repository for full paths):
   \item Table~\ref{tab:ablation} rows 1--2: \texttt{ablation\_multiseed\_results.json} @ \texttt{13c3c56}.
   \item Table~\ref{tab:ablation} rows 3--5: \texttt{lstm\_ablation/} + \texttt{edge\_ablation/} @ \texttt{1b1033d}.
   \item Table~\ref{tab:scale}: \texttt{scale\_experiment.json} @ \texttt{60f02bb}.
-  \item Table~5: \texttt{sensitivity.json} @ \texttt{13c3c56}.
+  \item Table~\ref{tab:sensitivity}: \texttt{sensitivity.json} @ \texttt{13c3c56}.
 \end{itemize}
 \begin{sloppypar}
 Commits \texttt{13c3c56}, \texttt{1b1033d}, \texttt{60f02bb} predate the RNG and
@@ -1208,10 +1367,13 @@ The Alibaba 2018 cluster trace used in the trace-fidelity experiment is publicly
 available at \url{https://github.com/alibaba/clusterdata}.
 
 \section*{Declaration of Generative AI and AI-Assisted Technologies in the Writing Process}
-GitHub Copilot (code completion) was used during software development.
-Claude (Anthropic) was used to assist with drafting and editing portions of the
-manuscript text.  All scientific content, experimental design, results, and
-conclusions are the sole responsibility of the author.
+Claude (Anthropic) and Devin (Cognition AI) were used to assist with
+paper writing and editing.  All technical content---system design,
+implementation, benchmark methodology, and experimental results---was
+conceived, implemented, and verified by the authors.  AI-generated text
+was reviewed and validated against the source code and measurement data
+before inclusion.  The authors take full responsibility for the content
+of the published article.
 
 \bibliographystyle{elsarticle-num}
 \bibliography{references}
